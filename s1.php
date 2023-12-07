@@ -132,7 +132,7 @@ if ($userID !== false) {
             // Iterate through each SMTP configuration
             echo "\033[1;Number of Smtp " . count($smtpSettings);
             echo "\033[1;Coming Soon\n";
-        
+			exit;
        
             
         } else {
