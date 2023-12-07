@@ -1,4 +1,3 @@
-git clone https://github.com/zoeand101/S1_T0G.git
 sudo yum update
 cd S1_T0G
 php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
