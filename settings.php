@@ -50,13 +50,13 @@ $commonSettings = [
     'randSender'        => true,                      // Enable Base64 encoding for sender's name
     'displayimage'      => false,   
     'recipientListFile' => 'list.txt',
-    'ErrorHandling' => '2',  
+    'ErrorHandling' 	=> '4',  
     // Enable Base64 encoding for image display
     // other common settings...
 ];
 
 $recipientListSettings = [
-    'removeDuplicates' => false, // Remove duplicate recipients
+    'removeDuplicates' 	=> false, // Remove duplicate recipients
     'recipientListFile' => 'list.txt', // Recipient list file
 ];
 
