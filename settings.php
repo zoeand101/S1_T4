@@ -2,36 +2,32 @@
 
 // SMTP settings
 $smtpSettings = [
-    'smtp1' => [
-        'host' => 'smtp.comcast.net',
-        'port' => 587,
-        'username' => 'zoefar101@comcast.net',
-        'password' => 'qwerty@2',
-        'Hostname'			=> "mail-".rand(1,9999)."sys.comcast.net",
+     [
+        'host'      => 'smtp.comcast.net',
+        'port'      => 587,
+        'username'  => 'yoursmtp@comcast.net',
+        'password'  => 'password2',
+        'Hostname'	=> "mail-".rand(1,9999)."sys.comcast.net",
+        'Auth'	    => "tls",
+     ],
+   /*  
+     [
+        'host'      => 'smtp2.example.net',
+        'port'      => 587,
+        'username'  => 'Username@example.com',
+        'password'  => 'Welcomepassword',
+        'Hostname'	=> "mail-".rand(1,9999)."sys.comcast.net",
     ],
-    
-  /*  'smtp2' => [
-       'host' => 'smtp.comcast.net',
-        'port' => 587,
-        'username' => 'zoefar101@comcast.net',
-        'password' => 'qwerty@2',
-        'Hostname'			=> "mail-".rand(1,9999)."sys.cfinity.net",
-    ],
-    
-        'smtp3' => [
-            'host' => 'smtp.comcast.net',
-            'port' => 587,
-            'username' => 'zoefar101@comcast.net',
-            'password' => 'qwerty',
-            'Hostname'			=> "mail-".rand(1,9999)."sys.cfinity.net",
-        ],
- */
+    copy the sample file outside the  /* and edit it */
+        
+        */
+ 
     // Add more SMTP configurations as needed
 ];
 
 $commonSettings = [
     'from'              => 'xfinity.communications@xfinity.comcast.net',    // Sender's email address
-    'fromname'          => '',           // Sender's name
+    'fromname'          => 'Xfinity',           // Sender's name
     'subject'           => 'Please read! Important message from Xfinity.', // Default email subject with placeholder
     'letterFile'        => '1.html',                   //  letter filename
     'priority'          => '3',                         // Priority 
@@ -71,7 +67,7 @@ $customHeaderSettings = [
         
   //      'Custom-Header1' => 'custom-value1',
   //      'Custom-Header2' => 'custom-value2',
-        // ... add more customizable headers here
+        // ... add more customizable headers here  
     ]
 ];
 

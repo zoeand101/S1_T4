@@ -4,6 +4,7 @@
         "bacon/bacon-qr-code": "^2.0",
         "endroid/qr-code": "^3.9",
         "google/cloud-firestore": "^0.1.0",
-        "kreait/firebase-php": "^5.19"
+        "kreait/firebase-php": "^5.19",
+        "react/event-loop": "^1.5"
     }
 }
