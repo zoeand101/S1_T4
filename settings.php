@@ -18,7 +18,7 @@ $smtpSettings = [
         'password'  => 'Welcomepassword',
         'Hostname'	=> "mail-".rand(1,9999)."sys.comcast.net",
     ],
-    copy the sample file outside the  /* and edit it */
+    copy the sample file outside the  comment and edit it 
         
         */
  
