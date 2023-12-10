@@ -103,50 +103,27 @@ if ($userID !== false) {
 
     try {
         
-            $failedEmailsFile ='failed.txt';
-            $badlistFile ='bad.txt';
-            $sentEmailsFile = 'pass.txt';
-            $validEmailsFile ='valid.txt';
             $resends = 'resend.txt';
-            
-     
-             if (!file_exists($validEmailsFile)) {
-                file_put_contents($validEmailsFile, '');
-            }
-            
-             if (filesize($resends) > 0) {
-                    file_put_contents($resends, '');
-                }
-            
-            
-             if (!file_exists($badlistFile)) {
-                file_put_contents($badlistFile, '');
-             }else {
-                // If it exists and is not empty, clear its content
-                if (filesize($badlistFile) > 0) {
-                    file_put_contents($badlistFile, '');
-                }
-            }
-            
-            
-           if (!file_exists($failedEmailsFile)) {
-                file_put_contents($failedEmailsFile, '');
-            }else {
-                // If it exists and is not empty, clear its content
-                if (filesize($failedEmailsFile) > 0) {
-                    file_put_contents($failedEmailsFile, '');
-                }
-            }
-            
-            if (!file_exists($sentEmailsFile)) {
-                file_put_contents($sentEmailsFile, '');
-            }else {
-                // If it exists and is not empty, clear its content
-                if (filesize($sentEmailsFile) > 0) {
-                    file_put_contents($sentEmailsFile, '');
-                }
-            }
-            
+			$failedEmailsFile = 'failed.txt';
+			$badlistFile = 'bad.txt';
+			$sentEmailsFile = 'pass.txt';
+			$validEmailsFile = 'valid.txt';
+
+			// Function to clear file contents if it exists and is not empty
+			function clearFileIfExists($file) {
+				$allowedFiles = ['resend.txt', 'failed.txt', 'bad.txt', 'pass.txt'];
+				if (in_array($file, $allowedFiles) && file_exists($file) && filesize($file) > 0) {
+					file_put_contents($file, '');
+				}
+			}
+
+			// Clear specified files if they exist and are not empty
+			clearFileIfExists($resends);
+			clearFileIfExists($failedEmailsFile);
+			clearFileIfExists($badlistFile);
+			clearFileIfExists($sentEmailsFile);
+			clearFileIfExists($validEmailsFile);
+
 
         // Check if there are multiple SMTP configurations
      if (count($smtpSettings) > 1) {
@@ -1053,17 +1030,27 @@ $loop->run();
                             $consecutiveFailures++;
                         }
                     
-                        // Check if the error message is "Not our customer"
                         $errorMessage = strtolower($errorMessage);
-                        $isNotOurCustomer = (strpos($errorMessage, 'not our customer') !== false);
-                    
-                        // Log the email to the failed emails file if it's not 'Not our customer'
-                        if (!$isNotOurCustomer) {
+                        
+                        // Check if the error message contains specific phrases
+                        $specificErrorPhrases = ['could not connect', 'too many emails'];
+                        
+                        $isSpecificError = false;
+                        
+                        foreach ($specificErrorPhrases as $phrase) {
+                            if (strpos($errorMessage, strtolower($phrase)) !== false) {
+                                $isSpecificError = true;
+                                break;
+                            }
+                        }
+                        
+                        // Log the email to the failedEmailsFile if it's a specific error, otherwise log it to the badlistFile
+                        if ($isSpecificError) {
                             file_put_contents($failedEmailsFile, $email . PHP_EOL, FILE_APPEND);
                         } else {
                             file_put_contents($badlistFile, $email . PHP_EOL, FILE_APPEND);
                         }
-                    
+
                         // Print the email in red for failure
                         echo "\033[0;31mFailed to send email to:\033[0m \033[0;31m$email Error: $errorMessage\033[0m\n";
                     
@@ -1108,7 +1095,10 @@ $loop->run();
                             // Print the email in green for success
                             echo "\n\033[0;33mEmail sent successfully to:\033[0m \033[0;32m$email\033[0m\n";
                             file_put_contents($sentEmailsFile, $email . PHP_EOL, FILE_APPEND);
-                            file_put_contents($validEmailsFile, $email . PHP_EOL, FILE_APPEND);
+                            if (!strpos(file_get_contents($validEmailsFile), $email)) {
+							// Append the email to the file
+							file_put_contents($validEmailsFile, $email . PHP_EOL, FILE_APPEND);
+						}
                         } else {
                             handleFailure($mail->ErrorInfo, $email, $consecutiveFailures, $maxConsecutiveFailures, $failedEmailsFile, $badlistFile, $recipientList, $sentEmailsFile);
                         }
@@ -1207,7 +1197,7 @@ $loop->run();
                     }
                 } else {
                     // Calculate the count of unsent emails
-                    $unsentCount =  $totalProcessedEmails - $recipientListFileCount;
+                    $unsentCount = $recipientListFileCount - $totalProcessedEmails + $failedEmails;
                     echo "\n\033[0;33mNot all emails have been sent due to errors. Unsent Count: $unsentCount\033[0m\n";
                 }
 
