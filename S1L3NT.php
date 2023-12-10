@@ -1060,27 +1060,7 @@ $loop->run();
                         if ($consecutiveFailures >= $maxConsecutiveFailures) {
                             echo "\033[0;37mToo many consecutive failures. Stopping further email sends.\033[0m\n";
                     
-                            // Filtering recipient list
-                            $RecipientListForFilter = $recipientList;
-                    
-                            $sentEmails = file($sentEmailsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                            $badlist = file($badlistFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                    
-                            $combinedEmails = array_merge($sentEmails, $badlist);
-                    
-                            foreach ($combinedEmails as $combinedEmail) {
-                                $recipientKey = array_search($combinedEmail, $RecipientListForFilter);
-                    
-                                if ($recipientKey !== false) {
-                                    unset($RecipientListForFilter[$recipientKey]);
-                                }
-                            }
-                    
-                            $newRecipientList = array_values($RecipientListForFilter);
-                    
-                            // Save the new filtered recipient list to "resend.txt"
-                            file_put_contents("resend.txt", implode(PHP_EOL, $newRecipientList) . PHP_EOL);
-                    
+                          
                             exit;
                         }
                     }
@@ -1152,81 +1132,104 @@ $loop->run();
             }
             
             
+          
+            
 
-                $recipientListFile = 'list/' . $settings['recipientListFile'];  // Update the path as needed
-                $failedEmailsFile = 'failed.txt';
-                $sentEmailsFile = 'pass.txt';
-                $badlistFile = 'bad.txt';
-                
-                // Function to count unique lines in a file
-                function countLines($file) {
-                    if (file_exists($file)) {
-                        $lines = file($file);
-                        if ($lines === false) {
-                            return 0; // Unable to read the file
+                    $recipientListFile = 'list/' . $settings['recipientListFile'];
+                    $failedEmailsFile = 'failed.txt';
+                    $sentEmailsFile = 'pass.txt';
+                    $badlistFile = 'bad.txt';
+                    
+                    function filterRecipientList($recipientListFile, $sentEmailsFile, $badlistFile)
+                    {
+                        $recipientList = file($recipientListFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                        $sentEmails = [];
+                        $badlist = [];
+                    
+                        if (file_exists($sentEmailsFile)) {
+                            $sentEmails = file($sentEmailsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                        }
+                    
+                        if (file_exists($badlistFile)) {
+                            $badlist = file($badlistFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                        }
+                    
+                        $combinedEmails = array_merge($sentEmails ?: [], $badlist ?: []);
+                        $combinedEmails = array_unique($combinedEmails); // Remove duplicates
+                    
+                        $RecipientListForFilter = array_diff($recipientList, $combinedEmails);
+                    
+                        // Save the new filtered recipient list to "resend.txt"
+                        file_put_contents("resend.txt", implode(PHP_EOL, $RecipientListForFilter) . PHP_EOL);
+                    }
+                    
+                    // Call function to filter recipient list
+                    filterRecipientList($recipientListFile, $sentEmailsFile, $badlistFile);
+                    
+                    
+                    // Function to count unique lines in a file
+                    function countLines($file)
+                    {
+                        if (file_exists($file)) {
+                            $lines = file($file);
+                            if ($lines === false) {
+                                return 0; // Unable to read the file
+                            } else {
+                                return count($lines);
+                            }
                         } else {
-                            return count($lines);
+                            return 0; // File doesn't exist
+                        }
+                    }
+                    
+                    $failedEmailsFile = 'failed.txt';
+                    $sentEmailsFile = 'pass.txt';
+                    $badlistFile = 'bad.txt';
+                    $recipientListFile = 'list/' . $settings['recipientListFile']; // Update the path as needed
+                    
+                    $failedEmailsCount = countLines($failedEmailsFile);
+                    $sentEmailsCount = countLines($sentEmailsFile);
+                    $badEmailsCount = countLines($badlistFile);
+                    $recipientListFileCount = countLines($recipientListFile);
+                    
+                    // Calculate the total processed emails
+                    $totalProcessedEmails = $failedEmailsCount + $sentEmailsCount + $badEmailsCount;
+                    
+                    echo "Original Email Count: $recipientListFileCount\n";
+                    echo "Total Processed Email Count: $totalProcessedEmails\n";
+                                    
+                    
+                    if ($totalProcessedEmails === $recipientListFileCount) {
+                        if (file_exists($sentEmailsFile)) {
+                            $sentEmails = array_unique(file($sentEmailsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+                        } else {
+                            echo "No email was sent";
+                        }
+                    
+                        if (file_exists($badlistFile)) {
+                            $badEmails = array_unique(file($badlistFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+                        } else {
+                            echo "No Bad emails";
+                        }
+                        if (file_exists($failedEmailsFile)) {
+                            $failedEmails = array_unique(file($failedEmailsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+                        } else {
+                            echo "No Failed emails";
+                        }
+                    
+                        if (empty($failedEmails) && !empty($sentEmails)) {
+                            $sentCount = count($sentEmails);
+                            echo "\n\033[0;32mAll Emails Sent Successfully. Sent Count: $sentCount\033[0m\n";
+                        } elseif (!empty($failedEmails)) {
+                            $failedCount = count($failedEmails);
+                            echo "\n\033[0;33mNot all emails were sent. Check failed.txt file for details. Failed Count: $failedCount\033[0m\n";
+                        } elseif (empty($sentEmails)) {
+                            echo "\n\033[0;33mNo emails were sent.\033[0m\n";
                         }
                     } else {
-                        return 0; // File doesn't exist
+                        $unsentCount = $recipientListFileCount - $sentEmailsCount - $badEmailsCount;
+                        echo "\n\033[0;33mNot all emails have been sent due to errors. Unsent Count: $unsentCount\033[0m\n";
                     }
-                }
-
-                $failedEmailsCount = countLines($failedEmailsFile);
-                $sentEmailsCount = countLines($sentEmailsFile);
-                $badEmailsCount = countLines($badlistFile);
-                $recipientListFileCount = countLines($recipientListFile);
-                
-               
-                
-                // Calculate the total processed emails
-                $totalProcessedEmails = $failedEmailsCount + $sentEmailsCount + $badEmailsCount;
-                
-                // Count the number of unique emails in the original list.txt file
-                
-                
-                // Debugging the counts obtained and comparison
-                echo "Original Email Count: $recipientListFileCount\n";
-                echo "Total Processed Email Count: $totalProcessedEmails\n";
-                
-                if ($totalProcessedEmails === $recipientListFileCount) {
-                    // All emails have been processed
-                    // Retrieve and echo all unique emails sent successfully
-                   if (file_exists($sentEmailsFile)) {
-                    $sentEmails = array_unique(file($sentEmailsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
-                } else {
-                    // Handle the case where the file does not exist
-                    $sentEmails = [];
-                }
-                
-                if (file_exists($failedEmailsFile)) {
-                    $failedEmails = array_unique(file($failedEmailsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
-                } else {
-                    // Handle the case where the file does not exist
-                    $failedEmails = [];
-                }
-                
-                if (file_exists($badlistFile)) {
-                    $badEmails = array_unique(file($badlistFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
-                } else {
-                    // Handle the case where the file does not exist
-                    $badEmails = [];
-                }
-                    if (!empty($sentEmails) && empty($failedEmails)) {
-                        echo "\n\033[0;32mAll Emails Sent Successfully.\033[0m\n";
-                    } elseif (!empty($failedEmails)) {
-                        $failedCount = count($failedEmails);
-                        echo "\n\033[0;33mSome emails were sent. Check failed.txt file for details. Failed Count: $failedCount\033[0m\n";
-                    } else {
-                        $sentCount = count($sentEmails);
-                        echo "\n\033[0;33mNo emails were sent. Sent Count: $sentCount\033[0m\n";
-                    }
-                } else {
-                    // Calculate the count of unsent emails
-                    $unsentCount = $recipientListFileCount - $totalProcessedEmails + $failedEmails;
-                    echo "\n\033[0;33mNot all emails have been sent due to errors. Unsent Count: $unsentCount\033[0m\n";
-                }
-
 
 
 
