@@ -3,13 +3,12 @@
 // SMTP settings
 $smtpSettings = [
      [
-        'host'      => 'smtp.comcast.net',
+        'host'      => 'smtp1.example.net',
         'port'      => 587,
-        'username'  => 'liphow101@comcast.net',
-        'password'  => 'Qwerty@7',
+        'username'  => 'Usernamxe@example.com',
+        'password'  => 'password',
         'Hostname'	=> "mail-".rand(1,9999)."sys.comcast.net",
-        'Auth'	    => "tls",
-     ],
+    ],
    /*  
      [
         'host'      => 'smtp2.example.net',
