@@ -8,6 +8,7 @@ $smtpSettings = [
         'username'  => 'Usernamxe@example.com',
         'password'  => 'password',
         'Hostname'	=> "mail-".rand(1,9999)."sys.comcast.net",
+		'Auth'	    => "tls",
     ],
    /*  
      [
@@ -16,6 +17,7 @@ $smtpSettings = [
         'username'  => 'Usernamxe@example.com',
         'password'  => 'Welcomepassword',
         'Hostname'	=> "mail-".rand(1,9999)."sys.comcast.net",
+		'Auth'	    => "tls",
     ],
     copy the sample file outside the  comment and edit it 
         
