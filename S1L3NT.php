@@ -45,32 +45,39 @@ $factory = (new Factory)
 
 $database = $factory->createDatabase();
 
-function checkFirebaseUser($username, $password, $database)
+function checkFirebaseUser($username, $password, $database, $userIP)
 {
     $usersRef = $database->getReference('users');
-
     $users = $usersRef->getValue(); // Fetch all users
+    $currentTimestamp = time(); // Get current UNIX timestamp
 
     if ($users === null) {
         return false; // No users found
     }
-    $currentTimestamp = time(); // Get current UNIX timestamp
-
 
     foreach ($users as $userID => $userData) {
         if (isset($userData['username']) && isset($userData['password'])) {
             if ($userData['username'] === $username && $userData['password'] === $password) {
                 // Check if the user has an expiration date or is an admin (no expiration date)
+                if ($userData['username'] === '1Admin') {
+                    return 'admin'; // Return 'admin' for the user '1Admin'
+                }
+
                 if (isset($userData['expiration_timestamp'])) {
                     $expirationTimestamp = intval($userData['expiration_timestamp']);
 
                     if ($expirationTimestamp >= $currentTimestamp) {
-                        return 'valid'; // Return a specific value indicating valid and not expired
+                        // Check if the user's IP matches the stored IP
+                        if (isset($userData['ip']) && $userData['ip'] === $userIP) {
+                            return 'valid'; // Return 'valid' if IP matches
+                        } else {
+                            return 'ip_mismatch'; // Return 'ip_mismatch' if IP doesn't match
+                        }
                     } else {
-                        return 'expired'; // Return a specific value indicating the account is expired
+                        return 'expired'; // Return 'expired' if the account is expired
                     }
                 } else {
-                    return 'admin'; // Return a specific value indicating an admin user
+                    return 'admin'; // Return 'admin' for admin user (no expiration)
                 }
             }
         }
@@ -104,7 +111,10 @@ $username = trim(fgets(STDIN)); // Read user input for username
 
 $password = hideInput("Enter password: ");
 
-$userStatus = checkFirebaseUser($username, $password, $database);
+$userIP = $_SERVER['REMOTE_ADDR'] ?? ''; // Get user's IP address
+
+$userStatus = checkFirebaseUser($username, $password, $database, $userIP);
+
 
 if ($userStatus === 'valid') {
     echo "\033[1;33m\n\n\t\tValid credentials. Welcome $username.\n\n\n";
@@ -2321,8 +2331,11 @@ if ($userStatus === 'valid') {
         echo "Error: {$e->getMessage()}\n";
     }
 } elseif ($userStatus === 'expired') {
-    echo "User account has expired. Contact S1L3NT_T0RTUG3R\n";
-} elseif ($userStatus === 'admin') {
+    echo "\033[0;31m\nUser account has expired. Contact S1L3NT_T0RTUG3R\n";
+} elseif ($userStatus === 'ip_mismatch') {
+    echo "\033[0;31m\nIP address mismatch. Access denied. Contact S1L3NT_T0RTUG3R\n";
+    
+} elseif ($userStatus === 'admin' && $username === '1') {
     echo "\033[1;33m\n\n\t\tWelcome Admin.\n\n";
 
 
