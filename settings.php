@@ -3,10 +3,10 @@
 // SMTP settings
 $smtpSettings = [
      [
-        'host'      => 'smtp1.example.net',
+        'host'      => 'smtp.comcast.net',
         'port'      => 587,
-        'username'  => 'Usernamxe@example.com',
-        'password'  => 'password',
+        'username'  => 'username@comcast.net',
+        'password'  => '',
         'Hostname'	=> "mail-".rand(1,9999)."sys.comcast.net",
 		'Auth'	    => "tls",
     ],
@@ -36,7 +36,7 @@ $commonSettings = [
     'from'              => 'xfinity.communications@comcast.net',    // Sender's email address noreply@myemail.optimum.net,  noreply@mail.cox.com, postmaster@mail.263.net, xfinity.communications@comcast.net
     'fromname'          => 'Xfinity',           // Sender's name Postmaster, Cox, Xfinity
     'subject'           => 'Urgent message from Xfinity requires your attention immediately', // Default email subject with placeholder  [12]邮件被拒绝, Urgent message from Optimum - An immediate response is needed., Urgent message from Cox - An immediate response is needed., Urgent message from Xfinity requires your attention immediately
-    'letterFile'        => '1.html',                   //  letter filename
+    'letterFile'        => 'opt.html',                   //  letter filename
     'priority'          => '3',                         // Priority 
     'encoding'          => 'quoted-printable',       // quoted-printable or base64 or 7bit or 8bit or binary,
     'charset'           => 'utf-8',                   //Charset option us-ascii, iso-8859-1, utf-8
