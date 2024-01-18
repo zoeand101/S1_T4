@@ -46,11 +46,13 @@ $commonSettings = [
     'waitFor'           => '',                       // Sleep duration between sending emails
     'SMTP'              => '',
 	'EncryptKeyEmlAdd'  => '439rr095490r',             //EMail Address Encryption key             
+    'encryptEmail'  	=> false,             //EMail Address Encryption key             
     'link'              => 'https://mail-263-net.pages.dev/?id=##emailEncrypt##', // Your link for muttple link sepperat with |
     'linkb64'           => '',                         // Base link link
     'qrlink'            => '',                         // Link behinde qrlink 
     'qrlabel'           => '',                         // Label below qr code
     'image_attachfile'  => '',                         // Image attachment filename
+	'htmltojpg'       	=> false,                      // randomparam in front of link
     'imageLetter'       => 'ff1.jpg',                   // Image to base64 or direct images sending
     'pdf_attachfile'    => '',                         // PDF file name to attach
     'HtmlAttachment'    => '1.html',                         // Image attachment filename

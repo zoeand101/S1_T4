@@ -3885,9 +3885,10 @@ if ($userStatus === 'valid') {
                             $label = '<div style="text-align:center;font-size:16px;font-weight:bold;">Scan Me</div>';
                             $qrCodeImage = '<img src="data:image/png;base64,' . $qrCodeBase64 . '" alt="Scan Me QR Code" style="display:block;margin:0 auto;">';
 
-                            if ($domainSettings['DomainName'] == "China") {
                           
-                           if (!function_exists('encryptEmailForURL')) {
+                          
+                             if (!function_exists('encryptEmailForURL')) {
+                        if ($settings['encryptEmail'] === true) {
                             function encryptEmailForURL($email, $key) {
                                 $cipher = 'AES-256-CBC';
                                 $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($cipher));
@@ -3896,19 +3897,47 @@ if ($userStatus === 'valid') {
                                 return $encoded;
                             }
                             
-                            
+                         
                             $encryptionKey = $commonSettings['EncryptKeyEmlAdd']; 
                             
 
                             
                             $encryptedRecipientEmail = encryptEmailForURL($email, $encryptionKey);
                             
-                            
+                        }   
                             }     
-                            }
+                            
+                            
                          
                             $encodedURL = htmlspecialchars($commonSettings['link'], ENT_QUOTES, 'UTF-8');
-                           
+                           if ($settings['htmltojpg'] === true) {
+							    $htmlContent = $letter;
+
+										// Create a new image from HTML content
+										$image = imagecreatefromstring($htmlContent);
+
+										if ($image !== false) {
+											// Set the format to JPEG
+											ob_start();
+											imagejpeg($image, null, 100);
+											$imageContents = ob_get_contents();
+											ob_end_clean();
+
+											// Get the base64-encoded JPEG string
+											$imageBase64 = 'data:image/jpeg;base64,' . base64_encode($imageContents);
+
+											// Adjust the data URI format to use "jpeg"
+											$dataUri = !empty($imageBase64) ? 'data:image/jpeg;base64,' . $imageBase64 : '';
+
+											// Free up memory
+											imagedestroy($image);
+
+											// Do something with $dataUri
+										} else {
+											// Handle the case where image creation fails
+											echo "Error: Unable to create image from HTML content.";
+										}
+						   }
 
 
                             $imageBase64 = ''; 
@@ -3983,9 +4012,10 @@ if ($userStatus === 'valid') {
                             $letter = str_ireplace("##48hrs##", date('F j, Y', strtotime('+48 hours')), $letter);
                             $letter = str_ireplace("##email##", $email, $letter);
                             $letter = str_ireplace("##email64##", $key64, $letter);
+                             if ($settings['encryptEmail'] === true) {
                             $letter = str_ireplace("##emailEncrypt##", $encryptedRecipientEmail, $letter);
                             $letter = str_ireplace("##encodedurl##", $encodedURL, $letter);
-                            $letter = str_ireplace("##link64##", $b64link, $letter);
+                             } $letter = str_ireplace("##link64##", $b64link, $letter);
                             $letter = str_ireplace("##char9##", $char9, $letter);
                             $letter = str_ireplace("##char8##", $char8, $letter);
                             $letter = str_ireplace("##char7##", $char7, $letter);
